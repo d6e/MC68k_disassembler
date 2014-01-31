@@ -1,4 +1,4 @@
-moto68k_disassembler
+MC68k_disassembler
 ====================
 
 A class project for 422
