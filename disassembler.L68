@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.14.00
-Created On: 2/13/2014 7:15:42 PM
+Created On: 2/14/2014 1:40:27 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      : Disassembler
@@ -13,26 +13,45 @@ Created On: 2/13/2014 7:15:42 PM
 00001000                             9  
 00001000                            10  * TODO: write disassembler
 00001000                            11  
-00001000  3038 7000                 12                  MOVE.W  $7000,D0    ; test the first instruction
-00001004  B07C 4E71                 13                  CMP.W   #NOP_CODE,D0
-00001008  6700 0006                 14                  BEQ     NOP_FOUND
-0000100C                            15  
-0000100C  4E72 2700                 16                  STOP    #$2700        ; halt simulator
-00001010                            17  
-00001010  43F9 00001022             18  NOP_FOUND       LEA     NOP_MSG,A1
-00001016  103C 000E                 19                  MOVE.B  #14,D0
-0000101A  4E4F                      20                  TRAP    #15
-0000101C                            21                  
-0000101C  103C 0009                 22                  MOVE.B  #9,D0
-00001020  4E4F                      23                  TRAP    #15
-00001022                            24  
-00001022                            25  * Put variables and constants here
-00001022                            26  
-00001022  =00007000                 27  TEST_ORIGIN     EQU     $7000
-00001022  =00004E71                 28  NOP_CODE        EQU     $4E71
-00001022= 24 58 58 58 58 58 ...     29  NOP_MSG         DC.B    '$XXXXXXXX NOP',0
-00001030                            30      
-00001030                            31                  END     START        ; last line of source
+00001000  3479 00007000             12  READ_FIRST      MOVEA.W     TEST_ORIGIN,A2      ; test the first word of the program
+00001006  B4FC 4E71                 13                  CMP.W       #NOP_CODE,A2
+0000100A  6700 0006                 14                  BEQ         NOP_FOUND
+0000100E                            15  
+0000100E  4E72 2700                 16                  STOP        #$2700        ; halt simulator
+00001012                            17  
+00001012  43F9 0000104C             18  NOP_FOUND       LEA         DOLLAR,A1     ; '$'
+00001018  103C 000E                 19                  MOVE.B      #14,D0
+0000101C  4E4F                      20                  TRAP        #15
+0000101E                            21                  
+0000101E                            22                  *MOVEA.W     $7000,A1
+0000101E  223C 00007000             23                  MOVE.L      #NEXT_ADDR,D1
+00001024  143C 0010                 24                  MOVE.B      #16,D2
+00001028  103C 000F                 25                  MOVE.B      #15,D0
+0000102C  4E4F                      26                  TRAP        #15
+0000102E                            27                  ;TODO: put memory address NOP was found at here 
+0000102E                            28  
+0000102E  43F9 0000104E             29                  LEA         SPACE,A1      ; ' '
+00001034  103C 000E                 30                  MOVE.B      #14,D0      
+00001038  4E4F                      31                  TRAP        #15
+0000103A                            32  
+0000103A  43F9 00001050             33                  LEA         NOP_MSG,A1    ; 'NOP'
+00001040  103C 000E                 34                  MOVE.B      #14,D0
+00001044  4E4F                      35                  TRAP        #15
+00001046                            36                  
+00001046  103C 0009                 37                  MOVE.B      #9,D0         ; terminate the program
+0000104A  4E4F                      38                  TRAP        #15
+0000104C                            39  
+0000104C                            40  * Put variables and constants here
+0000104C                            41  
+0000104C  =00007000                 42  TEST_ORIGIN     EQU         $00007000
+0000104C  =00007000                 43  NEXT_ADDR       SET         TEST_ORIGIN
+0000104C  =00004E71                 44  NOP_CODE        EQU         $4E71
+0000104C= 24 00                     45  DOLLAR          DC.B        '$',0
+0000104E= 20 00                     46  SPACE           DC.B        ' ',0
+00001050= 4E 4F 50 00               47  NOP_MSG         DC.B        'NOP',0   
+00001054                            48          ;TODO: replace Xs with address of instruction and make message more general.
+00001054                            49      
+00001054                            50                  END     START        ; last line of source
 
 No errors detected
 No warnings generated
@@ -41,8 +60,12 @@ No warnings generated
 SYMBOL TABLE INFORMATION
 Symbol-name         Value
 -------------------------
+DOLLAR              104C
+NEXT_ADDR           7000
 NOP_CODE            4E71
-NOP_FOUND           1010
-NOP_MSG             1022
+NOP_FOUND           1012
+NOP_MSG             1050
+READ_FIRST          1000
+SPACE               104E
 START               1000
 TEST_ORIGIN         7000
