@@ -1,0 +1,48 @@
+00001000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.14.00
+Created On: 2/13/2014 7:15:42 PM
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      : Disassembler
+00000000                             3  * Written by : Robert Brandenburg, Danielle Jenkins, Shahin Nahar
+00000000                             4  * Date       : 2/13/14
+00000000                             5  * Description: Disassemble hex machine code instructions into 68K instructions
+00000000                             6  *-----------------------------------------------------------
+00000000                             7  
+00001000                             8  START           ORG     $1000        ; first instruction of program
+00001000                             9  
+00001000                            10  * TODO: write disassembler
+00001000                            11  
+00001000  3038 7000                 12                  MOVE.W  $7000,D0    ; test the first instruction
+00001004  B07C 4E71                 13                  CMP.W   #NOP_CODE,D0
+00001008  6700 0006                 14                  BEQ     NOP_FOUND
+0000100C                            15  
+0000100C  4E72 2700                 16                  STOP    #$2700        ; halt simulator
+00001010                            17  
+00001010  43F9 00001022             18  NOP_FOUND       LEA     NOP_MSG,A1
+00001016  103C 000E                 19                  MOVE.B  #14,D0
+0000101A  4E4F                      20                  TRAP    #15
+0000101C                            21                  
+0000101C  103C 0009                 22                  MOVE.B  #9,D0
+00001020  4E4F                      23                  TRAP    #15
+00001022                            24  
+00001022                            25  * Put variables and constants here
+00001022                            26  
+00001022  =00007000                 27  TEST_ORIGIN     EQU     $7000
+00001022  =00004E71                 28  NOP_CODE        EQU     $4E71
+00001022= 24 58 58 58 58 58 ...     29  NOP_MSG         DC.B    '$XXXXXXXX NOP',0
+00001030                            30      
+00001030                            31                  END     START        ; last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+NOP_CODE            4E71
+NOP_FOUND           1010
+NOP_MSG             1022
+START               1000
+TEST_ORIGIN         7000

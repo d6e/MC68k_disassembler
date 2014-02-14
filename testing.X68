@@ -1,19 +1,22 @@
 *-----------------------------------------------------------
-* Title      :  
-* Written by :
-* Date       :
-* Description:
+* Title      : Testing
+* Written by : Robert Brandenburg, Danielle Jenkins, Shahin Nahar
+* Date       : 2/13/14
+* Description: Disassembler test file
 *-----------------------------------------------------------
-    ORG    $1000
-START:                  ; first instruction of program
+    
+START       ORG    $7000                ; first instruction of program
+            NOP
+            MOVE.B #10,D0
 
-* Put program code here
+* TODO: use all required opcodes in all possible combinations here
 
-    SIMHALT             ; halt simulator
+            STOP   #$7700          ; halt simulator
 
 * Put variables and constants here
 
-    END    START        ; last line of source
+            END    START        ; last line of source
+
 
 *~Font name~Courier New~
 *~Font size~10~
