@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.14.00
-Created On: 2/14/2014 2:45:00 PM
+Created On: 2/14/2014 6:10:20 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      : Disassembler
@@ -17,73 +17,89 @@ Created On: 2/14/2014 2:45:00 PM
 00001000                            13  
 00001000                            14  * TODO: ascii logo
 00001000                            15  
-00001000  43F9 0000106C             16  PROMPT_INPUT    LEA         INPUT_MSG_1,A1  ; prompt user for starting address
+00001000  43F9 00001078             16  PROMPT_INPUT    LEA         INPUT_MSG_1,A1  ; prompt user for starting address
 00001006  103C 000E                 17                  MOVE.B      #14,D0
 0000100A  4E4F                      18                  TRAP        #15
 0000100C                            19                  
-0000100C  103C 0004                 20                  MOVE.B      #4,D0   ;TODO: store D0's input data somewhere.
-00001010  4E4F                      21                  TRAP        #15     ;also, consider other input methods.
-00001012                            22  ; TODO: actually store and use start address and end address.
-00001012                            23  ; (start address first, since this iteration of the project stops immediately after READ_FIRST.
-00001012                            24  
-00001012  43F9 000010A0             25                  LEA         INPUT_MSG_2,A1  ; prompt user for ending address
-00001018  103C 000E                 26                  MOVE.B      #14,D0
-0000101C  4E4F                      27                  TRAP        #15
-0000101E                            28  
-0000101E  3479 00007000             29  READ_FIRST      MOVEA.W     TEST_ORIGIN,A2      ; test the first word of the program
-00001024  B4FC 4E71                 30                  CMP.W       #NOP_CODE,A2
-00001028  6700 0006                 31                  BEQ         NOP_FOUND
-0000102C                            32  
-0000102C  4E72 2700                 33                  STOP        #$2700        ; halt simulator
-00001030                            34  
-00001030  43F9 000010D7             35  NOP_FOUND       LEA         DOLLAR,A1     ; '$'
-00001036  103C 000E                 36                  MOVE.B      #14,D0
-0000103A  4E4F                      37                  TRAP        #15
-0000103C                            38                  
-0000103C  223C 00007000             39                  MOVE.L      #NEXT_ADDR,D1 ;display the address NOP was found at
-00001042  143C 0010                 40                  MOVE.B      #16,D2
-00001046  103C 000F                 41                  MOVE.B      #15,D0
-0000104A  4E4F                      42                  TRAP        #15
-0000104C                            43  
-0000104C  43F9 0000106A             44                  LEA         SPACE,A1      ; ' '
-00001052  103C 000E                 45                  MOVE.B      #14,D0      
-00001056  4E4F                      46                  TRAP        #15
-00001058                            47  
-00001058  43F9 000010D3             48                  LEA         NOP_MSG,A1    ; 'NOP'
-0000105E  103C 000E                 49                  MOVE.B      #14,D0
-00001062  4E4F                      50                  TRAP        #15
-00001064                            51                  
-00001064  103C 0009                 52                  MOVE.B      #9,D0         ; terminate the program
-00001068  4E4F                      53                  TRAP        #15
-0000106A                            54  
-0000106A                            55  * Put variables and constants here
-0000106A                            56  
-0000106A                            57  *output characters
-0000106A  =0000000D                 58  CR              EQU         $0D
-0000106A  =0000000A                 59  LF              EQU         $0A
-0000106A= 20 00                     60  SPACE           DC.B        ' ',0
-0000106C                            61  
-0000106C                            62  *output messages
-0000106C                            63      ;TODO: consider also giving the user the range of valid start/end addresses
-0000106C= 50 6C 65 61 73 65 ...     64  INPUT_MSG_1     DC.B        'Please enter a starting hex address to read from.',CR,LF,0
-000010A0= 50 6C 65 61 73 65 ...     65  INPUT_MSG_2     DC.B        'Please enter an ending hex address to read from.',CR,LF,0
-000010D3                            66  
-000010D3                            67  *output instruction names
-000010D3= 4E 4F 50 00               68  NOP_MSG         DC.B        'NOP',0   
-000010D7                            69  
-000010D7                            70  *address variables
-000010D7  =00007000                 71  TEST_ORIGIN     EQU         $00007000
-000010D7  =00007000                 72  NEXT_ADDR       SET         TEST_ORIGIN
-000010D7                            73  
-000010D7                            74  *constant OPcodes
-000010D7  =00004E71                 75  NOP_CODE        EQU         $4E71
-000010D7= 24 00                     76  DOLLAR          DC.B        '$',0
-000010D9                            77  
-000010D9                            78          ;TODO: replace Xs with address of instruction and make message more general.
-000010D9                            79      
-000010D9                            80                  END     START        ; last line of source
+0000100C  103C 0002                 20                  MOVE.B      #2,D0   ;Take user input for starting address.
+00001010  43F9 000010E3             21                  LEA         START_ADDR_IN,A1
+00001016  4E4F                      22                  TRAP        #15     ;consider other input methods.
+00001018                            23                  ;MOVE.W      D1,TEST_ORIGIN        
+00001018                            24                  ;TODO: note that input value is stored in A1. We
+00001018                            25                  ;still need to convert it to hex before we can actually use it
+00001018                            26                  ;as an address.
+00001018                            27  
+00001018                            28  ; (start address first, since this iteration of the project stops immediately after READ_FIRST.
+00001018                            29  
+00001018  43F9 000010AC             30                  LEA         INPUT_MSG_2,A1  ; prompt user for ending address
+0000101E  103C 000E                 31                  MOVE.B      #14,D0
+00001022  4E4F                      32                  TRAP        #15
+00001024                            33                  
+00001024  103C 0004                 34                  MOVE.B      #4,D0   ;Take user input for ending address.
+00001028  4E4F                      35                  TRAP        #15     ;consider other input methods.
+0000102A  23C1 00009000             36                  MOVE.L      D1,END_ADDR
+00001030                            37  
+00001030                            38  READ_FIRST      ;MOVEA.W     TEST_ORIGIN,A2      ; test the first word of the program
+00001030                            39                  ;TODO: instead of just comparing to NOP, branch based on digits.
+Line 40 ERROR: Invalid syntax
+00001030                            40                  MOVE.W      (NEXT_ADDR)+,D4
+00001030  B87C 4E71                 41                  CMP.W       #NOP_CODE,D4
+00001034  6700 0006                 42                  BEQ         NOP_FOUND
+00001038                            43  
+00001038  4E72 2700                 44                  STOP        #$2700        ; halt simulator
+0000103C                            45  
+0000103C  43F9 000010F7             46  NOP_FOUND       LEA         DOLLAR,A1     ; '$'
+00001042  103C 000E                 47                  MOVE.B      #14,D0
+00001046  4E4F                      48                  TRAP        #15
+00001048                            49                  
+00001048  223C 00007000             50                  MOVE.L      #NEXT_ADDR,D1 ;display the address NOP was found at
+0000104E  143C 0010                 51                  MOVE.B      #16,D2
+00001052  103C 000F                 52                  MOVE.B      #15,D0
+00001056  4E4F                      53                  TRAP        #15
+00001058                            54  
+00001058  43F9 00001076             55                  LEA         SPACE,A1      ; ' '
+0000105E  103C 000E                 56                  MOVE.B      #14,D0      
+00001062  4E4F                      57                  TRAP        #15
+00001064                            58  
+00001064  43F9 000010DF             59                  LEA         NOP_MSG,A1    ; 'NOP'
+0000106A  103C 000E                 60                  MOVE.B      #14,D0
+0000106E  4E4F                      61                  TRAP        #15
+00001070                            62                  
+00001070  103C 0009                 63                  MOVE.B      #9,D0         ; terminate the program
+00001074  4E4F                      64                  TRAP        #15
+00001076                            65  
+00001076                            66  * Put variables and constants here
+00001076                            67  
+00001076                            68  *output characters
+00001076  =0000000D                 69  CR              EQU         $0D
+00001076  =0000000A                 70  LF              EQU         $0A
+00001076= 20 00                     71  SPACE           DC.B        ' ',0
+00001078                            72  
+00001078                            73  *output messages
+00001078                            74      ;TODO: consider also giving the user the range of valid start/end addresses
+00001078= 50 6C 65 61 73 65 ...     75  INPUT_MSG_1     DC.B        'Please enter a starting hex address to read from.',CR,LF,0
+000010AC= 50 6C 65 61 73 65 ...     76  INPUT_MSG_2     DC.B        'Please enter an ending hex address to read from.',CR,LF,0
+000010DF                            77  
+000010DF                            78  *output instruction names
+000010DF= 4E 4F 50 00               79  NOP_MSG         DC.B        'NOP',0
+000010E3                            80  
+000010E3                            81  *storage locations for input
+000010E3                            82  START_ADDR_IN   DS.B        20
+000010F7                            83  
+000010F7                            84  *address variables
+000010F7  =00007000                 85  TEST_ORIGIN     SET         $00007000
+000010F7  =00007000                 86  NEXT_ADDR       SET         TEST_ORIGIN
+000010F7  =00009000                 87  END_ADDR        SET         $00009000
+000010F7                            88  
+000010F7                            89  *constant OPcodes
+000010F7  =00004E71                 90  NOP_CODE        EQU         $4E71
+000010F7= 24 00                     91  DOLLAR          DC.B        '$',0
+000010F9                            92  
+000010F9                            93          ;TODO: replace Xs with address of instruction and make message more general.
+000010F9                            94      
+000010F9                            95                  END     START        ; last line of source
 
-No errors detected
+1 error detected
 No warnings generated
 
 
@@ -91,16 +107,18 @@ SYMBOL TABLE INFORMATION
 Symbol-name         Value
 -------------------------
 CR                  D
-DOLLAR              10D7
-INPUT_MSG_1         106C
-INPUT_MSG_2         10A0
+DOLLAR              10F7
+END_ADDR            9000
+INPUT_MSG_1         1078
+INPUT_MSG_2         10AC
 LF                  A
 NEXT_ADDR           7000
 NOP_CODE            4E71
-NOP_FOUND           1030
-NOP_MSG             10D3
+NOP_FOUND           103C
+NOP_MSG             10DF
 PROMPT_INPUT        1000
-READ_FIRST          101E
-SPACE               106A
+READ_FIRST          1030
+SPACE               1076
 START               1000
+START_ADDR_IN       10E3
 TEST_ORIGIN         7000
