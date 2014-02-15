@@ -52,6 +52,8 @@ READ_FIRST      ;MOVEA.W     TEST_ORIGIN,A2      ; test the first word of the pr
                 CMP.W       #NOP_CODE,D4
                 BEQ         NOP_FOUND
                 
+                STOP        #$2700        ; halt simulator
+                
                 ;TODO: process for reading hex instructions (after the first instruction):
                 ;           1) Go to start of instruction reading loop, passing in the address of next instruction.
                 ;           2) Store a word (16 bits) from that address.
@@ -176,8 +178,6 @@ READ_FIRST      ;MOVEA.W     TEST_ORIGIN,A2      ; test the first word of the pr
 
 
 
-                STOP        #$2700        ; halt simulator
-
 NOP_FOUND       LEA         DOLLAR,A1     ; '$'
                 MOVE.B      #14,D0
                 TRAP        #15
@@ -241,6 +241,7 @@ FILT_SRC_REG    EQU        $0007   ;source register:           0000 0000 0000 0X
         ;TODO: replace Xs with address of instruction and make message more general.
     
                 END     START        ; last line of source
+
 
 
 
