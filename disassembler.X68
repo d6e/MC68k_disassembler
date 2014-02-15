@@ -13,13 +13,15 @@ START           ORG     $1000        ; first instruction of program
 
 * TODO: ascii logo
 
-PROMPT_INPUT    LEA         INPUT_MSG_1,A1  ; prompt user for starting address
+*------------------------START IO-----------------------------
+
+PROMPT_INPUT    LEA         INPUT_MSG_1,A1  ; Prompt user for starting address
                 MOVE.B      #14,D0
                 TRAP        #15
                 
-                MOVE.B      #2,D0   ;Take user input for starting address.
+                MOVE.B      #2,D0           ; Take user input for starting address.
                 LEA         START_ADDR_IN,A1
-                TRAP        #15     ;consider other input methods.
+                TRAP        #15        ; consider other input methods.
                 ;MOVE.W      D1,TEST_ORIGIN        
                 ;TODO: note that input value is stored in A1. We
                 ;still need to convert it to hex before we can actually use it
@@ -34,6 +36,9 @@ PROMPT_INPUT    LEA         INPUT_MSG_1,A1  ; prompt user for starting address
                 MOVE.B      #4,D0   ;Take user input for ending address.
                 TRAP        #15     ;consider other input methods.
                 MOVE.L      D1,END_ADDR
+
+*------------------------END IO-----------------------------
+*------------------------BEGIN OPCODE-----------------------------
 
 READ_FIRST      ;MOVEA.W     TEST_ORIGIN,A2      ; test the first word of the program
                 ;TODO: instead of just comparing to NOP, branch based on digits.
