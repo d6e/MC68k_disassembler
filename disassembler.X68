@@ -13,7 +13,7 @@ START           ORG     $1000        ; first instruction of program
 
 * TODO: ascii logo
 
-*------------------------START IO-----------------------------
+*------------------------BEGIN IO-----------------------------
 
 PROMPT_INPUT    LEA         INPUT_MSG_1,A1  ; Prompt user for starting address
                 MOVE.B      #14,D0
@@ -36,6 +36,12 @@ PROMPT_INPUT    LEA         INPUT_MSG_1,A1  ; Prompt user for starting address
                 MOVE.B      #4,D0   ;Take user input for ending address.
                 TRAP        #15     ;consider other input methods.
                 MOVE.L      D1,END_ADDR
+
+; To convert:
+;     If the digit is 0 through 9 add $30 to convert to ASCII.
+;     If the digit is A through F add $37 to convert to ASCII.
+
+
 
 *------------------------END IO-----------------------------
 *------------------------BEGIN OPCODE-----------------------------
@@ -160,6 +166,16 @@ READ_FIRST      ;MOVEA.W     TEST_ORIGIN,A2      ; test the first word of the pr
                 ;      should first have a default "Error" subroutine which the program
                 ;      branches to once all other possibilities have been ruled out.
 
+*------------------------END OPCODE-----------------------------
+*------------------------BEGIN EA-----------------------------
+
+
+
+*------------------------END EA-----------------------------
+
+
+
+
                 STOP        #$2700        ; halt simulator
 
 NOP_FOUND       LEA         DOLLAR,A1     ; '$'
@@ -182,7 +198,7 @@ NOP_FOUND       LEA         DOLLAR,A1     ; '$'
                 MOVE.B      #9,D0         ; terminate the program
                 TRAP        #15
 
-* Put variables and constants here
+*--------------- PUT VARIABLES/CONSTANTS HERE -----------------
 
 *output characters
 CR              EQU         $0D
@@ -225,6 +241,7 @@ FILT_SRC_REG    EQU        $0007   ;source register:           0000 0000 0000 0X
         ;TODO: replace Xs with address of instruction and make message more general.
     
                 END     START        ; last line of source
+
 
 
 
