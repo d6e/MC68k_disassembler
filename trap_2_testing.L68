@@ -1,0 +1,149 @@
+00001000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.14.00
+Created On: 2/15/2014 5:03:27 PM
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      :
+00000000                             3  * Written by :
+00000000                             4  * Date       :
+00000000                             5  * Description:
+00000000                             6  *-----------------------------------------------------------
+00001000                             7  START     ORG         $1000
+00001000                             8                  ; first instruction of program
+00001000                             9  
+00001000                            10            ;MOVE.W      #$3000,$7000 ;TODO: try to get the correct data from somewhere
+00001000                            11  
+00001000  43F9 0000112A             12            LEA         MSG_1,A1
+00001006  103C 000E                 13            MOVE.B      #14,D0
+0000100A  4E4F                      14            TRAP        #15
+0000100C                            15  
+0000100C  103C 0002                 16            MOVE.B      #2,D0           ; Take user input for starting address.
+00001010  327C 2000                 17            MOVEA.W     #$2000,A1       
+00001014                            18            ;SUB.L       #$FFFFFFFF,(A1)+
+00001014                            19            ;SUB.L       #$FFFFFFFF, (A1)
+00001014                            20            ;MOVEA.W     #$2000,A1       ; Stores the ascii address in (A1),
+00001014  4E4F                      21            TRAP        #15             ; and the length in D1.W.
+00001016                            22            
+00001016  327C 2001                 23            MOVEA.W     #$2001,A1
+0000101A  B27C 0001                 24            CMP         #1,D1
+0000101E  6700 0066                 25            BEQ         ASCII_TO_HEX  ;start converting if we have 1 digit.
+00001022                            26            
+00001022  327C 2002                 27            MOVEA.W     #$2002,A1
+00001026  B27C 0002                 28            CMP         #2,D1
+0000102A  6700 005A                 29            BEQ         ASCII_TO_HEX  ;start converting if we have 2 digits.
+0000102E                            30            
+0000102E  327C 2003                 31            MOVEA.W     #$2003,A1
+00001032  B27C 0003                 32            CMP         #3,D1
+00001036  6700 004E                 33            BEQ         ASCII_TO_HEX  ;start converting if we have 3 digits.
+0000103A                            34            
+0000103A  327C 2004                 35            MOVEA.W     #$2004,A1
+0000103E  B27C 0004                 36            CMP         #4,D1
+00001042  6700 0042                 37            BEQ         ASCII_TO_HEX  ;start converting if we have 4 digits.
+00001046                            38            
+00001046  327C 2005                 39            MOVEA.W     #$2005,A1
+0000104A  B27C 0005                 40            CMP         #5,D1
+0000104E  6700 0036                 41            BEQ         ASCII_TO_HEX  ;start converting if we have 5 digits.
+00001052                            42            
+00001052  327C 2006                 43            MOVEA.W     #$2006,A1
+00001056  B27C 0006                 44            CMP         #6,D1
+0000105A  6700 002A                 45            BEQ         ASCII_TO_HEX  ;start converting if we have 6 digits.
+0000105E                            46            
+0000105E  327C 2007                 47            MOVEA.W     #$2007,A1
+00001062  B27C 0007                 48            CMP         #7,D1
+00001066  6700 001E                 49            BEQ         ASCII_TO_HEX  ;start converting if we have 7 digits.
+0000106A                            50            
+0000106A  327C 2008                 51            MOVEA.W     #$2008,A1
+0000106E  B27C 0008                 52            CMP         #8,D1
+00001072  6700 0012                 53            BEQ         ASCII_TO_HEX  ;start converting if we have 8 digits.
+00001076                            54            
+00001076  43F9 0000113F             55            LEA         INVALID_LEN_MSG,A1         ;display the length of the input
+0000107C  103C 000E                 56            MOVE.B      #14,D0
+00001080  4E4F                      57            TRAP        #15   
+00001082                            58              
+00001082                            59            ;MOVE.L      (A1),D3       ;Move the ascii value we just read in to D3
+00001082                            60            ;MOVE.L      (A1),D4
+00001082                            61            
+00001082                            62            ;MOVE.W      (A1),D1
+00001082                            63            ;MOVE.B      #16,D2
+00001082                            64            ;MOVE.B      #15,D0    ;print the input back out
+00001082                            65            ;TRAP        #15          
+00001082                            66  
+00001082  FFFF FFFF                 67            SIMHALT             ; halt simulator
+00001086                            68            
+00001086                            69  ; when we get here, A1 is the ascii representation of the least significant digit (i.e., the ones place)
+00001086  04B8 FFFFFFFF 3000        70  ASCII_TO_HEX    SUB.L       #$FFFFFFFF,$3000
+0000108E  04B8 FFFFFFFF 3004        71                  SUB.L       #$FFFFFFFF,$3004
+00001096                            72  
+00001096  11E1 3007                 73                  MOVE.B   -(A1),$3007
+0000109A  0238 00CF 3007            74                  ANDI.B   #$CF,$3007
+000010A0  B27C 0001                 75                  CMP      #1,D1
+000010A4  6700 0080                 76                  BEQ      CONVERSION_DONE
+000010A8                            77                  
+000010A8  11E1 3006                 78                  MOVE.B   -(A1),$3006
+000010AC  0238 00CF 3006            79                  ANDI.B   #$CF,$3006
+000010B2  B27C 0002                 80                  CMP      #2,D1
+000010B6  6700 006E                 81                  BEQ      CONVERSION_DONE
+000010BA                            82                  
+000010BA  11E1 3005                 83                  MOVE.B   -(A1),$3005
+000010BE  0238 00CF 3005            84                  ANDI.B   #$CF,$3005
+000010C4  B27C 0003                 85                  CMP      #3,D1
+000010C8  6700 005C                 86                  BEQ      CONVERSION_DONE
+000010CC                            87                  
+000010CC  11E1 3004                 88                  MOVE.B   -(A1),$3004
+000010D0  0238 00CF 3004            89                  ANDI.B   #$CF,$3004
+000010D6  B27C 0004                 90                  CMP      #4,D1
+000010DA  6700 004A                 91                  BEQ      CONVERSION_DONE
+000010DE                            92                  
+000010DE  11E1 3003                 93                  MOVE.B   -(A1),$3003
+000010E2  0238 00CF 3003            94                  ANDI.B   #$CF,$3003
+000010E8  B27C 0005                 95                  CMP      #5,D1
+000010EC  6700 0038                 96                  BEQ      CONVERSION_DONE
+000010F0                            97                  
+000010F0  11E1 3002                 98                  MOVE.B   -(A1),$3002
+000010F4  0238 00CF 3002            99                  ANDI.B   #$CF,$3002
+000010FA  B27C 0006                100                  CMP      #6,D1
+000010FE  6700 0026                101                  BEQ      CONVERSION_DONE
+00001102                           102                  
+00001102  11E1 3001                103                  MOVE.B   -(A1),$3001
+00001106  0238 00CF 3001           104                  ANDI.B   #$CF,$3001
+0000110C  B27C 0007                105                  CMP      #7,D1
+00001110  6700 0014                106                  BEQ      CONVERSION_DONE
+00001114                           107                  
+00001114  11E1 3000                108                  MOVE.B   -(A1),$3000
+00001118  0238 00CF 3000           109                  ANDI.B   #$CF,$3000
+0000111E  B27C 0008                110                  CMP      #8,D1
+00001122  6700 0002                111                  BEQ      CONVERSION_DONE
+00001126                           112  
+00001126                           113        
+00001126                           114                 ;TODO: branch to done when we are done
+00001126                           115                 ;SIMHALT
+00001126                           116                 
+00001126  FFFF FFFF                117  CONVERSION_DONE SIMHALT ;TODO
+0000112A                           118  
+0000112A                           119  * Put variables and constants here
+0000112A                           120  
+0000112A  =0000000D                121  CR              EQU         $0D
+0000112A  =0000000A                122  LF              EQU         $0A
+0000112A                           123  
+0000112A= 45 6E 74 65 72 20 ...    124  MSG_1           DC.B        'Enter a hex value.',CR,LF,0
+0000113F= 4E 6F 74 20 61 20 ...    125  INVALID_LEN_MSG DC.B        'Not a valid length for input string.',CR,LF,0
+00001166                           126  
+00001166                           127  START_ADDR_IN   DS.B        20
+0000117A                           128  
+0000117A                           129      END    START        ; last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+ASCII_TO_HEX        1086
+CONVERSION_DONE     1126
+CR                  D
+INVALID_LEN_MSG     113F
+LF                  A
+MSG_1               112A
+START               1000
+START_ADDR_IN       1166
