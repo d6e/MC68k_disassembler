@@ -2,7 +2,7 @@
 
 ################################################################################
 ### This script generates a list of every possible x68 instruction for our
-### project. To get the list run: "python make_test.py > testlist.txt"
+### project. To get the list run: "python make_test.py > instruction_list.txt"
 ################################################################################
 
 size = ['.B', '.W', '.L']
