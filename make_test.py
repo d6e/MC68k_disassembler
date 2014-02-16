@@ -6,7 +6,8 @@
 ################################################################################
 
 size = ['.B', '.W', '.L']
-src = dest = ['D1', 'A1', '(A1)', '#1', '(A1)+', '-(A1)','$10000000', '$1000']
+src = ['D1', 'A1', '(A1)', '#1', '(A1)+', '-(A1)','$10000000', '$1000']
+dest = ['D1','$10000000', '$1000']
 
 
 class Instruction:
@@ -26,16 +27,14 @@ class Instruction:
 		for size in self.sizes:
 			for s in self.sources:
 				for d in self.destinations:
-
-
 					if self.bidirectional is True:
-						print ''.join([self.opcode, size, ' ', s, ', ', d])
-						print ''.join([self.opcode, size, ' ', d, ', ', s])
+						print ''.join(['    ', self.opcode, size, ' ', s, ', ', d])
+						print ''.join(['    ', self.opcode, size, ' ', d, ', ', s])
 					else:
 						if d:
-							print ''.join([self.opcode, size, ' ', s, ', ', d])
+							print ''.join(['    ', self.opcode, size, ' ', s, ', ', d])
 						else:
-							print ''.join([self.opcode, size, ' ', s])
+							print ''.join(['    ', self.opcode, size, ' ', s])
 
 
 if __name__ == '__main__':
@@ -45,7 +44,7 @@ if __name__ == '__main__':
 	instructions = [
 		Instruction('MOVE', ), 
 		Instruction('MOVEQ', ['#1'], ['D1'], ['.L'], False), 
-		Instruction('MOVEM', ['D1/D2/D3', 'D1', 'A1', '(A1)', '#1', '(A1)+', '-(A1)','$10000000', '$1000'], ['D1/D2/D3', 'D1', 'A1', '(A1)', '#1', '(A1)+', '-(A1)','$10000000', '$1000'], ['.W','.L']), 
+		Instruction('MOVEM', ['D1/D2/D3', 'D1','$10000000', '$1000'], ['D1/D2/D3', 'D1','$10000000', '$1000'], ['.W','.L']), 
 		Instruction('ADD', src, ['D1']), # Only for src: No 'An' if size is '.B' 
 		Instruction('ADDA', src, ['A1'], ['.W','.L'], False),
 		Instruction('ADDI', ['#1'], dest, size, False),
