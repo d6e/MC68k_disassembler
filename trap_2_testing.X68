@@ -185,7 +185,10 @@ ASCII_TO_HEX    MOVE.B   #0,D6      ; running total of converted hex number
                ;TODO: branch to done when we are done
                ;SIMHALT
                
-CONVERSION_DONE SIMHALT ;TODO: show what is in D6. It should be the same as the intended hex input.
+CONVERSION_DONE LSL.L #8,D7   ; Prepare for concatenation
+                LSL.L #8,D7   ; Got to perform the same operation twice to get it all the way to the left
+                ADD.W  D6,D7  ; concatenate the two data registers into one value
+                SIMHALT ;TODO: show what is in D6. It should be the same as the intended hex input.
 
 SUBTRACT_ONE
     SUB.B  #1, D4
@@ -202,6 +205,7 @@ INVALID_LEN_MSG DC.B        'Not a valid length for input string.',CR,LF,0
 START_ADDR_IN   DS.B        20
 
     END    START        ; last line of source
+
 
 
 *~Font name~Courier New~

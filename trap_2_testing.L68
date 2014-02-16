@@ -1,6 +1,6 @@
 00001000 Starting Address
-Assembler used: EASy68K Editor/Assembler v5.12.29
-Created On: 2/15/2014 6:24:44 PM
+Assembler used: EASy68K Editor/Assembler v5.14.00
+Created On: 2/16/2014 12:49:37 AM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :
@@ -13,7 +13,7 @@ Created On: 2/15/2014 6:24:44 PM
 00001000                             9  
 00001000                            10            ;MOVE.W      #$3000,$7000 ;TODO: try to get the correct data from somewhere
 00001000                            11  
-00001000  43F9 0000117C             12            LEA         MSG_1,A1
+00001000  43F9 00001182             12            LEA         MSG_1,A1
 00001006  103C 000E                 13            MOVE.B      #14,D0
 0000100A  4E4F                      14            TRAP        #15
 0000100C                            15  
@@ -56,7 +56,7 @@ Created On: 2/15/2014 6:24:44 PM
 0000106E  B27C 0008                 52            CMP         #8,D1
 00001072  6700 0012                 53            BEQ         ASCII_TO_HEX  ;start converting if we have 8 digits.
 00001076                            54            
-00001076  43F9 00001191             55            LEA         INVALID_LEN_MSG,A1         ;display the length of the input
+00001076  43F9 00001197             55            LEA         INVALID_LEN_MSG,A1         ;display the length of the input
 0000107C  103C 000E                 56            MOVE.B      #14,D0
 00001080  4E4F                      57            TRAP        #15   
 00001082                            58              
@@ -81,7 +81,7 @@ Created On: 2/15/2014 6:24:44 PM
 0000108C                            77                  ; Convert ascii to hex for that digit.
 0000108C  0444 0030                 78                  SUB      #$30,D4   ; TODO: once this works correctly for first two digits, change each iteration accordingly
 00001090  B87C 0009                 79                  CMP      #9,D4
-00001094  6E00 00E2                 80                  BGT      SUBTRACT_ONE ; Necessary to convert some ASCII values.
+00001094  6E00 00E8                 80                  BGT      SUBTRACT_ONE ; Necessary to convert some ASCII values.
 00001098                            81                                        ; TODO: errors for invalid ASCII values.
 00001098                            82                  
 00001098  DC04                      83                  ADD.B   D4,D6
@@ -93,7 +93,7 @@ Created On: 2/15/2014 6:24:44 PM
 000010A4  1821                      89                  MOVE.B   -(A1),D4
 000010A6  0444 0030                 90                  SUB      #$30,D4
 000010AA  B87C 0009                 91                  CMP      #9,D4
-000010AE  6E00 00C8                 92                  BGT      SUBTRACT_ONE
+000010AE  6E00 00CE                 92                  BGT      SUBTRACT_ONE
 000010B2                            93               
 000010B2  C8FC 0010                 94                  MULU.W   #$00000010,D4  ; this part adds $10 * (2nd digit) to our running total.
 000010B6  DC44                      95                  ADD.W    D4,D6 
@@ -106,7 +106,7 @@ Created On: 2/15/2014 6:24:44 PM
 000010C2  1821                     102                  MOVE.B   -(A1),D4
 000010C4  0444 0030                103                  SUB      #$30,D4
 000010C8  B87C 0009                104                  CMP      #9,D4
-000010CC  6E00 00AA                105                  BGT      SUBTRACT_ONE
+000010CC  6E00 00B0                105                  BGT      SUBTRACT_ONE
 000010D0                           106                  
 000010D0  C8FC 0100                107                  MULU.W   #$00000100,D4
 000010D4  DC44                     108                  ADD.W    D4,D6 
@@ -119,7 +119,7 @@ Created On: 2/15/2014 6:24:44 PM
 000010E0  1821                     115                  MOVE.B   -(A1),D4
 000010E2  0444 0030                116                  SUB      #$30,D4
 000010E6  B87C 0009                117                  CMP      #9,D4
-000010EA  6E00 008C                118                  BGT      SUBTRACT_ONE
+000010EA  6E00 0092                118                  BGT      SUBTRACT_ONE
 000010EE                           119                  
 000010EE  C8FC 1000                120                  MULU.W   #$00001000,D4
 000010F2  DC44                     121                  ADD.W    D4,D6 
@@ -132,7 +132,7 @@ Created On: 2/15/2014 6:24:44 PM
 000010FE  1821                     128                  MOVE.B   -(A1),D4
 00001100  0444 0030                129                  SUB      #$30,D4
 00001104  B87C 0009                130                  CMP      #9,D4
-00001108  6E00 006E                131                  BGT      SUBTRACT_ONE
+00001108  6E00 0074                131                  BGT      SUBTRACT_ONE
 0000110C                           132                  
 0000110C  C8FC 0001                133                  MULU.W   #$0001,D4
 00001110  DE44                     134                  ADD.W    D4,D7 
@@ -145,7 +145,7 @@ Created On: 2/15/2014 6:24:44 PM
 0000111C  1821                     141                  MOVE.B   -(A1),D4
 0000111E  0444 0030                142                  SUB      #$30,D4
 00001122  B87C 0009                143                  CMP      #9,D4
-00001126  6E00 0050                144                  BGT      SUBTRACT_ONE
+00001126  6E00 0056                144                  BGT      SUBTRACT_ONE
 0000112A                           145                  
 0000112A  C8FC 0010                146                  MULU.W   #$0010,D4
 0000112E  DE44                     147                  ADD.W    D4,D7
@@ -158,7 +158,7 @@ Created On: 2/15/2014 6:24:44 PM
 0000113A  1821                     154                  MOVE.B   -(A1),D4
 0000113C  0444 0030                155                  SUB      #$30,D4
 00001140  B87C 0009                156                  CMP      #9,D4
-00001144  6E00 0032                157                  BGT      SUBTRACT_ONE
+00001144  6E00 0038                157                  BGT      SUBTRACT_ONE
 00001148                           158                  
 00001148  C8FC 0100                159                  MULU.W   #$0100,D4
 0000114C  DE44                     160                  ADD.W    D4,D7
@@ -171,7 +171,7 @@ Created On: 2/15/2014 6:24:44 PM
 00001158  1821                     167                  MOVE.B   -(A1),D4
 0000115A  0444 0030                168                  SUB      #$30,D4
 0000115E  B87C 0009                169                  CMP      #9,D4
-00001162  6E00 0014                170                  BGT      SUBTRACT_ONE
+00001162  6E00 001A                170                  BGT      SUBTRACT_ONE
 00001166                           171                  
 00001166  C8FC 1000                172                  MULU.W   #$1000,D4
 0000116A  DE44                     173                  ADD.W    D4,D7
@@ -189,23 +189,26 @@ Created On: 2/15/2014 6:24:44 PM
 00001174                           185                 ;TODO: branch to done when we are done
 00001174                           186                 ;SIMHALT
 00001174                           187                 
-00001174  FFFF FFFF                188  CONVERSION_DONE SIMHALT ;TODO: show what is in D6. It should be the same as the intended hex input.
-00001178                           189  
-00001178                           190  SUBTRACT_ONE
-00001178  5304                     191      SUB.B  #1, D4
-0000117A  4E75                     192      RTS             ; return
-0000117C                           193  
-0000117C                           194  * Put variables and constants here
-0000117C                           195  
-0000117C  =0000000D                196  CR              EQU         $0D
-0000117C  =0000000A                197  LF              EQU         $0A
-0000117C                           198  
-0000117C= 45 6E 74 65 72 20 ...    199  MSG_1           DC.B        'Enter a hex value.',CR,LF,0
-00001191= 4E 6F 74 20 61 20 ...    200  INVALID_LEN_MSG DC.B        'Not a valid length for input string.',CR,LF,0
-000011B8                           201  
-000011B8                           202  START_ADDR_IN   DS.B        20
-000011CC                           203  
-000011CC                           204      END    START        ; last line of source
+00001174  E18F                     188  CONVERSION_DONE LSL.L #8,D7   ; Prepare for concatenation
+00001176  E18F                     189                  LSL.L #8,D7   ; Got to perform the same operation twice to get it all the way to the left
+00001178  DE46                     190                  ADD.W  D6,D7  ; concatenate the two data registers into one value
+0000117A  FFFF FFFF                191                  SIMHALT ;TODO: show what is in D6. It should be the same as the intended hex input.
+0000117E                           192  
+0000117E                           193  SUBTRACT_ONE
+0000117E  5304                     194      SUB.B  #1, D4
+00001180  4E75                     195      RTS             ; return
+00001182                           196  
+00001182                           197  * Put variables and constants here
+00001182                           198  
+00001182  =0000000D                199  CR              EQU         $0D
+00001182  =0000000A                200  LF              EQU         $0A
+00001182                           201  
+00001182= 45 6E 74 65 72 20 ...    202  MSG_1           DC.B        'Enter a hex value.',CR,LF,0
+00001197= 4E 6F 74 20 61 20 ...    203  INVALID_LEN_MSG DC.B        'Not a valid length for input string.',CR,LF,0
+000011BE                           204  
+000011BE                           205  START_ADDR_IN   DS.B        20
+000011D2                           206  
+000011D2                           207      END    START        ; last line of source
 
 No errors detected
 No warnings generated
@@ -217,9 +220,9 @@ Symbol-name         Value
 ASCII_TO_HEX        1086
 CONVERSION_DONE     1174
 CR                  D
-INVALID_LEN_MSG     1191
+INVALID_LEN_MSG     1197
 LF                  A
-MSG_1               117C
+MSG_1               1182
 START               1000
-START_ADDR_IN       11B8
-SUBTRACT_ONE        1178
+START_ADDR_IN       11BE
+SUBTRACT_ONE        117E
