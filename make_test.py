@@ -1,5 +1,9 @@
 #!/usr/bin/python
 
+################################################################################
+### This script generates a list of every possible x68 instruction for our
+### project. To get the list run: "python make_test.py > testlist.txt"
+################################################################################
 
 size = ['.B', '.W', '.L']
 src = dest = ['D1', 'A1', '(A1)', '#1', '(A1)+', '-(A1)','$10000000', '$1000']
