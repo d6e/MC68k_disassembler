@@ -5,17 +5,29 @@
 * Description: Disassemble hex machine code instructions into 68K instructions
 *-----------------------------------------------------------
 
-START           ORG     $1000        ; first instruction of program
-
 * TODO: write disassembler
 * TODO: more specific TODOs for our plan
 * TODO: comments saying who is working where
+
 
 * Commenting Key: 
 *    "----------"  <-- subroutine commenting
 *    "##########"  <-- section/role commenting
 
+
+*################ BEGIN MAIN ###############################
+*** All subroutine calls are made here ***
+START           ORG     $1000   ; first instruction of program
+
+BSR PROMPT_INPUT ; prompt the user for input
+BSR READ_FIRST   ; read the first instruction
+
+
+STOP        #$2700        ; halt simulator, end of main
+
+*################ END MAIN ###############################
 *################ BEGIN IO ###############################
+*** IO Subroutines are kept here ***
 
 *-------------------- Print ASCII logo ----------------------
 
@@ -41,6 +53,7 @@ PROMPT_INPUT    LEA         INPUT_MSG_1,A1  ; Prompt user for starting address
                 MOVE.B      #4,D0   ;Take user input for ending address.
                 TRAP        #15     ;consider other input methods.
                 MOVE.L      D1,END_ADDR
+                RTS                       ; return
 
 *------------------- Convert to hex subroutine -------------------
 *------------------- Add to display buffer -------------------
@@ -49,16 +62,43 @@ PROMPT_INPUT    LEA         INPUT_MSG_1,A1  ; Prompt user for starting address
 *------------------- Check if end of data -------------------
 *------------------- Ask user for input -------------------
 
-*################## END IO #####################################
-*################## BEGIN OPCODE ##########################
+*------------------- Print found instruction (temporary) -------------------
+NOP_FOUND       LEA         DOLLAR,A1     ; '$'
+                MOVE.B      #14,D0
+                TRAP        #15
+                
+                MOVE.L      #NEXT_ADDR,D1 ;display the address NOP was found at
+                MOVE.B      #16,D2
+                MOVE.B      #15,D0
+                TRAP        #15
 
+                LEA         SPACE,A1      ; ' '
+                MOVE.B      #14,D0      
+                TRAP        #15
+
+                LEA         NOP_MSG,A1    ; 'NOP'
+                MOVE.B      #14,D0
+                TRAP        #15
+                
+                MOVE.B      #9,D0         ; terminate the program
+                TRAP        #15
+                BSR STOP                  ; quit the program (TODO: Possibly do something else?)
+
+
+*################## END IO  #####################################
+*################## BEGIN OPCODE ##########################
+*** IO Subroutines are kept here ***
+
+*------------------- Read first instruction -------------------
 READ_FIRST      ;MOVEA.W     TEST_ORIGIN,A2      ; test the first word of the program
                 ;TODO: instead of just comparing to NOP, branch based on digits.
                 MOVE.W      NEXT_ADDR,D4    ;this would be a good place to postincrement.
                 CMP.W       #NOP_CODE,D4
                 BEQ         NOP_FOUND
+                ; put an "else" here
                 
-                STOP        #$2700        ; halt simulator
+                RTS                       ; return
+
                 
                 ;TODO: process for reading hex instructions (after the first instruction):
                 ;           1) Go to start of instruction reading loop, passing in the address of next instruction.
@@ -176,35 +216,12 @@ READ_FIRST      ;MOVEA.W     TEST_ORIGIN,A2      ; test the first word of the pr
 
 *###################### END OPCODE ##################################
 *###################### BEGIN EA ##################################
-
+*** EA Subroutines are kept here ***
 
 
 *###################### END EA ##################################
-
-
-
-
-NOP_FOUND       LEA         DOLLAR,A1     ; '$'
-                MOVE.B      #14,D0
-                TRAP        #15
-                
-                MOVE.L      #NEXT_ADDR,D1 ;display the address NOP was found at
-                MOVE.B      #16,D2
-                MOVE.B      #15,D0
-                TRAP        #15
-
-                LEA         SPACE,A1      ; ' '
-                MOVE.B      #14,D0      
-                TRAP        #15
-
-                LEA         NOP_MSG,A1    ; 'NOP'
-                MOVE.B      #14,D0
-                TRAP        #15
-                
-                MOVE.B      #9,D0         ; terminate the program
-                TRAP        #15
-
-*############# PUT VARIABLES/CONSTANTS HERE #########################
+*############# BEGIN VARIABLES/CONSTANTS #########################
+*** Variables and Constants are kept here ***
 
 *output characters
 CR              EQU         $0D
@@ -246,7 +263,10 @@ FILT_SRC_REG    EQU        $0007   ;source register:           0000 0000 0000 0X
 
         ;TODO: replace Xs with address of instruction and make message more general.
     
-                END     START        ; last line of source
+  
+*############# END VARIABLES/CONSTANTS #########################
+
+END     START        ; last line of source
 
 
 
