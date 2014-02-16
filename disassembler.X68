@@ -17,13 +17,12 @@
 
 *################ BEGIN MAIN ###############################
 *** All subroutine calls are made here ***
-START           ORG     $1000   ; first instruction of program
+START      ORG        $1000       ; first instruction of program
+                BSR    PROMPT_INPUT            ; prompt the user for input
+                BSR    READ_FIRST              ; read the first instruction
 
-BSR PROMPT_INPUT ; prompt the user for input
-BSR READ_FIRST   ; read the first instruction
 
-
-STOP        #$2700        ; halt simulator, end of main
+STOP            STOP #$2700          ; halt simulator, end of main
 
 *################ END MAIN ###############################
 *################ BEGIN IO ###############################
@@ -82,7 +81,7 @@ NOP_FOUND       LEA         DOLLAR,A1     ; '$'
                 
                 MOVE.B      #9,D0         ; terminate the program
                 TRAP        #15
-                BSR STOP                  ; quit the program (TODO: Possibly do something else?)
+                JMP         STOP          ; quit the program (TODO: Possibly do something else?)
 
 
 *################## END IO  #####################################
@@ -266,13 +265,7 @@ FILT_SRC_REG    EQU        $0007   ;source register:           0000 0000 0000 0X
   
 *############# END VARIABLES/CONSTANTS #########################
 
-END     START        ; last line of source
-
-
-
-
-
-
+    END START        ; last line of source, very end of the program
 *~Font name~Courier New~
 *~Font size~10~
 *~Tab type~1~

@@ -1,6 +1,6 @@
 00001000 Starting Address
-Assembler used: EASy68K Editor/Assembler v5.14.00
-Created On: 2/14/2014 6:10:20 PM
+Assembler used: EASy68K Editor/Assembler v5.12.29
+Created On: 2/15/2014 5:03:56 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      : Disassembler
@@ -9,97 +9,269 @@ Created On: 2/14/2014 6:10:20 PM
 00000000                             5  * Description: Disassemble hex machine code instructions into 68K instructions
 00000000                             6  *-----------------------------------------------------------
 00000000                             7  
-00001000                             8  START           ORG     $1000        ; first instruction of program
-00001000                             9  
-00001000                            10  * TODO: write disassembler
-00001000                            11  * TODO: more specific TODOs for our plan
-00001000                            12  * TODO: comments saying who is working where
-00001000                            13  
-00001000                            14  * TODO: ascii logo
-00001000                            15  
-00001000  43F9 00001078             16  PROMPT_INPUT    LEA         INPUT_MSG_1,A1  ; prompt user for starting address
-00001006  103C 000E                 17                  MOVE.B      #14,D0
-0000100A  4E4F                      18                  TRAP        #15
-0000100C                            19                  
-0000100C  103C 0002                 20                  MOVE.B      #2,D0   ;Take user input for starting address.
-00001010  43F9 000010E3             21                  LEA         START_ADDR_IN,A1
-00001016  4E4F                      22                  TRAP        #15     ;consider other input methods.
-00001018                            23                  ;MOVE.W      D1,TEST_ORIGIN        
-00001018                            24                  ;TODO: note that input value is stored in A1. We
-00001018                            25                  ;still need to convert it to hex before we can actually use it
-00001018                            26                  ;as an address.
-00001018                            27  
-00001018                            28  ; (start address first, since this iteration of the project stops immediately after READ_FIRST.
-00001018                            29  
-00001018  43F9 000010AC             30                  LEA         INPUT_MSG_2,A1  ; prompt user for ending address
-0000101E  103C 000E                 31                  MOVE.B      #14,D0
-00001022  4E4F                      32                  TRAP        #15
-00001024                            33                  
-00001024  103C 0004                 34                  MOVE.B      #4,D0   ;Take user input for ending address.
-00001028  4E4F                      35                  TRAP        #15     ;consider other input methods.
-0000102A  23C1 00009000             36                  MOVE.L      D1,END_ADDR
-00001030                            37  
-00001030                            38  READ_FIRST      ;MOVEA.W     TEST_ORIGIN,A2      ; test the first word of the program
-00001030                            39                  ;TODO: instead of just comparing to NOP, branch based on digits.
-Line 40 ERROR: Invalid syntax
-00001030                            40                  MOVE.W      (NEXT_ADDR)+,D4
-00001030  B87C 4E71                 41                  CMP.W       #NOP_CODE,D4
-00001034  6700 0006                 42                  BEQ         NOP_FOUND
-00001038                            43  
-00001038  4E72 2700                 44                  STOP        #$2700        ; halt simulator
-0000103C                            45  
-0000103C  43F9 000010F7             46  NOP_FOUND       LEA         DOLLAR,A1     ; '$'
-00001042  103C 000E                 47                  MOVE.B      #14,D0
-00001046  4E4F                      48                  TRAP        #15
-00001048                            49                  
-00001048  223C 00007000             50                  MOVE.L      #NEXT_ADDR,D1 ;display the address NOP was found at
-0000104E  143C 0010                 51                  MOVE.B      #16,D2
-00001052  103C 000F                 52                  MOVE.B      #15,D0
-00001056  4E4F                      53                  TRAP        #15
-00001058                            54  
-00001058  43F9 00001076             55                  LEA         SPACE,A1      ; ' '
-0000105E  103C 000E                 56                  MOVE.B      #14,D0      
-00001062  4E4F                      57                  TRAP        #15
-00001064                            58  
-00001064  43F9 000010DF             59                  LEA         NOP_MSG,A1    ; 'NOP'
-0000106A  103C 000E                 60                  MOVE.B      #14,D0
-0000106E  4E4F                      61                  TRAP        #15
-00001070                            62                  
-00001070  103C 0009                 63                  MOVE.B      #9,D0         ; terminate the program
-00001074  4E4F                      64                  TRAP        #15
-00001076                            65  
-00001076                            66  * Put variables and constants here
-00001076                            67  
-00001076                            68  *output characters
-00001076  =0000000D                 69  CR              EQU         $0D
-00001076  =0000000A                 70  LF              EQU         $0A
-00001076= 20 00                     71  SPACE           DC.B        ' ',0
-00001078                            72  
-00001078                            73  *output messages
-00001078                            74      ;TODO: consider also giving the user the range of valid start/end addresses
-00001078= 50 6C 65 61 73 65 ...     75  INPUT_MSG_1     DC.B        'Please enter a starting hex address to read from.',CR,LF,0
-000010AC= 50 6C 65 61 73 65 ...     76  INPUT_MSG_2     DC.B        'Please enter an ending hex address to read from.',CR,LF,0
-000010DF                            77  
-000010DF                            78  *output instruction names
-000010DF= 4E 4F 50 00               79  NOP_MSG         DC.B        'NOP',0
-000010E3                            80  
-000010E3                            81  *storage locations for input
-000010E3                            82  START_ADDR_IN   DS.B        20
-000010F7                            83  
-000010F7                            84  *address variables
-000010F7  =00007000                 85  TEST_ORIGIN     SET         $00007000
-000010F7  =00007000                 86  NEXT_ADDR       SET         TEST_ORIGIN
-000010F7  =00009000                 87  END_ADDR        SET         $00009000
-000010F7                            88  
-000010F7                            89  *constant OPcodes
-000010F7  =00004E71                 90  NOP_CODE        EQU         $4E71
-000010F7= 24 00                     91  DOLLAR          DC.B        '$',0
-000010F9                            92  
-000010F9                            93          ;TODO: replace Xs with address of instruction and make message more general.
-000010F9                            94      
-000010F9                            95                  END     START        ; last line of source
+00000000                             8  * TODO: write disassembler
+00000000                             9  * TODO: more specific TODOs for our plan
+00000000                            10  * TODO: comments saying who is working where
+00000000                            11  
+00000000                            12  
+00000000                            13  * Commenting Key: 
+00000000                            14  *    "----------"  <-- subroutine commenting
+00000000                            15  *    "##########"  <-- section/role commenting
+00000000                            16  
+00000000                            17  
+00000000                            18  *################ BEGIN MAIN ###############################
+00000000                            19  *** All subroutine calls are made here ***
+00001000                            20  START      ORG        $1000       ; first instruction of program
+00001000  6100 000A                 21                  BSR    PROMPT_INPUT            ; prompt the user for input
+00001004  6100 0076                 22                  BSR    READ_FIRST              ; read the first instruction
+00001008                            23  
+00001008                            24  
+00001008  4E72 2700                 25  STOP            STOP #$2700          ; halt simulator, end of main
+0000100C                            26  
+0000100C                            27  *################ END MAIN ###############################
+0000100C                            28  *################ BEGIN IO ###############################
+0000100C                            29  *** IO Subroutines are kept here ***
+0000100C                            30  
+0000100C                            31  *-------------------- Print ASCII logo ----------------------
+0000100C                            32  
+0000100C                            33  *------------------- Prompt user for input -------------------
+0000100C  43F9 0000108C             34  PROMPT_INPUT    LEA         INPUT_MSG_1,A1  ; Prompt user for starting address
+00001012  103C 000E                 35                  MOVE.B      #14,D0
+00001016  4E4F                      36                  TRAP        #15
+00001018                            37                  
+00001018  103C 0002                 38                  MOVE.B      #2,D0           ; Take user input for starting address.
+0000101C  43F9 000010F7             39                  LEA         START_ADDR_IN,A1
+00001022  4E4F                      40                  TRAP        #15        ; consider other input methods.
+00001024                            41                  ;MOVE.W      D1,TEST_ORIGIN        
+00001024                            42                  ;TODO: note that input value is stored in A1. We
+00001024                            43                  ;still need to convert it to hex before we can actually use it
+00001024                            44                  ;as an address.
+00001024                            45  
+00001024                            46  ; (start address first, since this iteration of the project stops immediately after READ_FIRST.
+00001024                            47  
+00001024  43F9 000010C0             48                  LEA         INPUT_MSG_2,A1  ; prompt user for ending address
+0000102A  103C 000E                 49                  MOVE.B      #14,D0
+0000102E  4E4F                      50                  TRAP        #15
+00001030                            51                  
+00001030  103C 0004                 52                  MOVE.B      #4,D0   ;Take user input for ending address.
+00001034  4E4F                      53                  TRAP        #15     ;consider other input methods.
+00001036  23C1 00009000             54                  MOVE.L      D1,END_ADDR
+0000103C  4E75                      55                  RTS                       ; return
+0000103E                            56  
+0000103E                            57  *------------------- Convert to hex subroutine -------------------
+0000103E                            58  *------------------- Add to display buffer -------------------
+0000103E                            59  *------------------- Move address pointer for data reading -------------------
+0000103E                            60  *------------------- Print display buffer -------------------
+0000103E                            61  *------------------- Check if end of data -------------------
+0000103E                            62  *------------------- Ask user for input -------------------
+0000103E                            63  
+0000103E                            64  *------------------- Print found instruction (temporary) -------------------
+0000103E  43F9 0000110B             65  NOP_FOUND       LEA         DOLLAR,A1     ; '$'
+00001044  103C 000E                 66                  MOVE.B      #14,D0
+00001048  4E4F                      67                  TRAP        #15
+0000104A                            68                  
+0000104A  223C 00007000             69                  MOVE.L      #NEXT_ADDR,D1 ;display the address NOP was found at
+00001050  143C 0010                 70                  MOVE.B      #16,D2
+00001054  103C 000F                 71                  MOVE.B      #15,D0
+00001058  4E4F                      72                  TRAP        #15
+0000105A                            73  
+0000105A  43F9 0000108A             74                  LEA         SPACE,A1      ; ' '
+00001060  103C 000E                 75                  MOVE.B      #14,D0      
+00001064  4E4F                      76                  TRAP        #15
+00001066                            77  
+00001066  43F9 000010F3             78                  LEA         NOP_MSG,A1    ; 'NOP'
+0000106C  103C 000E                 79                  MOVE.B      #14,D0
+00001070  4E4F                      80                  TRAP        #15
+00001072                            81                  
+00001072  103C 0009                 82                  MOVE.B      #9,D0         ; terminate the program
+00001076  4E4F                      83                  TRAP        #15
+00001078  4EF8 1008                 84                  JMP         STOP          ; quit the program (TODO: Possibly do something else?)
+0000107C                            85  
+0000107C                            86  
+0000107C                            87  *################## END IO  #####################################
+0000107C                            88  *################## BEGIN OPCODE ##########################
+0000107C                            89  *** IO Subroutines are kept here ***
+0000107C                            90  
+0000107C                            91  *------------------- Read first instruction -------------------
+0000107C                            92  READ_FIRST      ;MOVEA.W     TEST_ORIGIN,A2      ; test the first word of the program
+0000107C                            93                  ;TODO: instead of just comparing to NOP, branch based on digits.
+0000107C  3839 00007000             94                  MOVE.W      NEXT_ADDR,D4    ;this would be a good place to postincrement.
+00001082  B87C 4E71                 95                  CMP.W       #NOP_CODE,D4
+00001086  67B6                      96                  BEQ         NOP_FOUND
+00001088                            97                  ; put an "else" here
+00001088                            98                  
+00001088  4E75                      99                  RTS                       ; return
+0000108A                           100  
+0000108A                           101                  
+0000108A                           102                  ;TODO: process for reading hex instructions (after the first instruction):
+0000108A                           103                  ;           1) Go to start of instruction reading loop, passing in the address of next instruction.
+0000108A                           104                  ;           2) Store a word (16 bits) from that address.
+0000108A                           105                  ;           3) Read the first 4 bits of the word using a filter.
+0000108A                           106                  ;           4) branch to one of the following paths based on these bits:
+0000108A                           107                  ;               a) 0000: Read the next 3 bits (i.e., the destination mode). Branch:
+0000108A                           108                  ;                   i.   000: Read the bits at 0000 0000 XXXX XXXX (may want to make this filter) Branch:
+0000108A                           109                  ;                       1) 00 111 100: ORI TO CCR (need to read data, I think)
+0000108A                           110                  ;                       2) 01 111 100: ORI TO SR (need to read data, I think)
+0000108A                           111                  ;                       3) (default) ORI. Now, read and store:
+0000108A                           112                  ;                           SIZE:       0000 0000 XX00 0000 (need to make this filter)
+0000108A                           113                  ;                           MODE:       0000 0000 00XX X000 (need to make this filter)
+0000108A                           114                  ;                           REGISTER:   0000 0000 0000 0XXX (need to make this filter)
+0000108A                           115                  ;                           only mandatory additional data is the immediate data.
+0000108A                           116                  ;                   ii.  001: Read the bits at 0000 0000 XXXX XXXX (may want to make this filter) Branch:
+0000108A                           117                  ;                       1) 00 111 100: ANDI TO CCR (need to read data, I think)
+0000108A                           118                  ;                       2) 01 111 100: ANDI TO SR (need to read data, I think)
+0000108A                           119                  ;                       3) (default) ANDI. Now, read and store:
+0000108A                           120                  ;                           SIZE:       0000 0000 XX00 0000 (need to make this filter)
+0000108A                           121                  ;                           MODE:       0000 0000 00XX X000 (need to make this filter)
+0000108A                           122                  ;                           REGISTER:   0000 0000 0000 0XXX (need to make this filter)
+0000108A                           123                  ;                           only mandatory additional data is the immediate data.
+0000108A                           124                  ;                   iii. 101: Read the bits at 0000 0000 XXXX XXXX (may want to make this filter) Branch:
+0000108A                           125                  ;                       1) 00 111 100: EORI TO CCR (need to read data, I think)
+0000108A                           126                  ;                       2) 01 111 100: EORI TO SR (need to read data, I think)
+0000108A                           127                  ;                       3) (default) EORI. Now, read and store:
+0000108A                           128                  ;                           SIZE:       0000 0000 XX00 0000 (need to make this filter)
+0000108A                           129                  ;                           MODE:       0000 0000 00XX X000 (FILT_SRC_MODE)
+0000108A                           130                  ;                           REGISTER:   0000 0000 0000 0XXX (FILT_SRC_REG)
+0000108A                           131                  ;                           only mandatory additional data is the immediate data.
+0000108A                           132                  ;                   iv.  011: ADDI. Now read and store:
+0000108A                           133                  ;                           SIZE:       0000 0000 XX00 0000 (need to make this filter)
+0000108A                           134                  ;                           MODE:       0000 0000 00XX X000 (FILT_SRC_MODE)
+0000108A                           135                  ;                           REGISTER:   0000 0000 0000 0XXX (FILT_SRC_REG)
+0000108A                           136                  ;                           only mandatory additional data is the immediate data.
+0000108A                           137                  ;                   v.   010: SUBI. Now read and store:
+0000108A                           138                  ;                           SIZE:       0000 0000 XX00 0000 (need to make this filter)
+0000108A                           139                  ;                           MODE:       0000 0000 00XX X000 (FILT_SRC_MODE)
+0000108A                           140                  ;                           REGISTER:   0000 0000 0000 0XXX (FILT_SRC_REG)
+0000108A                           141                  ;                           only mandatory additional data is the immediate data.
+0000108A                           142                  ;                   vi.  110: CMPI. Now read and store:
+0000108A                           143                  ;                           SIZE:       0000 0000 XX00 0000 (need to make this filter)
+0000108A                           144                  ;                           MODE:       0000 0000 00XX X000 (FILT_SRC_MODE)
+0000108A                           145                  ;                           REGISTER:   0000 0000 0000 0XXX (FILT_SRC_REG)
+0000108A                           146                  ;                           only mandatory additional data is the immediate data.
+0000108A                           147                  ;                   vii. 100: BTST, BCHG, BCLR, BSET (TODO: expand this section if we need these OPcodes)
+0000108A                           148                  ;                   viii.(default): BTST, BCHG, BCLR, BSET (with data register)(TODO: expand this section if we need these OPcodes)
+0000108A                           149                  ;               b) 0001: (MOVE.B). Now read and store:
+0000108A                           150                  ;                           DESTINATION REGISTER: 0000 XXX0 0000 0000 (FILT_DEST_REG)
+0000108A                           151                  ;                           DESTINATION MODE:     0000 000X XX00 0000 (FILT_DEST_MODE)
+0000108A                           152                  ;                           SOURCE MODE:          0000 0000 00XX X000 (FILT_SCR_MODE)
+0000108A                           153                  ;                           SOURCE REGISTER:      0000 0000 0000 0XXX (FILT_SRC_REG)
+0000108A                           154                  ;                           The modes (and maybe register) will tell us whether we need to read additional data for this MOVE.
+0000108A                           155                  ;               c) 0011: (MOVE.W). Now read and store:
+0000108A                           156                  ;                           DESTINATION REGISTER: 0000 XXX0 0000 0000 (FILT_DEST_REG)
+0000108A                           157                  ;                           DESTINATION MODE:     0000 000X XX00 0000 (FILT_DEST_MODE)
+0000108A                           158                  ;                           SOURCE MODE:          0000 0000 00XX X000 (FILT_SCR_MODE)
+0000108A                           159                  ;                           SOURCE REGISTER:      0000 0000 0000 0XXX (FILT_SRC_REG)
+0000108A                           160                  ;                           The modes (and maybe register) will tell us whether we need to read additional data for this MOVE.
+0000108A                           161                  ;               d) 0010: (MOVE.L). Now read and store:
+0000108A                           162                  ;                           DESTINATION REGISTER: 0000 XXX0 0000 0000 (FILT_DEST_REG)
+0000108A                           163                  ;                           DESTINATION MODE:     0000 000X XX00 0000 (FILT_DEST_MODE)
+0000108A                           164                  ;                           SOURCE MODE:          0000 0000 00XX X000 (FILT_SCR_MODE)
+0000108A                           165                  ;                           SOURCE REGISTER:      0000 0000 0000 0XXX (FILT_SRC_REG)
+0000108A                           166                  ;                           The modes (and maybe register) will tell us whether we need to read additional data for this MOVE.
+0000108A                           167                  ;               e) 0100: Read the bits at 0000 XXXX 0000 0000 (need filter) Branch:
+0000108A                           168                  ;                   i.      0000: Read the bits at 0000 0000 XX00 0000 (need filter) Branch:
+0000108A                           169                  ;                               1. 11: MOVE from SR. (TODO)
+0000108A                           170                  ;                               2. (DEFAULT) NEGX. (the two bits are size) (TODO)
+0000108A                           171                  ;                   ii.     0100: Read the bits at 0000 0000 XX00 0000 (need filter) Branch:
+0000108A                           172                  ;                               1. 11 MOVE to CCR. (TODO)
+0000108A                           173                  ;                               2. (DEFAULT) NEG. (the two bits are size) (TODO)
+0000108A                           174                  ;                   iii.    0110: Read the bits at 0000 0000 XX00 0000 (need filter) Branch:
+0000108A                           175                  ;                               1. 11 MOVE to SR. (TODO)
+0000108A                           176                  ;                               2. (DEFAULT) NOT. (the two bits are size) (TODO)
+0000108A                           177                  ;                   iv.     0010: CLR. (TODO)
+0000108A                           178                  ;                    v.     1000: (EXT, NBCD, SWAP, PEA, MOVEM (dir 0)) (TODO)
+0000108A                           179                  ;                   vi.     1010: Check the bits at 0000 XX00 0000 0000 (need filter) Branch:
+0000108A                           180                  ;                           1. 11: check the bits at 0000 00XX XXXX XXXX (need filter) Branch:
+0000108A                           181                  ;                               a. 11 1100: ILLEGAL (TODO)
+0000108A                           182                  ;                               b. (default) TAS (TODO)
+0000108A                           183                  ;                           2. (default) TST (TODO)
+0000108A                           184                  ;                  vii.     1110: (TRAP, LINK, UNLK, MOVE USP, RESET, NOP, STOP, RTE, RTS, TRAPV, RTR, JSR, JMP) (TODO)
+0000108A                           185                  ;                 viii.     (DEFAULT): (MOVEM, LEA, CHK,) (TODO)    
+0000108A                           186                  ;               f) 0101: (ADDQ, SUBQ, Scc, DBcc): Read the bits at 0000 0000 XX00 0000 (need filter) Branch:
+0000108A                           187                  ;                    i. 11: Read the bit at 0000 000X 0000 0000 (need filter) Branch:
+0000108A                           188                  ;                           1. 0: ADDQ (TODO)
+0000108A                           189                  ;                           2. 1: SUBQ (TODO)
+0000108A                           190                  ;                   ii. (default) (bits are size) read the bits at 0000 00XX X000 (FILT_SRC_MODE). Branch:
+0000108A                           191                  ;                           1. 001: DBCC (TODO)
+0000108A                           192                  ;                           2. (default): Scc (TODO)
+0000108A                           193                  ;               g) 0110: Read the bit at 0000 XXXX 0000 0000 (need filter) Branch:
+0000108A                           194                  ;                    i. 0000: BRA (TODO)
+0000108A                           195                  ;                   ii. 0001: BSR (TODO)
+0000108A                           196                  ;                  iii. (default) Bcc (TODO)
+0000108A                           197                  ;               h) 0111: MOVEQ (TODO)
+0000108A                           198                  ;               i) 1000: (DIVU, DIVS, SBCD, OR) (TODO)
+0000108A                           199                  ;               j) 1001: (SUB, SUBX, SUBA) (TODO)
+0000108A                           200                  ;               k) 1011: (EOR, CMPM, CMP, CMPA) (TODO)
+0000108A                           201                  ;               l) 1100: (MULU, MULS, ABCD, EXG, AND) (TODO)
+0000108A                           202                  ;               m) 1101: (ADD, ADDX, ADDA) (TODO)
+0000108A                           203                  ;               n) 1110: (ASd, LSd, ROXd, ROd, ASd, LSd, ROXd, ROd) (TODO)
+0000108A                           204                  ;               o) (default) The code is invalid. Not yet sure what we do in this case.
+0000108A                           205                  ;   
+0000108A                           206                  ;   
+0000108A                           207                  ;
+0000108A                           208                  
+0000108A                           209                  ;TODO: Use AND operations with filters to create values which can be
+0000108A                           210                  ;      checked against constants to narrow down OPcodes.
+0000108A                           211                  
+0000108A                           212                  ;TODO: Since it will take a while to decode every possible OPcode, we
+0000108A                           213                  ;      should first have a default "Error" subroutine which the program
+0000108A                           214                  ;      branches to once all other possibilities have been ruled out.
+0000108A                           215  
+0000108A                           216  *###################### END OPCODE ##################################
+0000108A                           217  *###################### BEGIN EA ##################################
+0000108A                           218  *** EA Subroutines are kept here ***
+0000108A                           219  
+0000108A                           220  
+0000108A                           221  *###################### END EA ##################################
+0000108A                           222  *############# BEGIN VARIABLES/CONSTANTS #########################
+0000108A                           223  *** Variables and Constants are kept here ***
+0000108A                           224  
+0000108A                           225  *output characters
+0000108A  =0000000D                226  CR              EQU         $0D
+0000108A  =0000000A                227  LF              EQU         $0A
+0000108A= 20 00                    228  SPACE           DC.B        ' ',0
+0000108C                           229  
+0000108C                           230  *output messages
+0000108C                           231      ;TODO: consider also giving the user the range of valid start/end addresses
+0000108C= 50 6C 65 61 73 65 ...    232  INPUT_MSG_1     DC.B        'Please enter a starting hex address to read from.',CR,LF,0
+000010C0= 50 6C 65 61 73 65 ...    233  INPUT_MSG_2     DC.B        'Please enter an ending hex address to read from.',CR,LF,0
+000010F3                           234  
+000010F3                           235  *output instruction names
+000010F3= 4E 4F 50 00              236  NOP_MSG         DC.B        'NOP',0
+000010F7                           237  
+000010F7                           238  *storage locations for input
+000010F7                           239  START_ADDR_IN   DS.B        20
+0000110B                           240  
+0000110B                           241  *address variables
+0000110B  =00007000                242  TEST_ORIGIN     SET         $00007000
+0000110B  =00007000                243  NEXT_ADDR       SET         TEST_ORIGIN
+0000110B  =00009000                244  END_ADDR        SET         $00009000
+0000110B                           245  
+0000110B                           246  *constant OPcodes
+0000110B  =00004E71                247  NOP_CODE        EQU         $4E71
+0000110B= 24 00                    248  DOLLAR          DC.B        '$',0
+0000110D                           249  
+0000110D                           250  *filters for isolating parts of a hexa instruction.
+0000110D                           251  *To filter an instruction, AND it with the desired filter.
+0000110D  =0000F000                252  FILT_NIB1       EQU        $F000   ;first nibble:              XXXX 0000 0000 0000
+0000110D  =00003000                253  FILT_MOVE_SIZE  EQU        $3000   ;Size of a move operation:  00XX 0000 0000 0000
+0000110D  =00000E00                254  FILT_DEST_REG   EQU        $0E00   ;destination register:      0000 XXX0 0000 0000
+0000110D  =000001A0                255  FILT_DEST_MD    EQU        $01A0   ;destination mode:          0000 000X XX00 0000
+0000110D  =00000038                256  FILT_SRC_MD     EQU        $0038   ;source mode:               0000 0000 00XX X000
+0000110D  =00000007                257  FILT_SRC_REG    EQU        $0007   ;source register:           0000 0000 0000 0XXX
+0000110D                           258  
+0000110D                           259  ;TODO: consider other filters like OPmode and size.
+0000110D                           260  ;FILT_DEST_REG    EQU        $0E00   ;destination regilster:     0000 XXX0 0000 0000
+0000110D                           261  ;FILT_DEST_REG    EQU        $0E00   ;destination regilster:     0000 XXX0 0000 0000
+0000110D                           262  
+0000110D                           263          ;TODO: replace Xs with address of instruction and make message more general.
+0000110D                           264      
+0000110D                           265    
+0000110D                           266  *############# END VARIABLES/CONSTANTS #########################
+0000110D                           267  
+0000110D                           268      END START        ; last line of source
 
-1 error detected
+No errors detected
 No warnings generated
 
 
@@ -107,18 +279,25 @@ SYMBOL TABLE INFORMATION
 Symbol-name         Value
 -------------------------
 CR                  D
-DOLLAR              10F7
+DOLLAR              110B
 END_ADDR            9000
-INPUT_MSG_1         1078
-INPUT_MSG_2         10AC
+FILT_DEST_MD        1A0
+FILT_DEST_REG       E00
+FILT_MOVE_SIZE      3000
+FILT_NIB1           F000
+FILT_SRC_MD         38
+FILT_SRC_REG        7
+INPUT_MSG_1         108C
+INPUT_MSG_2         10C0
 LF                  A
 NEXT_ADDR           7000
 NOP_CODE            4E71
-NOP_FOUND           103C
-NOP_MSG             10DF
-PROMPT_INPUT        1000
-READ_FIRST          1030
-SPACE               1076
+NOP_FOUND           103E
+NOP_MSG             10F3
+PROMPT_INPUT        100C
+READ_FIRST          107C
+SPACE               108A
 START               1000
-START_ADDR_IN       10E3
+START_ADDR_IN       10F7
+STOP                1008
 TEST_ORIGIN         7000
