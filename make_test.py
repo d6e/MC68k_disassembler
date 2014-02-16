@@ -21,7 +21,7 @@ class Instruction:
 
 	def display(self):
 		if self.label:  # if it only has a label, just print label		
-			print ''.join([self.opcode, ' ', self.label])
+			print ''.join(['    ', self.opcode, ' ', self.label])
 
 		for size in self.sizes:
 			for s in self.sources:

@@ -603,7 +603,7 @@
     CMPI.L #1, D1
     CMPI.L #1, $10000000
     CMPI.L #1, $1000
-BCC GO_TO_SR
+    BCC GO_TO_SR
     BCC.B D1, D1
     BCC.B D1, $10000000
     BCC.B D1, $1000
