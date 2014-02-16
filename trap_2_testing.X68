@@ -67,46 +67,111 @@ START     ORG         $1000
           SIMHALT             ; halt simulator
           
 ; when we get here, A1 is the ascii representation of the least significant digit (i.e., the ones place)
-ASCII_TO_HEX    SUB.L       #$FFFFFFFF,$3000
-                SUB.L       #$FFFFFFFF,$3004
-
-                MOVE.B   -(A1),$3007
-                ANDI.B   #$CF,$3007
+ASCII_TO_HEX    MOVE.B   #0,D6      ; running total of converted hex number
+                
+                ;first digit
+                MOVE.B   -(A1),D4  ; Move the raw ascii value of first digit into 3007.
+                
+               
+                
+                ; Convert ascii to hex for that digit.
+                SUB      #$30,D4   ; TODO: once this works correctly for first two digits, change each iteration accordingly
+                CMP      #9,D4
+                BGT      SUBTRACT_ONE ; Necessary to convert some ASCII values.
+                                      ; TODO: errors for invalid ASCII values.
+                
+                ADD.B   D4,D6
                 CMP      #1,D1
                 BEQ      CONVERSION_DONE
                 
-                MOVE.B   -(A1),$3006
-                ANDI.B   #$CF,$3006
+                ;second digit
+                MOVE.L   #$00000000,D4
+                MOVE.B   -(A1),D4
+                SUB      #$30,D4
+                CMP      #9,D4
+                BGT      SUBTRACT_ONE
+             
+                MULU.W   #$00000010,D4  ; this part adds $10 * (2nd digit) to our running total.
+                ADD.W    D4,D6 
+                  
                 CMP      #2,D1
                 BEQ      CONVERSION_DONE
                 
-                MOVE.B   -(A1),$3005
-                ANDI.B   #$CF,$3005
+                ;third digit
+                MOVE.L   #$00000000,D4
+                MOVE.B   -(A1),D4
+                SUB      #$30,D4
+                CMP      #9,D4
+                BGT      SUBTRACT_ONE
+                
+                MULU.W   #$00000100,D4
+                ADD.W    D4,D6 
+    
                 CMP      #3,D1
                 BEQ      CONVERSION_DONE
                 
-                MOVE.B   -(A1),$3004
-                ANDI.B   #$CF,$3004
+                ;fourth digit
+                MOVE.L   #$00000000,D4
+                MOVE.B   -(A1),D4
+                SUB      #$30,D4
+                CMP      #9,D4
+                BGT      SUBTRACT_ONE
+                
+                MULU.W   #$00001000,D4
+                ADD.W    D4,D6 
+    
                 CMP      #4,D1
                 BEQ      CONVERSION_DONE
                 
-                MOVE.B   -(A1),$3003
-                ANDI.B   #$CF,$3003
+                ;fifth digit
+                MOVE.L   #$00000000,D4
+                MOVE.B   -(A1),D4
+                SUB      #$30,D4
+                CMP      #9,D4
+                BGT      SUBTRACT_ONE
+                
+                MULU.W   #$0001,D4
+                ADD.W    D4,D7 
+
                 CMP      #5,D1
                 BEQ      CONVERSION_DONE
                 
-                MOVE.B   -(A1),$3002
-                ANDI.B   #$CF,$3002
+                ;sixth digit
+                MOVE.L   #$00000000,D4
+                MOVE.B   -(A1),D4
+                SUB      #$30,D4
+                CMP      #9,D4
+                BGT      SUBTRACT_ONE
+                
+                MULU.W   #$0010,D4
+                ADD.W    D4,D7
+    
                 CMP      #6,D1
                 BEQ      CONVERSION_DONE
                 
-                MOVE.B   -(A1),$3001
-                ANDI.B   #$CF,$3001
+                ;seventh digit
+                MOVE.L   #$00000000,D4
+                MOVE.B   -(A1),D4
+                SUB      #$30,D4
+                CMP      #9,D4
+                BGT      SUBTRACT_ONE
+                
+                MULU.W   #$0100,D4
+                ADD.W    D4,D7
+    
                 CMP      #7,D1
                 BEQ      CONVERSION_DONE
                 
-                MOVE.B   -(A1),$3000
-                ANDI.B   #$CF,$3000
+                ;eight digit
+                MOVE.L   #$00000000,D4
+                MOVE.B   -(A1),D4
+                SUB      #$30,D4
+                CMP      #9,D4
+                BGT      SUBTRACT_ONE
+                
+                MULU.W   #$1000,D4
+                ADD.W    D4,D7
+    
                 CMP      #8,D1
                 BEQ      CONVERSION_DONE
                 
@@ -120,7 +185,11 @@ ASCII_TO_HEX    SUB.L       #$FFFFFFFF,$3000
                ;TODO: branch to done when we are done
                ;SIMHALT
                
-CONVERSION_DONE SIMHALT ;TODO
+CONVERSION_DONE SIMHALT ;TODO: show what is in D6. It should be the same as the intended hex input.
+
+SUBTRACT_ONE
+    SUB.B  #1, D4
+    RTS             ; return
 
 * Put variables and constants here
 
@@ -133,6 +202,7 @@ INVALID_LEN_MSG DC.B        'Not a valid length for input string.',CR,LF,0
 START_ADDR_IN   DS.B        20
 
     END    START        ; last line of source
+
 
 *~Font name~Courier New~
 *~Font size~10~

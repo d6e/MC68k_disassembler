@@ -1,6 +1,6 @@
 00001000 Starting Address
-Assembler used: EASy68K Editor/Assembler v5.14.00
-Created On: 2/15/2014 5:03:27 PM
+Assembler used: EASy68K Editor/Assembler v5.12.29
+Created On: 2/15/2014 6:24:44 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :
@@ -13,7 +13,7 @@ Created On: 2/15/2014 5:03:27 PM
 00001000                             9  
 00001000                            10            ;MOVE.W      #$3000,$7000 ;TODO: try to get the correct data from somewhere
 00001000                            11  
-00001000  43F9 0000112A             12            LEA         MSG_1,A1
+00001000  43F9 0000117C             12            LEA         MSG_1,A1
 00001006  103C 000E                 13            MOVE.B      #14,D0
 0000100A  4E4F                      14            TRAP        #15
 0000100C                            15  
@@ -56,7 +56,7 @@ Created On: 2/15/2014 5:03:27 PM
 0000106E  B27C 0008                 52            CMP         #8,D1
 00001072  6700 0012                 53            BEQ         ASCII_TO_HEX  ;start converting if we have 8 digits.
 00001076                            54            
-00001076  43F9 0000113F             55            LEA         INVALID_LEN_MSG,A1         ;display the length of the input
+00001076  43F9 00001191             55            LEA         INVALID_LEN_MSG,A1         ;display the length of the input
 0000107C  103C 000E                 56            MOVE.B      #14,D0
 00001080  4E4F                      57            TRAP        #15   
 00001082                            58              
@@ -71,66 +71,141 @@ Created On: 2/15/2014 5:03:27 PM
 00001082  FFFF FFFF                 67            SIMHALT             ; halt simulator
 00001086                            68            
 00001086                            69  ; when we get here, A1 is the ascii representation of the least significant digit (i.e., the ones place)
-00001086  04B8 FFFFFFFF 3000        70  ASCII_TO_HEX    SUB.L       #$FFFFFFFF,$3000
-0000108E  04B8 FFFFFFFF 3004        71                  SUB.L       #$FFFFFFFF,$3004
-00001096                            72  
-00001096  11E1 3007                 73                  MOVE.B   -(A1),$3007
-0000109A  0238 00CF 3007            74                  ANDI.B   #$CF,$3007
-000010A0  B27C 0001                 75                  CMP      #1,D1
-000010A4  6700 0080                 76                  BEQ      CONVERSION_DONE
-000010A8                            77                  
-000010A8  11E1 3006                 78                  MOVE.B   -(A1),$3006
-000010AC  0238 00CF 3006            79                  ANDI.B   #$CF,$3006
-000010B2  B27C 0002                 80                  CMP      #2,D1
-000010B6  6700 006E                 81                  BEQ      CONVERSION_DONE
-000010BA                            82                  
-000010BA  11E1 3005                 83                  MOVE.B   -(A1),$3005
-000010BE  0238 00CF 3005            84                  ANDI.B   #$CF,$3005
-000010C4  B27C 0003                 85                  CMP      #3,D1
-000010C8  6700 005C                 86                  BEQ      CONVERSION_DONE
-000010CC                            87                  
-000010CC  11E1 3004                 88                  MOVE.B   -(A1),$3004
-000010D0  0238 00CF 3004            89                  ANDI.B   #$CF,$3004
-000010D6  B27C 0004                 90                  CMP      #4,D1
-000010DA  6700 004A                 91                  BEQ      CONVERSION_DONE
-000010DE                            92                  
-000010DE  11E1 3003                 93                  MOVE.B   -(A1),$3003
-000010E2  0238 00CF 3003            94                  ANDI.B   #$CF,$3003
-000010E8  B27C 0005                 95                  CMP      #5,D1
-000010EC  6700 0038                 96                  BEQ      CONVERSION_DONE
-000010F0                            97                  
-000010F0  11E1 3002                 98                  MOVE.B   -(A1),$3002
-000010F4  0238 00CF 3002            99                  ANDI.B   #$CF,$3002
-000010FA  B27C 0006                100                  CMP      #6,D1
-000010FE  6700 0026                101                  BEQ      CONVERSION_DONE
-00001102                           102                  
-00001102  11E1 3001                103                  MOVE.B   -(A1),$3001
-00001106  0238 00CF 3001           104                  ANDI.B   #$CF,$3001
-0000110C  B27C 0007                105                  CMP      #7,D1
-00001110  6700 0014                106                  BEQ      CONVERSION_DONE
-00001114                           107                  
-00001114  11E1 3000                108                  MOVE.B   -(A1),$3000
-00001118  0238 00CF 3000           109                  ANDI.B   #$CF,$3000
-0000111E  B27C 0008                110                  CMP      #8,D1
-00001122  6700 0002                111                  BEQ      CONVERSION_DONE
-00001126                           112  
-00001126                           113        
-00001126                           114                 ;TODO: branch to done when we are done
-00001126                           115                 ;SIMHALT
-00001126                           116                 
-00001126  FFFF FFFF                117  CONVERSION_DONE SIMHALT ;TODO
-0000112A                           118  
-0000112A                           119  * Put variables and constants here
-0000112A                           120  
-0000112A  =0000000D                121  CR              EQU         $0D
-0000112A  =0000000A                122  LF              EQU         $0A
-0000112A                           123  
-0000112A= 45 6E 74 65 72 20 ...    124  MSG_1           DC.B        'Enter a hex value.',CR,LF,0
-0000113F= 4E 6F 74 20 61 20 ...    125  INVALID_LEN_MSG DC.B        'Not a valid length for input string.',CR,LF,0
-00001166                           126  
-00001166                           127  START_ADDR_IN   DS.B        20
-0000117A                           128  
-0000117A                           129      END    START        ; last line of source
+00001086  1C3C 0000                 70  ASCII_TO_HEX    MOVE.B   #0,D6      ; running total of converted hex number
+0000108A                            71                  
+0000108A                            72                  ;first digit
+0000108A  1821                      73                  MOVE.B   -(A1),D4  ; Move the raw ascii value of first digit into 3007.
+0000108C                            74                  
+0000108C                            75                 
+0000108C                            76                  
+0000108C                            77                  ; Convert ascii to hex for that digit.
+0000108C  0444 0030                 78                  SUB      #$30,D4   ; TODO: once this works correctly for first two digits, change each iteration accordingly
+00001090  B87C 0009                 79                  CMP      #9,D4
+00001094  6E00 00E2                 80                  BGT      SUBTRACT_ONE ; Necessary to convert some ASCII values.
+00001098                            81                                        ; TODO: errors for invalid ASCII values.
+00001098                            82                  
+00001098  DC04                      83                  ADD.B   D4,D6
+0000109A  B27C 0001                 84                  CMP      #1,D1
+0000109E  6700 00D4                 85                  BEQ      CONVERSION_DONE
+000010A2                            86                  
+000010A2                            87                  ;second digit
+000010A2  7800                      88                  MOVE.L   #$00000000,D4
+000010A4  1821                      89                  MOVE.B   -(A1),D4
+000010A6  0444 0030                 90                  SUB      #$30,D4
+000010AA  B87C 0009                 91                  CMP      #9,D4
+000010AE  6E00 00C8                 92                  BGT      SUBTRACT_ONE
+000010B2                            93               
+000010B2  C8FC 0010                 94                  MULU.W   #$00000010,D4  ; this part adds $10 * (2nd digit) to our running total.
+000010B6  DC44                      95                  ADD.W    D4,D6 
+000010B8                            96                    
+000010B8  B27C 0002                 97                  CMP      #2,D1
+000010BC  6700 00B6                 98                  BEQ      CONVERSION_DONE
+000010C0                            99                  
+000010C0                           100                  ;third digit
+000010C0  7800                     101                  MOVE.L   #$00000000,D4
+000010C2  1821                     102                  MOVE.B   -(A1),D4
+000010C4  0444 0030                103                  SUB      #$30,D4
+000010C8  B87C 0009                104                  CMP      #9,D4
+000010CC  6E00 00AA                105                  BGT      SUBTRACT_ONE
+000010D0                           106                  
+000010D0  C8FC 0100                107                  MULU.W   #$00000100,D4
+000010D4  DC44                     108                  ADD.W    D4,D6 
+000010D6                           109      
+000010D6  B27C 0003                110                  CMP      #3,D1
+000010DA  6700 0098                111                  BEQ      CONVERSION_DONE
+000010DE                           112                  
+000010DE                           113                  ;fourth digit
+000010DE  7800                     114                  MOVE.L   #$00000000,D4
+000010E0  1821                     115                  MOVE.B   -(A1),D4
+000010E2  0444 0030                116                  SUB      #$30,D4
+000010E6  B87C 0009                117                  CMP      #9,D4
+000010EA  6E00 008C                118                  BGT      SUBTRACT_ONE
+000010EE                           119                  
+000010EE  C8FC 1000                120                  MULU.W   #$00001000,D4
+000010F2  DC44                     121                  ADD.W    D4,D6 
+000010F4                           122      
+000010F4  B27C 0004                123                  CMP      #4,D1
+000010F8  6700 007A                124                  BEQ      CONVERSION_DONE
+000010FC                           125                  
+000010FC                           126                  ;fifth digit
+000010FC  7800                     127                  MOVE.L   #$00000000,D4
+000010FE  1821                     128                  MOVE.B   -(A1),D4
+00001100  0444 0030                129                  SUB      #$30,D4
+00001104  B87C 0009                130                  CMP      #9,D4
+00001108  6E00 006E                131                  BGT      SUBTRACT_ONE
+0000110C                           132                  
+0000110C  C8FC 0001                133                  MULU.W   #$0001,D4
+00001110  DE44                     134                  ADD.W    D4,D7 
+00001112                           135  
+00001112  B27C 0005                136                  CMP      #5,D1
+00001116  6700 005C                137                  BEQ      CONVERSION_DONE
+0000111A                           138                  
+0000111A                           139                  ;sixth digit
+0000111A  7800                     140                  MOVE.L   #$00000000,D4
+0000111C  1821                     141                  MOVE.B   -(A1),D4
+0000111E  0444 0030                142                  SUB      #$30,D4
+00001122  B87C 0009                143                  CMP      #9,D4
+00001126  6E00 0050                144                  BGT      SUBTRACT_ONE
+0000112A                           145                  
+0000112A  C8FC 0010                146                  MULU.W   #$0010,D4
+0000112E  DE44                     147                  ADD.W    D4,D7
+00001130                           148      
+00001130  B27C 0006                149                  CMP      #6,D1
+00001134  6700 003E                150                  BEQ      CONVERSION_DONE
+00001138                           151                  
+00001138                           152                  ;seventh digit
+00001138  7800                     153                  MOVE.L   #$00000000,D4
+0000113A  1821                     154                  MOVE.B   -(A1),D4
+0000113C  0444 0030                155                  SUB      #$30,D4
+00001140  B87C 0009                156                  CMP      #9,D4
+00001144  6E00 0032                157                  BGT      SUBTRACT_ONE
+00001148                           158                  
+00001148  C8FC 0100                159                  MULU.W   #$0100,D4
+0000114C  DE44                     160                  ADD.W    D4,D7
+0000114E                           161      
+0000114E  B27C 0007                162                  CMP      #7,D1
+00001152  6700 0020                163                  BEQ      CONVERSION_DONE
+00001156                           164                  
+00001156                           165                  ;eight digit
+00001156  7800                     166                  MOVE.L   #$00000000,D4
+00001158  1821                     167                  MOVE.B   -(A1),D4
+0000115A  0444 0030                168                  SUB      #$30,D4
+0000115E  B87C 0009                169                  CMP      #9,D4
+00001162  6E00 0014                170                  BGT      SUBTRACT_ONE
+00001166                           171                  
+00001166  C8FC 1000                172                  MULU.W   #$1000,D4
+0000116A  DE44                     173                  ADD.W    D4,D7
+0000116C                           174      
+0000116C  B27C 0008                175                  CMP      #8,D1
+00001170  6700 0002                176                  BEQ      CONVERSION_DONE
+00001174                           177                  
+00001174                           178                  ;TODO: need to correctly read ABCDEF for each case. 
+00001174                           179                  ;(Test by entering these values and looking at addresses $2000 and $3000 in simulator.)
+00001174                           180                  
+00001174                           181                  ;TODO: once these values are stored correctly, build the final hex value by multiplying each digit by
+00001174                           182                  ;      hex $10, $100, $1000, etc (one for each case of D1, which still has the number of digits)
+00001174                           183                  ;      and adding each product to a running total, initialized to 0.
+00001174                           184        
+00001174                           185                 ;TODO: branch to done when we are done
+00001174                           186                 ;SIMHALT
+00001174                           187                 
+00001174  FFFF FFFF                188  CONVERSION_DONE SIMHALT ;TODO: show what is in D6. It should be the same as the intended hex input.
+00001178                           189  
+00001178                           190  SUBTRACT_ONE
+00001178  5304                     191      SUB.B  #1, D4
+0000117A  4E75                     192      RTS             ; return
+0000117C                           193  
+0000117C                           194  * Put variables and constants here
+0000117C                           195  
+0000117C  =0000000D                196  CR              EQU         $0D
+0000117C  =0000000A                197  LF              EQU         $0A
+0000117C                           198  
+0000117C= 45 6E 74 65 72 20 ...    199  MSG_1           DC.B        'Enter a hex value.',CR,LF,0
+00001191= 4E 6F 74 20 61 20 ...    200  INVALID_LEN_MSG DC.B        'Not a valid length for input string.',CR,LF,0
+000011B8                           201  
+000011B8                           202  START_ADDR_IN   DS.B        20
+000011CC                           203  
+000011CC                           204      END    START        ; last line of source
 
 No errors detected
 No warnings generated
@@ -140,10 +215,11 @@ SYMBOL TABLE INFORMATION
 Symbol-name         Value
 -------------------------
 ASCII_TO_HEX        1086
-CONVERSION_DONE     1126
+CONVERSION_DONE     1174
 CR                  D
-INVALID_LEN_MSG     113F
+INVALID_LEN_MSG     1191
 LF                  A
-MSG_1               112A
+MSG_1               117C
 START               1000
-START_ADDR_IN       1166
+START_ADDR_IN       11B8
+SUBTRACT_ONE        1178
