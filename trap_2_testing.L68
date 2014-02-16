@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.14.00
-Created On: 2/15/2014 5:03:27 PM
+Created On: 2/15/2014 5:33:03 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :
@@ -113,24 +113,30 @@ Created On: 2/15/2014 5:03:27 PM
 00001118  0238 00CF 3000           109                  ANDI.B   #$CF,$3000
 0000111E  B27C 0008                110                  CMP      #8,D1
 00001122  6700 0002                111                  BEQ      CONVERSION_DONE
-00001126                           112  
-00001126                           113        
-00001126                           114                 ;TODO: branch to done when we are done
-00001126                           115                 ;SIMHALT
-00001126                           116                 
-00001126  FFFF FFFF                117  CONVERSION_DONE SIMHALT ;TODO
-0000112A                           118  
-0000112A                           119  * Put variables and constants here
-0000112A                           120  
-0000112A  =0000000D                121  CR              EQU         $0D
-0000112A  =0000000A                122  LF              EQU         $0A
-0000112A                           123  
-0000112A= 45 6E 74 65 72 20 ...    124  MSG_1           DC.B        'Enter a hex value.',CR,LF,0
-0000113F= 4E 6F 74 20 61 20 ...    125  INVALID_LEN_MSG DC.B        'Not a valid length for input string.',CR,LF,0
-00001166                           126  
-00001166                           127  START_ADDR_IN   DS.B        20
-0000117A                           128  
-0000117A                           129      END    START        ; last line of source
+00001126                           112                  
+00001126                           113                  ;TODO: need to correctly read ABCDEF for each case. 
+00001126                           114                  ;(Test by entering these values and looking at addresses $2000 and $3000 in simulator.)
+00001126                           115                  
+00001126                           116                  ;TODO: once these values are stored correctly, build the final hex value by multiplying each digit by
+00001126                           117                  ;      hex $10, $100, $1000, etc (one for each case of D1, which still has the number of digits)
+00001126                           118                  ;      and adding each product to a running total, initialized to 0.
+00001126                           119        
+00001126                           120                 ;TODO: branch to done when we are done
+00001126                           121                 ;SIMHALT
+00001126                           122                 
+00001126  FFFF FFFF                123  CONVERSION_DONE SIMHALT ;TODO
+0000112A                           124  
+0000112A                           125  * Put variables and constants here
+0000112A                           126  
+0000112A  =0000000D                127  CR              EQU         $0D
+0000112A  =0000000A                128  LF              EQU         $0A
+0000112A                           129  
+0000112A= 45 6E 74 65 72 20 ...    130  MSG_1           DC.B        'Enter a hex value.',CR,LF,0
+0000113F= 4E 6F 74 20 61 20 ...    131  INVALID_LEN_MSG DC.B        'Not a valid length for input string.',CR,LF,0
+00001166                           132  
+00001166                           133  START_ADDR_IN   DS.B        20
+0000117A                           134  
+0000117A                           135      END    START        ; last line of source
 
 No errors detected
 No warnings generated
