@@ -19,7 +19,6 @@ class Instruction:
 		self.bidirectional = bd
 		self.label = label
 
-
 	def display(self):
 		if self.label:  # if it only has a label, just print label		
 			print ''.join([self.opcode, ' ', self.label])
