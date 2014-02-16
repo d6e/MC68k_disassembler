@@ -14,6 +14,11 @@
 *    "----------"  <-- subroutine commenting
 *    "##########"  <-- section/role commenting
 
+* Notes on saving registers on run:
+*    MOVEM.L A0-A3/D0-D7, -(A7) * copies all working registers to stack
+*    MOVEM.L (A7)+, A0-A3/D0-D7 *Restore the registers
+
+
 
 *################ BEGIN MAIN ###############################
 *** All subroutine calls are made here ***
