@@ -11,148 +11,76 @@ START       ORG    $7000                ; first instruction of program
 
 * TODO: use all required opcodes in all possible combinations here
             MOVE.B D1, D1
-            MOVE.B D1, D1
             MOVE.B D1, $10000000
-            MOVE.B $10000000, D1
             MOVE.B D1, $1000
-            MOVE.B $1000, D1
             MOVE.B A1, D1
-            MOVE.B D1, A1
             MOVE.B A1, $10000000
-            MOVE.B $10000000, A1
             MOVE.B A1, $1000
-            MOVE.B $1000, A1
             MOVE.B (A1), D1
-            MOVE.B D1, (A1)
             MOVE.B (A1), $10000000
-            MOVE.B $10000000, (A1)
             MOVE.B (A1), $1000
-            MOVE.B $1000, (A1)
             MOVE.B #1, D1
-            MOVE.B D1, #1
             MOVE.B #1, $10000000
-            MOVE.B $10000000, #1
             MOVE.B #1, $1000
-            MOVE.B $1000, #1
             MOVE.B (A1)+, D1
-            MOVE.B D1, (A1)+
             MOVE.B (A1)+, $10000000
-            MOVE.B $10000000, (A1)+
             MOVE.B (A1)+, $1000
-            MOVE.B $1000, (A1)+
             MOVE.B -(A1), D1
-            MOVE.B D1, -(A1)
             MOVE.B -(A1), $10000000
-            MOVE.B $10000000, -(A1)
             MOVE.B -(A1), $1000
-            MOVE.B $1000, -(A1)
             MOVE.B $10000000, D1
-            MOVE.B D1, $10000000
-            MOVE.B $10000000, $10000000
             MOVE.B $10000000, $10000000
             MOVE.B $10000000, $1000
-            MOVE.B $1000, $10000000
             MOVE.B $1000, D1
-            MOVE.B D1, $1000
             MOVE.B $1000, $10000000
-            MOVE.B $10000000, $1000
             MOVE.B $1000, $1000
-            MOVE.B $1000, $1000
-            MOVE.W D1, D1
             MOVE.W D1, D1
             MOVE.W D1, $10000000
-            MOVE.W $10000000, D1
             MOVE.W D1, $1000
-            MOVE.W $1000, D1
             MOVE.W A1, D1
-            MOVE.W D1, A1
             MOVE.W A1, $10000000
-            MOVE.W $10000000, A1
             MOVE.W A1, $1000
-            MOVE.W $1000, A1
             MOVE.W (A1), D1
-            MOVE.W D1, (A1)
             MOVE.W (A1), $10000000
-            MOVE.W $10000000, (A1)
             MOVE.W (A1), $1000
-            MOVE.W $1000, (A1)
             MOVE.W #1, D1
-            MOVE.W D1, #1
             MOVE.W #1, $10000000
-            MOVE.W $10000000, #1
             MOVE.W #1, $1000
-            MOVE.W $1000, #1
             MOVE.W (A1)+, D1
-            MOVE.W D1, (A1)+
             MOVE.W (A1)+, $10000000
-            MOVE.W $10000000, (A1)+
             MOVE.W (A1)+, $1000
-            MOVE.W $1000, (A1)+
             MOVE.W -(A1), D1
-            MOVE.W D1, -(A1)
             MOVE.W -(A1), $10000000
-            MOVE.W $10000000, -(A1)
             MOVE.W -(A1), $1000
-            MOVE.W $1000, -(A1)
             MOVE.W $10000000, D1
-            MOVE.W D1, $10000000
-            MOVE.W $10000000, $10000000
             MOVE.W $10000000, $10000000
             MOVE.W $10000000, $1000
-            MOVE.W $1000, $10000000
             MOVE.W $1000, D1
-            MOVE.W D1, $1000
             MOVE.W $1000, $10000000
-            MOVE.W $10000000, $1000
             MOVE.W $1000, $1000
-            MOVE.W $1000, $1000
-            MOVE.L D1, D1
             MOVE.L D1, D1
             MOVE.L D1, $10000000
-            MOVE.L $10000000, D1
             MOVE.L D1, $1000
-            MOVE.L $1000, D1
             MOVE.L A1, D1
-            MOVE.L D1, A1
             MOVE.L A1, $10000000
-            MOVE.L $10000000, A1
             MOVE.L A1, $1000
-            MOVE.L $1000, A1
             MOVE.L (A1), D1
-            MOVE.L D1, (A1)
             MOVE.L (A1), $10000000
-            MOVE.L $10000000, (A1)
             MOVE.L (A1), $1000
-            MOVE.L $1000, (A1)
             MOVE.L #1, D1
-            MOVE.L D1, #1
             MOVE.L #1, $10000000
-            MOVE.L $10000000, #1
             MOVE.L #1, $1000
-            MOVE.L $1000, #1
             MOVE.L (A1)+, D1
-            MOVE.L D1, (A1)+
             MOVE.L (A1)+, $10000000
-            MOVE.L $10000000, (A1)+
             MOVE.L (A1)+, $1000
-            MOVE.L $1000, (A1)+
             MOVE.L -(A1), D1
-            MOVE.L D1, -(A1)
             MOVE.L -(A1), $10000000
-            MOVE.L $10000000, -(A1)
             MOVE.L -(A1), $1000
-            MOVE.L $1000, -(A1)
             MOVE.L $10000000, D1
-            MOVE.L D1, $10000000
-            MOVE.L $10000000, $10000000
             MOVE.L $10000000, $10000000
             MOVE.L $10000000, $1000
-            MOVE.L $1000, $10000000
             MOVE.L $1000, D1
-            MOVE.L D1, $1000
             MOVE.L $1000, $10000000
-            MOVE.L $10000000, $1000
-            MOVE.L $1000, $1000
             MOVE.L $1000, $1000
             MOVEQ.L #1, D1
             MOVEM.W D1/D2/D3, D1/D2/D3

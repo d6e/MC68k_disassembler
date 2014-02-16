@@ -43,7 +43,7 @@ if __name__ == '__main__':
 	# This is a list of all the instructions, with their exceptions. 
 	# 	I've added comments for exceptions I didn't account for
 	instructions = [
-		Instruction('MOVE', ), 
+		Instruction('MOVE', src, dest, size, False), 
 		Instruction('MOVEQ', ['#1'], ['D1'], ['.L'], False), 
 		Instruction('MOVEM', ['D1/D2/D3', 'D1','$10000000', '$1000'], ['D1/D2/D3', 'D1','$10000000', '$1000'], ['.W','.L']), 
 		Instruction('ADD', src, ['D1']), # Only for src: No 'An' if size is '.B' 
