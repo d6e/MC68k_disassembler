@@ -60,6 +60,7 @@ PROMPT_INPUT    LEA         INPUT_MSG_1,A1  ; Prompt user for starting address
                 RTS                       ; return
 
 *------------------- Convert to hex subroutine -------------------
+
 *------------------- Add to display buffer -------------------
 *------------------- Move address pointer for data reading -------------------
 *------------------- Print display buffer -------------------
@@ -271,6 +272,7 @@ FILT_SRC_REG    EQU        $0007   ;source register:           0000 0000 0000 0X
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+
 *~Font name~Courier New~
 *~Font size~10~
 *~Tab type~1~
