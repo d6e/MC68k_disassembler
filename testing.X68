@@ -13,9 +13,6 @@ START       ORG    $7000                ; first instruction of program
             MOVE.B D1, D1
             MOVE.B D1, $10000000
             MOVE.B D1, $1000
-            MOVE.B A1, D1
-            MOVE.B A1, $10000000
-            MOVE.B A1, $1000
             MOVE.B (A1), D1
             MOVE.B (A1), $10000000
             MOVE.B (A1), $1000
@@ -147,6 +144,8 @@ START       ORG    $7000                ; first instruction of program
             ADD.B D1, $1000
             ADD.W D1, D1
             ADD.W D1, D1
+            ADD.W A1, D1
+            ADD.W D1, A1
             ADD.W (A1), D1
             ADD.W D1, (A1)
             ADD.W #1, D1
@@ -161,6 +160,8 @@ START       ORG    $7000                ; first instruction of program
             ADD.W D1, $1000
             ADD.L D1, D1
             ADD.L D1, D1
+            ADD.L A1, D1
+            ADD.L D1, A1
             ADD.L (A1), D1
             ADD.L D1, (A1)
             ADD.L #1, D1
@@ -214,6 +215,8 @@ START       ORG    $7000                ; first instruction of program
             SUB.B D1, $1000
             SUB.W D1, D1
             SUB.W D1, D1
+            SUB.W A1, D1
+            SUB.W D1, A1
             SUB.W (A1), D1
             SUB.W D1, (A1)
             SUB.W #1, D1
@@ -228,6 +231,8 @@ START       ORG    $7000                ; first instruction of program
             SUB.W D1, $1000
             SUB.L D1, D1
             SUB.L D1, D1
+            SUB.L A1, D1
+            SUB.L D1, A1
             SUB.L (A1), D1
             SUB.L D1, (A1)
             SUB.L #1, D1
@@ -474,6 +479,7 @@ START       ORG    $7000                ; first instruction of program
             CMP.B $10000000, D1
             CMP.B $1000, D1
             CMP.W D1, D1
+            CMP.W A1, D1
             CMP.W (A1), D1
             CMP.W #1, D1
             CMP.W (A1)+, D1
@@ -481,6 +487,7 @@ START       ORG    $7000                ; first instruction of program
             CMP.W $10000000, D1
             CMP.W $1000, D1
             CMP.L D1, D1
+            CMP.L A1, D1
             CMP.L (A1), D1
             CMP.L #1, D1
             CMP.L (A1)+, D1
