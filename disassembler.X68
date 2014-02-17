@@ -279,25 +279,48 @@ INVALID_ADDR_INPUT      LEA      INVALID_ADDR_MSG,A1    ;tell the user the addre
                         MOVE.B   #14,D0
                         TRAP     #15
                         
-                        BSR      TAKE_USER_INPUT    
+                        BSR      TAKE_USER_INPUT
+                        
+INVALID_END_ADDR        LEA      INVALID_END_ADDR_MSG,A1
+                        MOVE.B   #14,D0
+                        TRAP     #15
+                        
+                        BSR      TAKE_USER_INPUT
+                        
+INVALID_ADDR_LOW        LEA      INVALID_ADDR_L_MSG,A1    ;tell the user the address was invalid and prompt input again.
+                        MOVE.B   #14,D0
+                        TRAP     #15
+                        
+                        BSR      TAKE_USER_INPUT
+
+INVALID_ADDR_HIGH       LEA      INVALID_ADDR_H_MSG,A1    ;tell the user the address was invalid and prompt input again.
+                        MOVE.B   #14,D0
+                        TRAP     #15
+                        
+                        BSR      TAKE_USER_INPUT
                
 CONVERSION_DONE         LSL.L    #8,D7   ; Prepare for concatenation
                         LSL.L    #8,D7   ; Got to perform the same operation twice to get it all the way to the left
                         ADD.W    D6,D7  ; concatenate the two data registers into one value
                         
-                        ;MOVE.L   #INPUTTING_START,D3
-                        CMPI     #1,D3
+                        CMP.L    #MIN_ADDRESS,D7
+                        BLT      INVALID_ADDR_LOW ;Not a valid address-- too low.
+                        
+                        CMP.L    #MAX_ADDRESS,D7
+                        BGT      INVALID_ADDR_HIGH  ;Not a valid address-- too high.
+                        
+VALID_ADDR              CMPI     #1,D3
                         
                         BEQ      SET_START_ADDR
                         BSR      SET_END_ADDR
-                        
-        ; TODO: make more error cases (like any address that is part of our program, or an ending address equal to or less than start address.)                       
-                        
+                                               
 SET_START_ADDR          MOVEA.L  D7,A5  ;when a valid start address is inputted, store and ask the user for an end address.
-                        ;INPUTTING_START         SET      0
                         BSR      TAKE_USER_IN_E
 
-SET_END_ADDR            MOVEA.L  D7,A6  ;when a valid start address is inputted, store and ask the user for an end address.
+SET_END_ADDR            CMP.L    A5,D7    ;if end address is lower than start address, we get an error.
+                        BLT      INVALID_END_ADDR           
+                        
+                        MOVEA.L  D7,A6  ;when a valid start address is inputted, store and ask the user for an end address.
                         BSR      PREPARE_DISPLAY
 
 *------------------- Add to display buffer -------------------
@@ -493,6 +516,14 @@ INVALID_LEN_MSG         DC.B        'Not a valid length for input address.',CR,L
                         DC.B        'Please enter a valid-length address.',CR,LF,0
 INVALID_ADDR_MSG        DC.B        'Not a valid address.',CR,LF
                         DC.B        'Please enter a valid address.',CR,LF,0
+INVALID_END_ADDR_MSG    DC.B        'Not a valid end address.',CR,LF
+                        DC.B        'Please enter an end address after the start address.',CR,LF,0
+                      
+INVALID_ADDR_L_MSG      DC.B        'Not a valid address (too low).',CR,LF
+                        DC.B        'Please enter a valid address.',CR,LF,0
+                        
+INVALID_ADDR_H_MSG      DC.B        'Not a valid address (too high).',CR,LF
+                        DC.B        'Please enter a valid address.',CR,LF,0
 
 *output instruction names
 NOP_MSG                 DC.B        'NOP',0
@@ -502,6 +533,10 @@ START_ADDR_IN           DS.B        20
 
 *other input-related variables/constants
 INPUTTING_START         SET         1 ;if 1, we are inputting start address. If 0, we are inputting end address.
+
+*address constants
+MIN_ADDRESS             EQU         $00003000
+MAX_ADDRESS             EQU         $0FFF0000
 
 *address variables
 TEST_ORIGIN             SET         $00007000
@@ -531,6 +566,7 @@ FILT_SRC_REG            EQU        $0007   ;source register:           0000 0000
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+
 
 *~Font name~Courier New~
 *~Font size~10~
