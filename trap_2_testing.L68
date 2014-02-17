@@ -1,6 +1,6 @@
 00001000 Starting Address
-Assembler used: EASy68K Editor/Assembler v5.14.00
-Created On: 2/16/2014 12:49:37 AM
+Assembler used: EASy68K Editor/Assembler v5.12.29
+Created On: 2/16/2014 5:17:48 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :
@@ -8,207 +8,277 @@ Created On: 2/16/2014 12:49:37 AM
 00000000                             4  * Date       :
 00000000                             5  * Description:
 00000000                             6  *-----------------------------------------------------------
-00001000                             7  START     ORG         $1000
+00001000                             7  START                   ORG         $1000
 00001000                             8                  ; first instruction of program
 00001000                             9  
-00001000                            10            ;MOVE.W      #$3000,$7000 ;TODO: try to get the correct data from somewhere
-00001000                            11  
-00001000  43F9 00001182             12            LEA         MSG_1,A1
-00001006  103C 000E                 13            MOVE.B      #14,D0
-0000100A  4E4F                      14            TRAP        #15
-0000100C                            15  
-0000100C  103C 0002                 16            MOVE.B      #2,D0           ; Take user input for starting address.
-00001010  327C 2000                 17            MOVEA.W     #$2000,A1       
-00001014                            18            ;SUB.L       #$FFFFFFFF,(A1)+
-00001014                            19            ;SUB.L       #$FFFFFFFF, (A1)
-00001014                            20            ;MOVEA.W     #$2000,A1       ; Stores the ascii address in (A1),
-00001014  4E4F                      21            TRAP        #15             ; and the length in D1.W.
-00001016                            22            
-00001016  327C 2001                 23            MOVEA.W     #$2001,A1
-0000101A  B27C 0001                 24            CMP         #1,D1
-0000101E  6700 0066                 25            BEQ         ASCII_TO_HEX  ;start converting if we have 1 digit.
-00001022                            26            
-00001022  327C 2002                 27            MOVEA.W     #$2002,A1
-00001026  B27C 0002                 28            CMP         #2,D1
-0000102A  6700 005A                 29            BEQ         ASCII_TO_HEX  ;start converting if we have 2 digits.
-0000102E                            30            
-0000102E  327C 2003                 31            MOVEA.W     #$2003,A1
-00001032  B27C 0003                 32            CMP         #3,D1
-00001036  6700 004E                 33            BEQ         ASCII_TO_HEX  ;start converting if we have 3 digits.
-0000103A                            34            
-0000103A  327C 2004                 35            MOVEA.W     #$2004,A1
-0000103E  B27C 0004                 36            CMP         #4,D1
-00001042  6700 0042                 37            BEQ         ASCII_TO_HEX  ;start converting if we have 4 digits.
-00001046                            38            
-00001046  327C 2005                 39            MOVEA.W     #$2005,A1
-0000104A  B27C 0005                 40            CMP         #5,D1
-0000104E  6700 0036                 41            BEQ         ASCII_TO_HEX  ;start converting if we have 5 digits.
-00001052                            42            
-00001052  327C 2006                 43            MOVEA.W     #$2006,A1
-00001056  B27C 0006                 44            CMP         #6,D1
-0000105A  6700 002A                 45            BEQ         ASCII_TO_HEX  ;start converting if we have 6 digits.
-0000105E                            46            
-0000105E  327C 2007                 47            MOVEA.W     #$2007,A1
-00001062  B27C 0007                 48            CMP         #7,D1
-00001066  6700 001E                 49            BEQ         ASCII_TO_HEX  ;start converting if we have 7 digits.
-0000106A                            50            
-0000106A  327C 2008                 51            MOVEA.W     #$2008,A1
-0000106E  B27C 0008                 52            CMP         #8,D1
-00001072  6700 0012                 53            BEQ         ASCII_TO_HEX  ;start converting if we have 8 digits.
-00001076                            54            
-00001076  43F9 00001197             55            LEA         INVALID_LEN_MSG,A1         ;display the length of the input
-0000107C  103C 000E                 56            MOVE.B      #14,D0
-00001080  4E4F                      57            TRAP        #15   
-00001082                            58              
-00001082                            59            ;MOVE.L      (A1),D3       ;Move the ascii value we just read in to D3
-00001082                            60            ;MOVE.L      (A1),D4
-00001082                            61            
-00001082                            62            ;MOVE.W      (A1),D1
-00001082                            63            ;MOVE.B      #16,D2
-00001082                            64            ;MOVE.B      #15,D0    ;print the input back out
-00001082                            65            ;TRAP        #15          
-00001082                            66  
-00001082  FFFF FFFF                 67            SIMHALT             ; halt simulator
-00001086                            68            
-00001086                            69  ; when we get here, A1 is the ascii representation of the least significant digit (i.e., the ones place)
-00001086  1C3C 0000                 70  ASCII_TO_HEX    MOVE.B   #0,D6      ; running total of converted hex number
-0000108A                            71                  
-0000108A                            72                  ;first digit
-0000108A  1821                      73                  MOVE.B   -(A1),D4  ; Move the raw ascii value of first digit into 3007.
-0000108C                            74                  
-0000108C                            75                 
-0000108C                            76                  
-0000108C                            77                  ; Convert ascii to hex for that digit.
-0000108C  0444 0030                 78                  SUB      #$30,D4   ; TODO: once this works correctly for first two digits, change each iteration accordingly
-00001090  B87C 0009                 79                  CMP      #9,D4
-00001094  6E00 00E8                 80                  BGT      SUBTRACT_ONE ; Necessary to convert some ASCII values.
-00001098                            81                                        ; TODO: errors for invalid ASCII values.
-00001098                            82                  
-00001098  DC04                      83                  ADD.B   D4,D6
-0000109A  B27C 0001                 84                  CMP      #1,D1
-0000109E  6700 00D4                 85                  BEQ      CONVERSION_DONE
-000010A2                            86                  
-000010A2                            87                  ;second digit
-000010A2  7800                      88                  MOVE.L   #$00000000,D4
-000010A4  1821                      89                  MOVE.B   -(A1),D4
-000010A6  0444 0030                 90                  SUB      #$30,D4
-000010AA  B87C 0009                 91                  CMP      #9,D4
-000010AE  6E00 00CE                 92                  BGT      SUBTRACT_ONE
-000010B2                            93               
-000010B2  C8FC 0010                 94                  MULU.W   #$00000010,D4  ; this part adds $10 * (2nd digit) to our running total.
-000010B6  DC44                      95                  ADD.W    D4,D6 
-000010B8                            96                    
-000010B8  B27C 0002                 97                  CMP      #2,D1
-000010BC  6700 00B6                 98                  BEQ      CONVERSION_DONE
-000010C0                            99                  
-000010C0                           100                  ;third digit
-000010C0  7800                     101                  MOVE.L   #$00000000,D4
-000010C2  1821                     102                  MOVE.B   -(A1),D4
-000010C4  0444 0030                103                  SUB      #$30,D4
-000010C8  B87C 0009                104                  CMP      #9,D4
-000010CC  6E00 00B0                105                  BGT      SUBTRACT_ONE
-000010D0                           106                  
-000010D0  C8FC 0100                107                  MULU.W   #$00000100,D4
-000010D4  DC44                     108                  ADD.W    D4,D6 
-000010D6                           109      
-000010D6  B27C 0003                110                  CMP      #3,D1
-000010DA  6700 0098                111                  BEQ      CONVERSION_DONE
-000010DE                           112                  
-000010DE                           113                  ;fourth digit
-000010DE  7800                     114                  MOVE.L   #$00000000,D4
-000010E0  1821                     115                  MOVE.B   -(A1),D4
-000010E2  0444 0030                116                  SUB      #$30,D4
-000010E6  B87C 0009                117                  CMP      #9,D4
-000010EA  6E00 0092                118                  BGT      SUBTRACT_ONE
-000010EE                           119                  
-000010EE  C8FC 1000                120                  MULU.W   #$00001000,D4
-000010F2  DC44                     121                  ADD.W    D4,D6 
-000010F4                           122      
-000010F4  B27C 0004                123                  CMP      #4,D1
-000010F8  6700 007A                124                  BEQ      CONVERSION_DONE
-000010FC                           125                  
-000010FC                           126                  ;fifth digit
-000010FC  7800                     127                  MOVE.L   #$00000000,D4
-000010FE  1821                     128                  MOVE.B   -(A1),D4
-00001100  0444 0030                129                  SUB      #$30,D4
-00001104  B87C 0009                130                  CMP      #9,D4
-00001108  6E00 0074                131                  BGT      SUBTRACT_ONE
-0000110C                           132                  
-0000110C  C8FC 0001                133                  MULU.W   #$0001,D4
-00001110  DE44                     134                  ADD.W    D4,D7 
-00001112                           135  
-00001112  B27C 0005                136                  CMP      #5,D1
-00001116  6700 005C                137                  BEQ      CONVERSION_DONE
-0000111A                           138                  
-0000111A                           139                  ;sixth digit
-0000111A  7800                     140                  MOVE.L   #$00000000,D4
-0000111C  1821                     141                  MOVE.B   -(A1),D4
-0000111E  0444 0030                142                  SUB      #$30,D4
-00001122  B87C 0009                143                  CMP      #9,D4
-00001126  6E00 0056                144                  BGT      SUBTRACT_ONE
-0000112A                           145                  
-0000112A  C8FC 0010                146                  MULU.W   #$0010,D4
-0000112E  DE44                     147                  ADD.W    D4,D7
-00001130                           148      
-00001130  B27C 0006                149                  CMP      #6,D1
-00001134  6700 003E                150                  BEQ      CONVERSION_DONE
-00001138                           151                  
-00001138                           152                  ;seventh digit
-00001138  7800                     153                  MOVE.L   #$00000000,D4
-0000113A  1821                     154                  MOVE.B   -(A1),D4
-0000113C  0444 0030                155                  SUB      #$30,D4
-00001140  B87C 0009                156                  CMP      #9,D4
-00001144  6E00 0038                157                  BGT      SUBTRACT_ONE
-00001148                           158                  
-00001148  C8FC 0100                159                  MULU.W   #$0100,D4
-0000114C  DE44                     160                  ADD.W    D4,D7
-0000114E                           161      
-0000114E  B27C 0007                162                  CMP      #7,D1
-00001152  6700 0020                163                  BEQ      CONVERSION_DONE
-00001156                           164                  
-00001156                           165                  ;eight digit
-00001156  7800                     166                  MOVE.L   #$00000000,D4
-00001158  1821                     167                  MOVE.B   -(A1),D4
-0000115A  0444 0030                168                  SUB      #$30,D4
-0000115E  B87C 0009                169                  CMP      #9,D4
-00001162  6E00 001A                170                  BGT      SUBTRACT_ONE
-00001166                           171                  
-00001166  C8FC 1000                172                  MULU.W   #$1000,D4
-0000116A  DE44                     173                  ADD.W    D4,D7
-0000116C                           174      
-0000116C  B27C 0008                175                  CMP      #8,D1
-00001170  6700 0002                176                  BEQ      CONVERSION_DONE
-00001174                           177                  
-00001174                           178                  ;TODO: need to correctly read ABCDEF for each case. 
-00001174                           179                  ;(Test by entering these values and looking at addresses $2000 and $3000 in simulator.)
-00001174                           180                  
-00001174                           181                  ;TODO: once these values are stored correctly, build the final hex value by multiplying each digit by
-00001174                           182                  ;      hex $10, $100, $1000, etc (one for each case of D1, which still has the number of digits)
-00001174                           183                  ;      and adding each product to a running total, initialized to 0.
-00001174                           184        
-00001174                           185                 ;TODO: branch to done when we are done
-00001174                           186                 ;SIMHALT
-00001174                           187                 
-00001174  E18F                     188  CONVERSION_DONE LSL.L #8,D7   ; Prepare for concatenation
-00001176  E18F                     189                  LSL.L #8,D7   ; Got to perform the same operation twice to get it all the way to the left
-00001178  DE46                     190                  ADD.W  D6,D7  ; concatenate the two data registers into one value
-0000117A  FFFF FFFF                191                  SIMHALT ;TODO: show what is in D6. It should be the same as the intended hex input.
-0000117E                           192  
-0000117E                           193  SUBTRACT_ONE
-0000117E  5304                     194      SUB.B  #1, D4
-00001180  4E75                     195      RTS             ; return
-00001182                           196  
-00001182                           197  * Put variables and constants here
-00001182                           198  
-00001182  =0000000D                199  CR              EQU         $0D
-00001182  =0000000A                200  LF              EQU         $0A
-00001182                           201  
-00001182= 45 6E 74 65 72 20 ...    202  MSG_1           DC.B        'Enter a hex value.',CR,LF,0
-00001197= 4E 6F 74 20 61 20 ...    203  INVALID_LEN_MSG DC.B        'Not a valid length for input string.',CR,LF,0
-000011BE                           204  
-000011BE                           205  START_ADDR_IN   DS.B        20
-000011D2                           206  
-000011D2                           207      END    START        ; last line of source
+00001000                            10  
+00001000  43F9 0000129D             11                          LEA         START_ADDR_MSG,A1
+00001006  103C 000E                 12                          MOVE.B      #14,D0
+0000100A  4E4F                      13                          TRAP        #15
+0000100C                            14  
+0000100C  7200                      15  TAKE_USER_IN            MOVE.L      #$00000000,D1
+0000100E  7800                      16                          MOVE.L      #$00000000,D4    
+00001010  7A00                      17                          MOVE.L      #$00000000,D5    
+00001012  7C00                      18                          MOVE.L      #$00000000,D6
+00001014  7E00                      19                          MOVE.L      #$00000000,D7    
+00001016                            20  
+00001016  103C 0002                 21                          MOVE.B      #2,D0           ; Take user input for starting address.
+0000101A  327C 2000                 22                          MOVEA.W     #$2000,A1       ; Store the ascii input in A1,
+0000101E  4E4F                      23                          TRAP        #15             ; and the length in D1.W.
+00001020                            24            
+00001020  327C 2001                 25                          MOVEA.W     #$2001,A1
+00001024  B27C 0001                 26                          CMP         #1,D1
+00001028  6700 006A                 27                          BEQ         ASCII_TO_HEX  ;start converting if we have 1 digit.
+0000102C                            28            
+0000102C  327C 2002                 29                          MOVEA.W     #$2002,A1
+00001030  B27C 0002                 30                          CMP         #2,D1
+00001034  6700 005E                 31                          BEQ         ASCII_TO_HEX  ;start converting if we have 2 digits.
+00001038                            32            
+00001038  327C 2003                 33                          MOVEA.W     #$2003,A1
+0000103C  B27C 0003                 34                          CMP         #3,D1
+00001040  6700 0052                 35                          BEQ         ASCII_TO_HEX  ;start converting if we have 3 digits.
+00001044                            36            
+00001044  327C 2004                 37                          MOVEA.W     #$2004,A1
+00001048  B27C 0004                 38                          CMP         #4,D1
+0000104C  6700 0046                 39                          BEQ         ASCII_TO_HEX  ;start converting if we have 4 digits.
+00001050                            40            
+00001050  327C 2005                 41                          MOVEA.W     #$2005,A1
+00001054  B27C 0005                 42                          CMP         #5,D1
+00001058  6700 003A                 43                          BEQ         ASCII_TO_HEX  ;start converting if we have 5 digits.
+0000105C                            44            
+0000105C  327C 2006                 45                          MOVEA.W     #$2006,A1
+00001060  B27C 0006                 46                          CMP         #6,D1
+00001064  6700 002E                 47                          BEQ         ASCII_TO_HEX  ;start converting if we have 6 digits.
+00001068                            48            
+00001068  327C 2007                 49                          MOVEA.W     #$2007,A1
+0000106C  B27C 0007                 50                          CMP         #7,D1
+00001070  6700 0022                 51                          BEQ         ASCII_TO_HEX  ;start converting if we have 7 digits.
+00001074                            52            
+00001074  327C 2008                 53                          MOVEA.W     #$2008,A1
+00001078  B27C 0008                 54                          CMP         #8,D1
+0000107C  6700 0016                 55                          BEQ         ASCII_TO_HEX  ;start converting if we have 8 digits.
+00001080                            56            
+00001080  43F9 000012BD             57                          LEA         INVALID_LEN_MSG,A1         ; TODO: branch back to asking for input.
+00001086  103C 000E                 58                          MOVE.B      #14,D0
+0000108A  4E4F                      59                          TRAP        #15
+0000108C                            60  
+0000108C  6000 FF7E                 61                          BRA         TAKE_USER_IN   
+00001090                            62              
+00001090  FFFF FFFF                 63                          SIMHALT             ; halt simulator
+00001094                            64            
+00001094                            65  ; when we get here, A1 is the ascii representation of the least significant digit (i.e., the ones place)
+00001094  7C00                      66  ASCII_TO_HEX            MOVE.L   #$00000000,D6      ; running total of converted hex number
+00001096                            67                  
+00001096                            68                          ;first digit
+00001096  1821                      69                          MOVE.B   -(A1),D4  ; Move the raw ascii value of first digit into 3007.
+00001098  B87C 0030                 70                          CMP      #$30,D4
+0000109C  6D00 01B2                 71                          BLT      INVALID_ADDR_INPUT ;comes  from inputting invalid characters
+000010A0  B87C 0040                 72                          CMP      #$40,D4
+000010A4  6700 01AA                 73                          BEQ      INVALID_ADDR_INPUT
+000010A8  B87C 0046                 74                          CMP      #$46,D4
+000010AC  6E00 01A2                 75                          BGT      INVALID_ADDR_INPUT   
+000010B0                            76                          ; Convert ascii to hex for that digit.
+000010B0  0444 0030                 77                          SUB      #$30,D4   ;
+000010B4  B87C 000A                 78                          CMP      #$A,D4
+000010B8  6D00 0004                 79                          BLT      DIG_CONV_DONE_1 ; Necessary to convert some ASCII values.
+000010BC  5F04                      80                          SUB.B    #7, D4                      ; TODO: errors for invalid ASCII values.
+000010BE                            81                  
+000010BE  DC44                      82  DIG_CONV_DONE_1         ADD.W    D4,D6
+000010C0  B27C 0001                 83                          CMP      #1,D1
+000010C4  6700 019A                 84                          BEQ      CONVERSION_DONE
+000010C8                            85                  
+000010C8                            86                          ;second digit
+000010C8  7800                      87                          MOVE.L   #$00000000,D4
+000010CA  1821                      88                          MOVE.B   -(A1),D4
+000010CC  B87C 0030                 89                          CMP      #$30,D4
+000010D0  6D00 017E                 90                          BLT      INVALID_ADDR_INPUT ;comes  from inputting invalid characters
+000010D4  B87C 0040                 91                          CMP      #$40,D4
+000010D8  6700 0176                 92                          BEQ      INVALID_ADDR_INPUT
+000010DC  B87C 0046                 93                          CMP      #$46,D4
+000010E0  6E00 016E                 94                          BGT      INVALID_ADDR_INPUT   
+000010E4  0444 0030                 95                          SUB      #$30,D4
+000010E8  B87C 000A                 96                          CMP      #$A,D4             
+000010EC  6D00 0004                 97                          BLT      DIG_CONV_DONE_2    ;digit conversion done 1
+000010F0  5F04                      98                          SUB.B    #7, D4             ; if we have A or greater, then we need to subtract 1.
+000010F2                            99               
+000010F2  C8FC 0010                100  DIG_CONV_DONE_2         MULU.W   #$00000010,D4  ; this part adds $10 * (2nd digit) to our running total.
+000010F6  DC44                     101                          ADD.W    D4,D6 
+000010F8                           102                    
+000010F8  B27C 0002                103                          CMP      #2,D1
+000010FC  6700 0162                104                          BEQ      CONVERSION_DONE
+00001100                           105                  
+00001100                           106                          ;third digit
+00001100  7800                     107                          MOVE.L   #$00000000,D4
+00001102  1821                     108                          MOVE.B   -(A1),D4
+00001104  B87C 0030                109                          CMP      #$30,D4
+00001108  6D00 0146                110                          BLT      INVALID_ADDR_INPUT ;comes  from inputting invalid characters
+0000110C  B87C 0040                111                          CMP      #$40,D4
+00001110  6700 013E                112                          BEQ      INVALID_ADDR_INPUT
+00001114  B87C 0046                113                          CMP      #$46,D4
+00001118  6E00 0136                114                          BGT      INVALID_ADDR_INPUT   
+0000111C  0444 0030                115                          SUB      #$30,D4
+00001120  B87C 000A                116                          CMP      #$A,D4
+00001124  6D00 0004                117                          BLT      DIG_CONV_DONE_3 
+00001128  5F04                     118                          SUB.B    #7, D4
+0000112A                           119                  
+0000112A  C8FC 0100                120  DIG_CONV_DONE_3         MULU.W   #$00000100,D4
+0000112E  DC44                     121                          ADD.W    D4,D6 
+00001130                           122      
+00001130  B27C 0003                123                          CMP      #3,D1
+00001134  6700 012A                124                          BEQ      CONVERSION_DONE
+00001138                           125                  
+00001138                           126                          ;fourth digit
+00001138  7800                     127                          MOVE.L   #$00000000,D4
+0000113A  1821                     128                          MOVE.B   -(A1),D4
+0000113C  B87C 0030                129                          CMP      #$30,D4
+00001140  6D00 010E                130                          BLT      INVALID_ADDR_INPUT ;comes  from inputting invalid characters
+00001144  B87C 0040                131                          CMP      #$40,D4
+00001148  6700 0106                132                          BEQ      INVALID_ADDR_INPUT
+0000114C  B87C 0046                133                          CMP      #$46,D4
+00001150  6E00 00FE                134                          BGT      INVALID_ADDR_INPUT   
+00001154  0444 0030                135                          SUB      #$30,D4
+00001158  B87C 000A                136                          CMP      #$A,D4
+0000115C  6D00 0004                137                          BLT      DIG_CONV_DONE_4
+00001160  5F04                     138                          SUB.B    #7, D4
+00001162                           139                  
+00001162  C8FC 1000                140  DIG_CONV_DONE_4         MULU.W   #$00001000,D4
+00001166  DC44                     141                          ADD.W    D4,D6 
+00001168                           142      
+00001168  B27C 0004                143                          CMP      #4,D1
+0000116C  6700 00F2                144                          BEQ      CONVERSION_DONE
+00001170                           145                  
+00001170                           146                          ;fifth digit
+00001170  7800                     147                          MOVE.L   #$00000000,D4
+00001172  1821                     148                          MOVE.B   -(A1),D4
+00001174  B87C 0030                149                          CMP      #$30,D4
+00001178  6D00 00D6                150                          BLT      INVALID_ADDR_INPUT ;comes  from inputting invalid characters
+0000117C  B87C 0040                151                          CMP      #$40,D4
+00001180  6700 00CE                152                          BEQ      INVALID_ADDR_INPUT
+00001184  B87C 0046                153                          CMP      #$46,D4
+00001188  6E00 00C6                154                          BGT      INVALID_ADDR_INPUT   
+0000118C  0444 0030                155                          SUB      #$30,D4
+00001190  B87C 000A                156                          CMP      #$A,D4
+00001194  6D00 0004                157                          BLT      DIG_CONV_DONE_5
+00001198  5F04                     158                          SUB.B    #$7, D4
+0000119A                           159                  
+0000119A  C8FC 0001                160  DIG_CONV_DONE_5         MULU.W   #$0001,D4
+0000119E  DE44                     161                          ADD.W    D4,D7 
+000011A0                           162  
+000011A0  B27C 0005                163                          CMP      #5,D1
+000011A4  6700 00BA                164                          BEQ      CONVERSION_DONE
+000011A8                           165                  
+000011A8                           166                          ;sixth digit
+000011A8  7800                     167                          MOVE.L   #$00000000,D4
+000011AA  1821                     168                          MOVE.B   -(A1),D4
+000011AC  B87C 0030                169                          CMP      #$30,D4
+000011B0  6D00 009E                170                          BLT      INVALID_ADDR_INPUT ;comes  from inputting invalid characters
+000011B4  B87C 0040                171                          CMP      #$40,D4
+000011B8  6700 0096                172                          BEQ      INVALID_ADDR_INPUT
+000011BC  B87C 0046                173                          CMP      #$46,D4
+000011C0  6E00 008E                174                          BGT      INVALID_ADDR_INPUT   
+000011C4  0444 0030                175                          SUB      #$30,D4
+000011C8  B87C 000A                176                          CMP      #$A,D4 
+000011CC  6D00 0004                177                          BLT      DIG_CONV_DONE_6
+000011D0  5F04                     178                          SUB.B    #$7, D4
+000011D2                           179                  
+000011D2  C8FC 0010                180  DIG_CONV_DONE_6         MULU.W   #$0010,D4
+000011D6  DE44                     181                          ADD.W    D4,D7
+000011D8                           182      
+000011D8  B27C 0006                183                          CMP      #6,D1
+000011DC  6700 0082                184                          BEQ      CONVERSION_DONE
+000011E0                           185                  
+000011E0                           186                          ;seventh digit
+000011E0  7800                     187                          MOVE.L   #$00000000,D4
+000011E2  1821                     188                          MOVE.B   -(A1),D4
+000011E4  B87C 0030                189                          CMP      #$30,D4
+000011E8  6D00 0066                190                          BLT      INVALID_ADDR_INPUT ;comes  from inputting invalid characters
+000011EC  B87C 0040                191                          CMP      #$40,D4
+000011F0  6700 005E                192                          BEQ      INVALID_ADDR_INPUT
+000011F4  B87C 0046                193                          CMP      #$46,D4
+000011F8  6E00 0056                194                          BGT      INVALID_ADDR_INPUT   
+000011FC  0444 0030                195                          SUB      #$30,D4
+00001200  B87C 000A                196                          CMP      #$A,D4
+00001204  6D00 0004                197                          BLT      DIG_CONV_DONE_7
+00001208  5F04                     198                          SUB.B    #7, D4
+0000120A                           199                  
+0000120A  C8FC 0100                200  DIG_CONV_DONE_7         MULU.W   #$0100,D4
+0000120E  DE44                     201                          ADD.W    D4,D7
+00001210                           202      
+00001210  B27C 0007                203                          CMP      #7,D1
+00001214  6700 004A                204                          BEQ      CONVERSION_DONE
+00001218                           205                  
+00001218                           206                          ;eighth digit
+00001218  7800                     207                          MOVE.L   #$00000000,D4
+0000121A  1821                     208                          MOVE.B   -(A1),D4
+0000121C  B87C 0030                209                          CMP      #$30,D4
+00001220  6D00 002E                210                          BLT      INVALID_ADDR_INPUT ;comes  from inputting invalid characters
+00001224  B87C 0040                211                          CMP      #$40,D4
+00001228  6700 0026                212                          BEQ      INVALID_ADDR_INPUT
+0000122C  B87C 0046                213                          CMP      #$46,D4
+00001230  6E00 001E                214                          BGT      INVALID_ADDR_INPUT   
+00001234  0444 0030                215                          SUB      #$30,D4
+00001238  B87C 000A                216                          CMP      #$A,D4
+0000123C  6D00 0004                217                          BLT      DIG_CONV_DONE_8
+00001240  5F04                     218                          SUB.B    #7, D4
+00001242                           219                  
+00001242  C8FC 1000                220  DIG_CONV_DONE_8         MULU.W   #$1000,D4
+00001246  DE44                     221                          ADD.W    D4,D7
+00001248                           222      
+00001248  B27C 0008                223                          CMP      #8,D1
+0000124C  6700 0012                224                          BEQ      CONVERSION_DONE    ;the input was valid and we are done with the conversion
+00001250                           225                  
+00001250  43F9 0000130B            226  INVALID_ADDR_INPUT      LEA      INVALID_ADDR_MSG,A1    ;tell the user the address was invalid and prompt input again.
+00001256  103C 000E                227                          MOVE.B   #14,D0
+0000125A  4E4F                     228                          TRAP     #15
+0000125C                           229                          
+0000125C  6000 FDAE                230                          BRA      TAKE_USER_IN
+00001260                           231                 
+00001260  E18F                     232  CONVERSION_DONE         LSL.L    #8,D7   ; Prepare for concatenation
+00001262  E18F                     233                          LSL.L    #8,D7   ; Got to perform the same operation twice to get it all the way to the left
+00001264  DE46                     234                          ADD.W    D6,D7  ; concatenate the two data registers into one value
+00001266                           235                          
+00001266  43F9 00001341            236                          LEA      THANK_YOU,A1
+0000126C  103C 000E                237                          MOVE.B   #14,D0
+00001270  4E4F                     238                          TRAP     #15
+00001272                           239                          
+00001272  2207                     240                          MOVE.L   D7,D1
+00001274  143C 0010                241                          MOVE.B   #16,D2
+00001278  103C 000F                242                          MOVE.B   #15,D0
+0000127C  4E4F                     243                          TRAP     #15
+0000127E                           244                          
+0000127E  43F9 0000129A            245                          LEA      RETURN, A1
+00001284  103C 000E                246                          MOVE.B   #14,D0
+00001288  4E4F                     247                          TRAP     #15
+0000128A                           248                          
+0000128A  43F9 00001362            249                          LEA      MORE_ADDR_MSG,A1
+00001290  103C 000E                250                          MOVE.B   #14,D0
+00001294  4E4F                     251                          TRAP     #15
+00001296                           252                          
+00001296                           253                          
+00001296                           254                          
+00001296  6000 FD74                255                          BRA      TAKE_USER_IN
+0000129A                           256                          ;SIMHALT ;TODO: show what is in D6. It should be the same as the intended hex input.
+0000129A                           257  
+0000129A                           258  * Put variables and constants here
+0000129A                           259  
+0000129A  =0000000D                260  CR                      EQU         $0D
+0000129A  =0000000A                261  LF                      EQU         $0A
+0000129A= 0D 0A 00                 262  RETURN                  DC.B        CR,LF,0      
+0000129D                           263  
+0000129D= 45 6E 74 65 72 20 ...    264  START_ADDR_MSG          DC.B        'Enter a starting hex address.',CR,LF,0
+000012BD                           265  
+000012BD= 4E 6F 74 20 61 20 ...    266  INVALID_LEN_MSG         DC.B        'Not a valid length for input address.',CR,LF
+000012E4= 50 6C 65 61 73 65 ...    267                          DC.B        'Please enter a valid-length address.',CR,LF,0
+0000130B                           268                      
+0000130B= 4E 6F 74 20 61 20 ...    269  INVALID_ADDR_MSG        DC.B        'Not a valid address.',CR,LF
+00001321= 50 6C 65 61 73 65 ...    270                          DC.B        'Please enter a valid address.',CR,LF,0
+00001341                           271                          
+00001341= 54 68 61 6E 6B 20 ...    272  THANK_YOU               DC.B        'Thank you. You entered address $',0        ;TEMPORARY
+00001362= 50 6C 65 61 73 65 ...    273  MORE_ADDR_MSG           DC.B        'Please enter another address.',CR,LF,0     ;TEMPORARY
+00001382                           274  
+00001382                           275  START_ADDR_IN           DS.B        20
+00001396                           276  
+00001396                           277      END    START        ; last line of source
 
 No errors detected
 No warnings generated
@@ -217,12 +287,25 @@ No warnings generated
 SYMBOL TABLE INFORMATION
 Symbol-name         Value
 -------------------------
-ASCII_TO_HEX        1086
-CONVERSION_DONE     1174
+ASCII_TO_HEX        1094
+CONVERSION_DONE     1260
 CR                  D
-INVALID_LEN_MSG     1197
+DIG_CONV_DONE_1     10BE
+DIG_CONV_DONE_2     10F2
+DIG_CONV_DONE_3     112A
+DIG_CONV_DONE_4     1162
+DIG_CONV_DONE_5     119A
+DIG_CONV_DONE_6     11D2
+DIG_CONV_DONE_7     120A
+DIG_CONV_DONE_8     1242
+INVALID_ADDR_INPUT  1250
+INVALID_ADDR_MSG    130B
+INVALID_LEN_MSG     12BD
 LF                  A
-MSG_1               1182
+MORE_ADDR_MSG       1362
+RETURN              129A
 START               1000
-START_ADDR_IN       11BE
-SUBTRACT_ONE        117E
+START_ADDR_IN       1382
+START_ADDR_MSG      129D
+TAKE_USER_IN        100C
+THANK_YOU           1341

@@ -1,6 +1,6 @@
 00007000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.12.29
-Created On: 2/13/2014 6:59:55 PM
+Created On: 2/16/2014 4:03:03 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      : Testing
@@ -8,20 +8,657 @@ Created On: 2/13/2014 6:59:55 PM
 00000000                             4  * Date       : 2/13/14
 00000000                             5  * Description: Disassembler test file
 00000000                             6  *-----------------------------------------------------------
-00000000                             7      
+00000000                             7  
 00007000                             8  START       ORG    $7000                ; first instruction of program
 00007000  4E71                       9              NOP
 00007002  103C 000A                 10              MOVE.B #10,D0
 00007006                            11  
 00007006                            12  * TODO: use all required opcodes in all possible combinations here
-00007006                            13  
-00007006  4E72 7700                 14              STOP   #$7700          ; halt simulator
-0000700A                            15  
-0000700A                            16  * Put variables and constants here
-0000700A                            17  
-0000700A                            18              END    START        ; last line of source
+00007006  1201                      13              MOVE.B D1, D1
+00007008  13C1 10000000             14              MOVE.B D1, $10000000
+0000700E  11C1 1000                 15              MOVE.B D1, $1000
+Line 16 ERROR: Invalid size code
+00007012  3209                      16              MOVE.B A1, D1
+Line 17 ERROR: Invalid size code
+00007014  33C9 10000000             17              MOVE.B A1, $10000000
+Line 18 ERROR: Invalid size code
+0000701A  31C9 1000                 18              MOVE.B A1, $1000
+0000701E  1211                      19              MOVE.B (A1), D1
+00007020  13D1 10000000             20              MOVE.B (A1), $10000000
+00007026  11D1 1000                 21              MOVE.B (A1), $1000
+0000702A  123C 0001                 22              MOVE.B #1, D1
+0000702E  13FC 0001 10000000        23              MOVE.B #1, $10000000
+00007036  11FC 0001 1000            24              MOVE.B #1, $1000
+0000703C  1219                      25              MOVE.B (A1)+, D1
+0000703E  13D9 10000000             26              MOVE.B (A1)+, $10000000
+00007044  11D9 1000                 27              MOVE.B (A1)+, $1000
+00007048  1221                      28              MOVE.B -(A1), D1
+0000704A  13E1 10000000             29              MOVE.B -(A1), $10000000
+00007050  11E1 1000                 30              MOVE.B -(A1), $1000
+00007054  1239 10000000             31              MOVE.B $10000000, D1
+0000705A  13F9 10000000 10000000    32              MOVE.B $10000000, $10000000
+00007064  11F9 10000000 1000        33              MOVE.B $10000000, $1000
+0000706C  1238 1000                 34              MOVE.B $1000, D1
+00007070  13F8 1000 10000000        35              MOVE.B $1000, $10000000
+00007078  11F8 1000 1000            36              MOVE.B $1000, $1000
+0000707E  3201                      37              MOVE.W D1, D1
+00007080  33C1 10000000             38              MOVE.W D1, $10000000
+00007086  31C1 1000                 39              MOVE.W D1, $1000
+0000708A  3209                      40              MOVE.W A1, D1
+0000708C  33C9 10000000             41              MOVE.W A1, $10000000
+00007092  31C9 1000                 42              MOVE.W A1, $1000
+00007096  3211                      43              MOVE.W (A1), D1
+00007098  33D1 10000000             44              MOVE.W (A1), $10000000
+0000709E  31D1 1000                 45              MOVE.W (A1), $1000
+000070A2  323C 0001                 46              MOVE.W #1, D1
+000070A6  33FC 0001 10000000        47              MOVE.W #1, $10000000
+000070AE  31FC 0001 1000            48              MOVE.W #1, $1000
+000070B4  3219                      49              MOVE.W (A1)+, D1
+000070B6  33D9 10000000             50              MOVE.W (A1)+, $10000000
+000070BC  31D9 1000                 51              MOVE.W (A1)+, $1000
+000070C0  3221                      52              MOVE.W -(A1), D1
+000070C2  33E1 10000000             53              MOVE.W -(A1), $10000000
+000070C8  31E1 1000                 54              MOVE.W -(A1), $1000
+000070CC  3239 10000000             55              MOVE.W $10000000, D1
+000070D2  33F9 10000000 10000000    56              MOVE.W $10000000, $10000000
+000070DC  31F9 10000000 1000        57              MOVE.W $10000000, $1000
+000070E4  3238 1000                 58              MOVE.W $1000, D1
+000070E8  33F8 1000 10000000        59              MOVE.W $1000, $10000000
+000070F0  31F8 1000 1000            60              MOVE.W $1000, $1000
+000070F6  2201                      61              MOVE.L D1, D1
+000070F8  23C1 10000000             62              MOVE.L D1, $10000000
+000070FE  21C1 1000                 63              MOVE.L D1, $1000
+00007102  2209                      64              MOVE.L A1, D1
+00007104  23C9 10000000             65              MOVE.L A1, $10000000
+0000710A  21C9 1000                 66              MOVE.L A1, $1000
+0000710E  2211                      67              MOVE.L (A1), D1
+00007110  23D1 10000000             68              MOVE.L (A1), $10000000
+00007116  21D1 1000                 69              MOVE.L (A1), $1000
+0000711A  7201                      70              MOVE.L #1, D1
+0000711C  23FC 00000001 10000000    71              MOVE.L #1, $10000000
+00007126  21FC 00000001 1000        72              MOVE.L #1, $1000
+0000712E  2219                      73              MOVE.L (A1)+, D1
+00007130  23D9 10000000             74              MOVE.L (A1)+, $10000000
+00007136  21D9 1000                 75              MOVE.L (A1)+, $1000
+0000713A  2221                      76              MOVE.L -(A1), D1
+0000713C  23E1 10000000             77              MOVE.L -(A1), $10000000
+00007142  21E1 1000                 78              MOVE.L -(A1), $1000
+00007146  2239 10000000             79              MOVE.L $10000000, D1
+0000714C  23F9 10000000 10000000    80              MOVE.L $10000000, $10000000
+00007156  21F9 10000000 1000        81              MOVE.L $10000000, $1000
+0000715E  2238 1000                 82              MOVE.L $1000, D1
+00007162  23F8 1000 10000000        83              MOVE.L $1000, $10000000
+0000716A  21F8 1000 1000            84              MOVE.L $1000, $1000
+00007170  7201                      85              MOVEQ.L #1, D1
+Line 86 ERROR: Invalid addressing mode
+00007172                            86              MOVEM.W D1/D2/D3, D1
+Line 87 ERROR: Invalid addressing mode
+00007172                            87              MOVEM.W D1, D1/D2/D3
+00007172  48B9 000E 10000000        88              MOVEM.W D1/D2/D3, $10000000
+0000717A  4CB9 000E 10000000        89              MOVEM.W $10000000, D1/D2/D3
+00007182  48B8 000E 1000            90              MOVEM.W D1/D2/D3, $1000
+00007188  4CB8 000E 1000            91              MOVEM.W $1000, D1/D2/D3
+Line 92 ERROR: Invalid addressing mode
+0000718E                            92              MOVEM.W D1, D1
+Line 93 ERROR: Invalid addressing mode
+0000718E                            93              MOVEM.W D1, D1
+0000718E  48B9 0002 10000000        94              MOVEM.W D1, $10000000
+00007196  4CB9 0002 10000000        95              MOVEM.W $10000000, D1
+0000719E  48B8 0002 1000            96              MOVEM.W D1, $1000
+000071A4  4CB8 0002 1000            97              MOVEM.W $1000, D1
+000071AA  4CB9 0002 10000000        98              MOVEM.W $10000000, D1
+000071B2  48B9 0002 10000000        99              MOVEM.W D1, $10000000
+Line 100 ERROR: Invalid syntax
+000071BA                           100              MOVEM.W $10000000, $10000000
+Line 101 ERROR: Invalid syntax
+000071BA                           101              MOVEM.W $10000000, $10000000
+Line 102 ERROR: Invalid syntax
+000071BA                           102              MOVEM.W $10000000, $1000
+Line 103 ERROR: Invalid syntax
+000071BA                           103              MOVEM.W $1000, $10000000
+000071BA  4CB8 0002 1000           104              MOVEM.W $1000, D1
+000071C0  48B8 0002 1000           105              MOVEM.W D1, $1000
+Line 106 ERROR: Invalid syntax
+000071C6                           106              MOVEM.W $1000, $10000000
+Line 107 ERROR: Invalid syntax
+000071C6                           107              MOVEM.W $10000000, $1000
+Line 108 ERROR: Invalid syntax
+000071C6                           108              MOVEM.W $1000, $1000
+Line 109 ERROR: Invalid syntax
+000071C6                           109              MOVEM.W $1000, $1000
+Line 110 ERROR: Invalid addressing mode
+000071C6                           110              MOVEM.L D1/D2/D3, D1
+Line 111 ERROR: Invalid addressing mode
+000071C6                           111              MOVEM.L D1, D1/D2/D3
+000071C6  48F9 000E 10000000       112              MOVEM.L D1/D2/D3, $10000000
+000071CE  4CF9 000E 10000000       113              MOVEM.L $10000000, D1/D2/D3
+000071D6  48F8 000E 1000           114              MOVEM.L D1/D2/D3, $1000
+000071DC  4CF8 000E 1000           115              MOVEM.L $1000, D1/D2/D3
+Line 116 ERROR: Invalid addressing mode
+000071E2                           116              MOVEM.L D1, D1
+Line 117 ERROR: Invalid addressing mode
+000071E2                           117              MOVEM.L D1, D1
+000071E2  48F9 0002 10000000       118              MOVEM.L D1, $10000000
+000071EA  4CF9 0002 10000000       119              MOVEM.L $10000000, D1
+000071F2  48F8 0002 1000           120              MOVEM.L D1, $1000
+000071F8  4CF8 0002 1000           121              MOVEM.L $1000, D1
+000071FE  4CF9 0002 10000000       122              MOVEM.L $10000000, D1
+00007206  48F9 0002 10000000       123              MOVEM.L D1, $10000000
+Line 124 ERROR: Invalid syntax
+0000720E                           124              MOVEM.L $10000000, $10000000
+Line 125 ERROR: Invalid syntax
+0000720E                           125              MOVEM.L $10000000, $10000000
+Line 126 ERROR: Invalid syntax
+0000720E                           126              MOVEM.L $10000000, $1000
+Line 127 ERROR: Invalid syntax
+0000720E                           127              MOVEM.L $1000, $10000000
+0000720E  4CF8 0002 1000           128              MOVEM.L $1000, D1
+00007214  48F8 0002 1000           129              MOVEM.L D1, $1000
+Line 130 ERROR: Invalid syntax
+0000721A                           130              MOVEM.L $1000, $10000000
+Line 131 ERROR: Invalid syntax
+0000721A                           131              MOVEM.L $10000000, $1000
+Line 132 ERROR: Invalid syntax
+0000721A                           132              MOVEM.L $1000, $1000
+Line 133 ERROR: Invalid syntax
+0000721A                           133              MOVEM.L $1000, $1000
+0000721A  D201                     134              ADD.B D1, D1
+0000721C  D201                     135              ADD.B D1, D1
+Line 136 ERROR: Invalid size code
+0000721E  D249                     136              ADD.B A1, D1
+Line 137 ERROR: Invalid size code
+00007220  D2C1                     137              ADD.B D1, A1
+00007222  D211                     138              ADD.B (A1), D1
+00007224  D311                     139              ADD.B D1, (A1)
+00007226  5201                     140              ADD.B #1, D1
+Line 141 ERROR: Invalid addressing mode
+00007228                           141              ADD.B D1, #1
+00007228  D219                     142              ADD.B (A1)+, D1
+0000722A  D319                     143              ADD.B D1, (A1)+
+0000722C  D221                     144              ADD.B -(A1), D1
+0000722E  D321                     145              ADD.B D1, -(A1)
+00007230  D239 10000000            146              ADD.B $10000000, D1
+00007236  D339 10000000            147              ADD.B D1, $10000000
+0000723C  D238 1000                148              ADD.B $1000, D1
+00007240  D338 1000                149              ADD.B D1, $1000
+00007244  D241                     150              ADD.W D1, D1
+00007246  D241                     151              ADD.W D1, D1
+00007248  D249                     152              ADD.W A1, D1
+0000724A  D2C1                     153              ADD.W D1, A1
+0000724C  D251                     154              ADD.W (A1), D1
+0000724E  D351                     155              ADD.W D1, (A1)
+00007250  5241                     156              ADD.W #1, D1
+Line 157 ERROR: Invalid addressing mode
+00007252                           157              ADD.W D1, #1
+00007252  D259                     158              ADD.W (A1)+, D1
+00007254  D359                     159              ADD.W D1, (A1)+
+00007256  D261                     160              ADD.W -(A1), D1
+00007258  D361                     161              ADD.W D1, -(A1)
+0000725A  D279 10000000            162              ADD.W $10000000, D1
+00007260  D379 10000000            163              ADD.W D1, $10000000
+00007266  D278 1000                164              ADD.W $1000, D1
+0000726A  D378 1000                165              ADD.W D1, $1000
+0000726E  D281                     166              ADD.L D1, D1
+00007270  D281                     167              ADD.L D1, D1
+00007272  D289                     168              ADD.L A1, D1
+00007274  D3C1                     169              ADD.L D1, A1
+00007276  D291                     170              ADD.L (A1), D1
+00007278  D391                     171              ADD.L D1, (A1)
+0000727A  5281                     172              ADD.L #1, D1
+Line 173 ERROR: Invalid addressing mode
+0000727C                           173              ADD.L D1, #1
+0000727C  D299                     174              ADD.L (A1)+, D1
+0000727E  D399                     175              ADD.L D1, (A1)+
+00007280  D2A1                     176              ADD.L -(A1), D1
+00007282  D3A1                     177              ADD.L D1, -(A1)
+00007284  D2B9 10000000            178              ADD.L $10000000, D1
+0000728A  D3B9 10000000            179              ADD.L D1, $10000000
+00007290  D2B8 1000                180              ADD.L $1000, D1
+00007294  D3B8 1000                181              ADD.L D1, $1000
+00007298  D2C1                     182              ADDA.W D1, A1
+0000729A  D2C9                     183              ADDA.W A1, A1
+0000729C  D2D1                     184              ADDA.W (A1), A1
+0000729E  5249                     185              ADDA.W #1, A1
+000072A0  D2D9                     186              ADDA.W (A1)+, A1
+000072A2  D2E1                     187              ADDA.W -(A1), A1
+000072A4  D2F9 10000000            188              ADDA.W $10000000, A1
+000072AA  D2F8 1000                189              ADDA.W $1000, A1
+000072AE  D3C1                     190              ADDA.L D1, A1
+000072B0  D3C9                     191              ADDA.L A1, A1
+000072B2  D3D1                     192              ADDA.L (A1), A1
+000072B4  5289                     193              ADDA.L #1, A1
+000072B6  D3D9                     194              ADDA.L (A1)+, A1
+000072B8  D3E1                     195              ADDA.L -(A1), A1
+000072BA  D3F9 10000000            196              ADDA.L $10000000, A1
+000072C0  D3F8 1000                197              ADDA.L $1000, A1
+000072C4  5201                     198              ADDI.B #1, D1
+000072C6  5239 10000000            199              ADDI.B #1, $10000000
+000072CC  5238 1000                200              ADDI.B #1, $1000
+000072D0  5241                     201              ADDI.W #1, D1
+000072D2  5279 10000000            202              ADDI.W #1, $10000000
+000072D8  5278 1000                203              ADDI.W #1, $1000
+000072DC  5281                     204              ADDI.L #1, D1
+000072DE  52B9 10000000            205              ADDI.L #1, $10000000
+000072E4  52B8 1000                206              ADDI.L #1, $1000
+000072E8  9201                     207              SUB.B D1, D1
+000072EA  9201                     208              SUB.B D1, D1
+Line 209 ERROR: Invalid size code
+000072EC  9249                     209              SUB.B A1, D1
+Line 210 ERROR: Invalid size code
+000072EE  92C1                     210              SUB.B D1, A1
+000072F0  9211                     211              SUB.B (A1), D1
+000072F2  9311                     212              SUB.B D1, (A1)
+000072F4  5301                     213              SUB.B #1, D1
+Line 214 ERROR: Invalid addressing mode
+000072F6                           214              SUB.B D1, #1
+000072F6  9219                     215              SUB.B (A1)+, D1
+000072F8  9319                     216              SUB.B D1, (A1)+
+000072FA  9221                     217              SUB.B -(A1), D1
+000072FC  9321                     218              SUB.B D1, -(A1)
+000072FE  9239 10000000            219              SUB.B $10000000, D1
+00007304  9339 10000000            220              SUB.B D1, $10000000
+0000730A  9238 1000                221              SUB.B $1000, D1
+0000730E  9338 1000                222              SUB.B D1, $1000
+00007312  9241                     223              SUB.W D1, D1
+00007314  9241                     224              SUB.W D1, D1
+00007316  9249                     225              SUB.W A1, D1
+00007318  92C1                     226              SUB.W D1, A1
+0000731A  9251                     227              SUB.W (A1), D1
+0000731C  9351                     228              SUB.W D1, (A1)
+0000731E  5341                     229              SUB.W #1, D1
+Line 230 ERROR: Invalid addressing mode
+00007320                           230              SUB.W D1, #1
+00007320  9259                     231              SUB.W (A1)+, D1
+00007322  9359                     232              SUB.W D1, (A1)+
+00007324  9261                     233              SUB.W -(A1), D1
+00007326  9361                     234              SUB.W D1, -(A1)
+00007328  9279 10000000            235              SUB.W $10000000, D1
+0000732E  9379 10000000            236              SUB.W D1, $10000000
+00007334  9278 1000                237              SUB.W $1000, D1
+00007338  9378 1000                238              SUB.W D1, $1000
+0000733C  9281                     239              SUB.L D1, D1
+0000733E  9281                     240              SUB.L D1, D1
+00007340  9289                     241              SUB.L A1, D1
+00007342  93C1                     242              SUB.L D1, A1
+00007344  9291                     243              SUB.L (A1), D1
+00007346  9391                     244              SUB.L D1, (A1)
+00007348  5381                     245              SUB.L #1, D1
+Line 246 ERROR: Invalid addressing mode
+0000734A                           246              SUB.L D1, #1
+0000734A  9299                     247              SUB.L (A1)+, D1
+0000734C  9399                     248              SUB.L D1, (A1)+
+0000734E  92A1                     249              SUB.L -(A1), D1
+00007350  93A1                     250              SUB.L D1, -(A1)
+00007352  92B9 10000000            251              SUB.L $10000000, D1
+00007358  93B9 10000000            252              SUB.L D1, $10000000
+0000735E  92B8 1000                253              SUB.L $1000, D1
+00007362  93B8 1000                254              SUB.L D1, $1000
+00007366  92C1                     255              SUBA.W D1, A1
+00007368  92C9                     256              SUBA.W A1, A1
+0000736A  92D1                     257              SUBA.W (A1), A1
+0000736C  5349                     258              SUBA.W #1, A1
+0000736E  92D9                     259              SUBA.W (A1)+, A1
+00007370  92E1                     260              SUBA.W -(A1), A1
+00007372  92F9 10000000            261              SUBA.W $10000000, A1
+00007378  92F8 1000                262              SUBA.W $1000, A1
+0000737C  93C1                     263              SUBA.L D1, A1
+0000737E  93C9                     264              SUBA.L A1, A1
+00007380  93D1                     265              SUBA.L (A1), A1
+00007382  5389                     266              SUBA.L #1, A1
+00007384  93D9                     267              SUBA.L (A1)+, A1
+00007386  93E1                     268              SUBA.L -(A1), A1
+00007388  93F9 10000000            269              SUBA.L $10000000, A1
+0000738E  93F8 1000                270              SUBA.L $1000, A1
+00007392  5301                     271              SUBQ.B #1, D1
+00007394  5339 10000000            272              SUBQ.B #1, $10000000
+0000739A  5338 1000                273              SUBQ.B #1, $1000
+0000739E  5341                     274              SUBQ.W #1, D1
+000073A0  5379 10000000            275              SUBQ.W #1, $10000000
+000073A6  5378 1000                276              SUBQ.W #1, $1000
+000073AA  5381                     277              SUBQ.L #1, D1
+000073AC  53B9 10000000            278              SUBQ.L #1, $10000000
+000073B2  53B8 1000                279              SUBQ.L #1, $1000
+000073B6  C3C1                     280              MULS.W D1, D1
+Line 281 ERROR: Invalid addressing mode
+000073B8                           281              MULS.W A1, D1
+000073B8  C3D1                     282              MULS.W (A1), D1
+000073BA  C3FC 0001                283              MULS.W #1, D1
+000073BE  C3D9                     284              MULS.W (A1)+, D1
+000073C0  C3E1                     285              MULS.W -(A1), D1
+000073C2  C3F9 10000000            286              MULS.W $10000000, D1
+000073C8  C3F8 1000                287              MULS.W $1000, D1
+000073CC  82C1                     288              DIVU.W D1, D1
+Line 289 ERROR: Invalid addressing mode
+000073CE                           289              DIVU.W A1, D1
+000073CE  82D1                     290              DIVU.W (A1), D1
+000073D0  82FC 0001                291              DIVU.W #1, D1
+000073D4  82D9                     292              DIVU.W (A1)+, D1
+000073D6  82E1                     293              DIVU.W -(A1), D1
+000073D8  82F9 10000000            294              DIVU.W $10000000, D1
+000073DE  82F8 1000                295              DIVU.W $1000, D1
+Line 296 ERROR: Invalid addressing mode
+000073E2                           296              LEA.L D1, A1
+Line 297 ERROR: Invalid addressing mode
+000073E2                           297              LEA.L A1, A1
+000073E2  43D1                     298              LEA.L (A1), A1
+Line 299 ERROR: Invalid addressing mode
+000073E4                           299              LEA.L #1, A1
+Line 300 ERROR: Invalid addressing mode
+000073E4                           300              LEA.L (A1)+, A1
+Line 301 ERROR: Invalid addressing mode
+000073E4                           301              LEA.L -(A1), A1
+000073E4  43F9 10000000            302              LEA.L $10000000, A1
+000073EA  43F8 1000                303              LEA.L $1000, A1
+000073EE  4201                     304              CLR.B D1
+Line 305 ERROR: Invalid addressing mode
+000073F0                           305              CLR.B A1
+000073F0  4211                     306              CLR.B (A1)
+Line 307 ERROR: Invalid addressing mode
+000073F2                           307              CLR.B #1
+000073F2  4219                     308              CLR.B (A1)+
+000073F4  4221                     309              CLR.B -(A1)
+000073F6  4239 10000000            310              CLR.B $10000000
+000073FC  4238 1000                311              CLR.B $1000
+00007400  4241                     312              CLR.W D1
+Line 313 ERROR: Invalid addressing mode
+00007402                           313              CLR.W A1
+00007402  4251                     314              CLR.W (A1)
+Line 315 ERROR: Invalid addressing mode
+00007404                           315              CLR.W #1
+00007404  4259                     316              CLR.W (A1)+
+00007406  4261                     317              CLR.W -(A1)
+00007408  4279 10000000            318              CLR.W $10000000
+0000740E  4278 1000                319              CLR.W $1000
+00007412  4281                     320              CLR.L D1
+Line 321 ERROR: Invalid addressing mode
+00007414                           321              CLR.L A1
+00007414  4291                     322              CLR.L (A1)
+Line 323 ERROR: Invalid addressing mode
+00007416                           323              CLR.L #1
+00007416  4299                     324              CLR.L (A1)+
+00007418  42A1                     325              CLR.L -(A1)
+0000741A  42B9 10000000            326              CLR.L $10000000
+00007420  42B8 1000                327              CLR.L $1000
+00007424  C201                     328              AND.B D1, D1
+00007426  C201                     329              AND.B D1, D1
+Line 330 ERROR: Invalid addressing mode
+00007428                           330              AND.B A1, D1
+Line 331 ERROR: Invalid addressing mode
+00007428                           331              AND.B D1, A1
+00007428  C211                     332              AND.B (A1), D1
+0000742A  C311                     333              AND.B D1, (A1)
+0000742C  C23C 0001                334              AND.B #1, D1
+Line 335 ERROR: Invalid addressing mode
+00007430                           335              AND.B D1, #1
+00007430  C219                     336              AND.B (A1)+, D1
+00007432  C319                     337              AND.B D1, (A1)+
+00007434  C221                     338              AND.B -(A1), D1
+00007436  C321                     339              AND.B D1, -(A1)
+00007438  C239 10000000            340              AND.B $10000000, D1
+0000743E  C339 10000000            341              AND.B D1, $10000000
+00007444  C238 1000                342              AND.B $1000, D1
+00007448  C338 1000                343              AND.B D1, $1000
+0000744C  C241                     344              AND.W D1, D1
+0000744E  C241                     345              AND.W D1, D1
+Line 346 ERROR: Invalid addressing mode
+00007450                           346              AND.W A1, D1
+Line 347 ERROR: Invalid addressing mode
+00007450                           347              AND.W D1, A1
+00007450  C251                     348              AND.W (A1), D1
+00007452  C351                     349              AND.W D1, (A1)
+00007454  C27C 0001                350              AND.W #1, D1
+Line 351 ERROR: Invalid addressing mode
+00007458                           351              AND.W D1, #1
+00007458  C259                     352              AND.W (A1)+, D1
+0000745A  C359                     353              AND.W D1, (A1)+
+0000745C  C261                     354              AND.W -(A1), D1
+0000745E  C361                     355              AND.W D1, -(A1)
+00007460  C279 10000000            356              AND.W $10000000, D1
+00007466  C379 10000000            357              AND.W D1, $10000000
+0000746C  C278 1000                358              AND.W $1000, D1
+00007470  C378 1000                359              AND.W D1, $1000
+00007474  C281                     360              AND.L D1, D1
+00007476  C281                     361              AND.L D1, D1
+Line 362 ERROR: Invalid addressing mode
+00007478                           362              AND.L A1, D1
+Line 363 ERROR: Invalid addressing mode
+00007478                           363              AND.L D1, A1
+00007478  C291                     364              AND.L (A1), D1
+0000747A  C391                     365              AND.L D1, (A1)
+0000747C  C2BC 00000001            366              AND.L #1, D1
+Line 367 ERROR: Invalid addressing mode
+00007482                           367              AND.L D1, #1
+00007482  C299                     368              AND.L (A1)+, D1
+00007484  C399                     369              AND.L D1, (A1)+
+00007486  C2A1                     370              AND.L -(A1), D1
+00007488  C3A1                     371              AND.L D1, -(A1)
+0000748A  C2B9 10000000            372              AND.L $10000000, D1
+00007490  C3B9 10000000            373              AND.L D1, $10000000
+00007496  C2B8 1000                374              AND.L $1000, D1
+0000749A  C3B8 1000                375              AND.L D1, $1000
+0000749E  0201 0001                376              ANDI.B #1, D1
+000074A2  0239 0001 10000000       377              ANDI.B #1, $10000000
+000074AA  0238 0001 1000           378              ANDI.B #1, $1000
+000074B0  0241 0001                379              ANDI.W #1, D1
+000074B4  0279 0001 10000000       380              ANDI.W #1, $10000000
+000074BC  0278 0001 1000           381              ANDI.W #1, $1000
+000074C2  0281 00000001            382              ANDI.L #1, D1
+000074C8  02B9 00000001 10000000   383              ANDI.L #1, $10000000
+000074D2  02B8 00000001 1000       384              ANDI.L #1, $1000
+000074DA  B301                     385              EOR.B D1, D1
+000074DC  B339 10000000            386              EOR.B D1, $10000000
+000074E2  B338 1000                387              EOR.B D1, $1000
+000074E6  B341                     388              EOR.W D1, D1
+000074E8  B379 10000000            389              EOR.W D1, $10000000
+000074EE  B378 1000                390              EOR.W D1, $1000
+000074F2  B381                     391              EOR.L D1, D1
+000074F4  B3B9 10000000            392              EOR.L D1, $10000000
+000074FA  B3B8 1000                393              EOR.L D1, $1000
+000074FE  0A01 0001                394              EORI.B #1, D1
+00007502  0A39 0001 10000000       395              EORI.B #1, $10000000
+0000750A  0A38 0001 1000           396              EORI.B #1, $1000
+00007510  0A41 0001                397              EORI.W #1, D1
+00007514  0A79 0001 10000000       398              EORI.W #1, $10000000
+0000751C  0A78 0001 1000           399              EORI.W #1, $1000
+00007522  0A81 00000001            400              EORI.L #1, D1
+00007528  0AB9 00000001 10000000   401              EORI.L #1, $10000000
+00007532  0AB8 00000001 1000       402              EORI.L #1, $1000
+0000753A  E222                     403              ASR.B D1, D2
+0000753C  E262                     404              ASR.W D1, D2
+0000753E  E2A2                     405              ASR.L D1, D2
+00007540  E202                     406              ASR.B #1, D2
+00007542  E242                     407              ASR.W #1, D2
+00007544  E282                     408              ASR.L #1, D2
+Line 409 ERROR: Comma expected
+00007546                           409              ASR.B D1
+Line 410 ERROR: Comma expected
+00007546                           410              ASR.B A1
+Line 411 ERROR: Invalid size code
+00007546  E0D1                     411              ASR.B (A1)
+Line 412 ERROR: Comma expected
+00007548                           412              ASR.B #1
+Line 413 ERROR: Invalid size code
+00007548  E0D9                     413              ASR.B (A1)+
+Line 414 ERROR: Invalid size code
+0000754A  E0E1                     414              ASR.B -(A1)
+Line 415 ERROR: Invalid size code
+0000754C  E0F9 10000000            415              ASR.B $10000000
+Line 416 ERROR: Invalid size code
+00007552  E0F8 1000                416              ASR.B $1000
+Line 417 ERROR: Comma expected
+00007556                           417              ASR.W D1
+Line 418 ERROR: Comma expected
+00007556                           418              ASR.W A1
+00007556  E0D1                     419              ASR.W (A1)
+Line 420 ERROR: Comma expected
+00007558                           420              ASR.W #1
+00007558  E0D9                     421              ASR.W (A1)+
+0000755A  E0E1                     422              ASR.W -(A1)
+0000755C  E0F9 10000000            423              ASR.W $10000000
+00007562  E0F8 1000                424              ASR.W $1000
+Line 425 ERROR: Comma expected
+00007566                           425              ASR.L D1
+Line 426 ERROR: Comma expected
+00007566                           426              ASR.L A1
+Line 427 ERROR: Invalid size code
+00007566  E0D1                     427              ASR.L (A1)
+Line 428 ERROR: Comma expected
+00007568                           428              ASR.L #1
+Line 429 ERROR: Invalid size code
+00007568  E0D9                     429              ASR.L (A1)+
+Line 430 ERROR: Invalid size code
+0000756A  E0E1                     430              ASR.L -(A1)
+Line 431 ERROR: Invalid size code
+0000756C  E0F9 10000000            431              ASR.L $10000000
+Line 432 ERROR: Invalid size code
+00007572  E0F8 1000                432              ASR.L $1000
+00007576  E32A                     433              LSL.B D1, D2
+00007578  E36A                     434              LSL.W D1, D2
+0000757A  E3AA                     435              LSL.L D1, D2
+0000757C  E30A                     436              LSL.B #1, D2
+0000757E  E34A                     437              LSL.W #1, D2
+00007580  E38A                     438              LSL.L #1, D2
+Line 439 ERROR: Comma expected
+00007582                           439              LSL.B D1
+Line 440 ERROR: Comma expected
+00007582                           440              LSL.B A1
+Line 441 ERROR: Invalid size code
+00007582  E3D1                     441              LSL.B (A1)
+Line 442 ERROR: Comma expected
+00007584                           442              LSL.B #1
+Line 443 ERROR: Invalid size code
+00007584  E3D9                     443              LSL.B (A1)+
+Line 444 ERROR: Invalid size code
+00007586  E3E1                     444              LSL.B -(A1)
+Line 445 ERROR: Invalid size code
+00007588  E3F9 10000000            445              LSL.B $10000000
+Line 446 ERROR: Invalid size code
+0000758E  E3F8 1000                446              LSL.B $1000
+Line 447 ERROR: Comma expected
+00007592                           447              LSL.W D1
+Line 448 ERROR: Comma expected
+00007592                           448              LSL.W A1
+00007592  E3D1                     449              LSL.W (A1)
+Line 450 ERROR: Comma expected
+00007594                           450              LSL.W #1
+00007594  E3D9                     451              LSL.W (A1)+
+00007596  E3E1                     452              LSL.W -(A1)
+00007598  E3F9 10000000            453              LSL.W $10000000
+0000759E  E3F8 1000                454              LSL.W $1000
+Line 455 ERROR: Comma expected
+000075A2                           455              LSL.L D1
+Line 456 ERROR: Comma expected
+000075A2                           456              LSL.L A1
+Line 457 ERROR: Invalid size code
+000075A2  E3D1                     457              LSL.L (A1)
+Line 458 ERROR: Comma expected
+000075A4                           458              LSL.L #1
+Line 459 ERROR: Invalid size code
+000075A4  E3D9                     459              LSL.L (A1)+
+Line 460 ERROR: Invalid size code
+000075A6  E3E1                     460              LSL.L -(A1)
+Line 461 ERROR: Invalid size code
+000075A8  E3F9 10000000            461              LSL.L $10000000
+Line 462 ERROR: Invalid size code
+000075AE  E3F8 1000                462              LSL.L $1000
+000075B2  E33A                     463              ROL.B D1, D2
+000075B4  E37A                     464              ROL.W D1, D2
+000075B6  E3BA                     465              ROL.L D1, D2
+000075B8  E23A                     466              ROR.B D1, D2
+000075BA  E27A                     467              ROR.W D1, D2
+000075BC  E2BA                     468              ROR.L D1, D2
+Line 469 ERROR: Invalid size code
+000075BE  0341                     469              BCHG.B D1, D1
+000075C0  0379 10000000            470              BCHG.B D1, $10000000
+000075C6  0378 1000                471              BCHG.B D1, $1000
+000075CA  0341                     472              BCHG.L D1, D1
+Line 473 ERROR: Invalid size code
+000075CC  0379 10000000            473              BCHG.L D1, $10000000
+Line 474 ERROR: Invalid size code
+000075D2  0378 1000                474              BCHG.L D1, $1000
+Line 475 ERROR: Invalid size code
+000075D6  0841 0001                475              BCHG.B #1, D1
+000075DA  0879 0001 10000000       476              BCHG.B #1, $10000000
+000075E2  0878 0001 1000           477              BCHG.B #1, $1000
+000075E8  0841 0001                478              BCHG.L #1, D1
+Line 479 ERROR: Invalid size code
+000075EC  0879 0001 10000000       479              BCHG.L #1, $10000000
+Line 480 ERROR: Invalid size code
+000075F4  0878 0001 1000           480              BCHG.L #1, $1000
+000075FA  B201                     481              CMP.B D1, D1
+Line 482 ERROR: Invalid size code
+000075FC  B249                     482              CMP.B A1, D1
+000075FE  B211                     483              CMP.B (A1), D1
+00007600  B23C 0001                484              CMP.B #1, D1
+00007604  B219                     485              CMP.B (A1)+, D1
+00007606  B221                     486              CMP.B -(A1), D1
+00007608  B239 10000000            487              CMP.B $10000000, D1
+0000760E  B238 1000                488              CMP.B $1000, D1
+00007612  B241                     489              CMP.W D1, D1
+00007614  B249                     490              CMP.W A1, D1
+00007616  B251                     491              CMP.W (A1), D1
+00007618  B27C 0001                492              CMP.W #1, D1
+0000761C  B259                     493              CMP.W (A1)+, D1
+0000761E  B261                     494              CMP.W -(A1), D1
+00007620  B279 10000000            495              CMP.W $10000000, D1
+00007626  B278 1000                496              CMP.W $1000, D1
+0000762A  B281                     497              CMP.L D1, D1
+0000762C  B289                     498              CMP.L A1, D1
+0000762E  B291                     499              CMP.L (A1), D1
+00007630  B2BC 00000001            500              CMP.L #1, D1
+00007636  B299                     501              CMP.L (A1)+, D1
+00007638  B2A1                     502              CMP.L -(A1), D1
+0000763A  B2B9 10000000            503              CMP.L $10000000, D1
+00007640  B2B8 1000                504              CMP.L $1000, D1
+00007644  B2C1                     505              CMPA.W D1, A1
+00007646  B2C9                     506              CMPA.W A1, A1
+00007648  B2D1                     507              CMPA.W (A1), A1
+0000764A  B2FC 0001                508              CMPA.W #1, A1
+0000764E  B2D9                     509              CMPA.W (A1)+, A1
+00007650  B2E1                     510              CMPA.W -(A1), A1
+00007652  B2F9 10000000            511              CMPA.W $10000000, A1
+00007658  B2F8 1000                512              CMPA.W $1000, A1
+0000765C  B3C1                     513              CMPA.L D1, A1
+0000765E  B3C9                     514              CMPA.L A1, A1
+00007660  B3D1                     515              CMPA.L (A1), A1
+00007662  B3FC 00000001            516              CMPA.L #1, A1
+00007668  B3D9                     517              CMPA.L (A1)+, A1
+0000766A  B3E1                     518              CMPA.L -(A1), A1
+0000766C  B3F9 10000000            519              CMPA.L $10000000, A1
+00007672  B3F8 1000                520              CMPA.L $1000, A1
+00007676  0C01 0001                521              CMPI.B #1, D1
+0000767A  0C39 0001 10000000       522              CMPI.B #1, $10000000
+00007682  0C38 0001 1000           523              CMPI.B #1, $1000
+00007688  0C41 0001                524              CMPI.W #1, D1
+0000768C  0C79 0001 10000000       525              CMPI.W #1, $10000000
+00007694  0C78 0001 1000           526              CMPI.W #1, $1000
+0000769A  0C81 00000001            527              CMPI.L #1, D1
+000076A0  0CB9 00000001 10000000   528              CMPI.L #1, $10000000
+000076AA  0CB8 00000001 1000       529              CMPI.L #1, $1000
+Line 530 ERROR: Undefined symbol
+000076B2  6400 DBFE                530              BCC GO_TO_SR
+Line 531 ERROR: Invalid addressing mode
+000076B6                           531              JSR D1
+Line 532 ERROR: Invalid addressing mode
+000076B6                           532              JSR A1
+000076B6  4E91                     533              JSR (A1)
+Line 534 ERROR: Invalid addressing mode
+000076B8                           534              JSR #1
+Line 535 ERROR: Invalid addressing mode
+000076B8                           535              JSR (A1)+
+Line 536 ERROR: Invalid addressing mode
+000076B8                           536              JSR -(A1)
+000076B8  4EB9 10000000            537              JSR $10000000
+000076BE  4EB8 1000                538              JSR $1000
+000076C2  4E75                     539              RTS 
+000076C4                           540  
+000076C4  4E72 7700                541              STOP   #$7700          ; halt simulator
+000076C8                           542  
+000076C8                           543  * Put variables and constants here
+000076C8                           544  
+000076C8                           545              END    START        ; last line of source
 
-No errors detected
+110 errors detected
 No warnings generated
 
 
