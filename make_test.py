@@ -1,11 +1,6 @@
 #!/usr/bin/python
 
-################################################################################
-### This script generates a list of every possible x68 instruction for our
-### project. To get the list run: "python make_test.py > testing.X68"
-################################################################################
-
-
+# Default values:
 size = ['.B', '.W', '.L']
 src = ['D1', 'A1', '(A1)', '#1', '(A1)+', '-(A1)','$10000000', '$1000']
 dest = ['D1','$10000000', '$1000']
@@ -20,32 +15,64 @@ class Instruction:
 		self.bidirectional = bd
 		self.label = label
 
-	def display(self):
+	def append(self, writeList):
 		indent = "            "
 		if self.label:  # if it only has a label, just print label		
-			print ''.join([indent, self.opcode, ' ', self.label])
-
-		for size in self.sizes:
-			for s in self.sources:
-				for d in self.destinations:
-					if self.bidirectional is True:
-						print ''.join([indent, self.opcode, size, ' ', s, ', ', d])
-						print ''.join([indent, self.opcode, size, ' ', d, ', ', s])
-					else:
-						if d:
-							print ''.join([indent, self.opcode, size, ' ', s, ', ', d])
+			writeList.append(''.join([indent, self.opcode, ' ', self.label]))
+		else:
+			for size in self.sizes:
+				for s in self.sources:
+					for d in self.destinations:
+						if self.bidirectional is True:
+							writeList.append(''.join([indent, self.opcode, size, ' ', s, ', ', d]))
+							writeList.append(''.join([indent, self.opcode, size, ' ', d, ', ', s]))
 						else:
-							print ''.join([indent, self.opcode, size, ' ', s])
+							if d:
+								writeList.append(''.join([indent, self.opcode, size, ' ', s, ', ', d]))
+							else:
+								writeList.append(''.join([indent, self.opcode, size, ' ', s]))
 
 
-if __name__ == '__main__':
 
+def getHeader():
+	return '\n'.join([
+		"*-----------------------------------------------------------",
+		"* Title      : Testing",
+		"* Written by : Robert Brandenburg, Danielle Jenkins, Shahin Nahar",
+		"* Date       : 2/13/14",
+		"* Description: Disassembler test file",
+		"*-----------------------------------------------------------",
+		"",
+		"START       ORG    $7000                ; first instruction of program",
+		"            NOP",
+		"            MOVE.B #10,D0",
+		"",
+		"* TODO: use all required opcodes in all possible combinations here",
+	])
+
+def getFooter():
+	return '\n'.join([
+		"",
+		"            STOP   #$7700          ; halt simulator",
+		"",
+		"* Put variables and constants here",
+		"",
+		"            END    START        ; last line of source",
+		"",
+		"",
+		"*~Font name~Courier New~",
+		"*~Font size~10~",
+		"*~Tab type~1~",
+		"*~Tab size~4~",
+	])
+
+def initInstructionList():
 	# This is a list of all the instructions, with their exceptions. 
-	# 	I've added comments for exceptions I didn't account for
-	instructions = [
+	# 	I've added comments for exceptions for which I did not take into account
+	return [
 		Instruction('MOVE', src, dest, size, False), 
 		Instruction('MOVEQ', ['#1'], ['D1'], ['.L'], False), 
-		Instruction('MOVEM', ['D1/D2/D3', 'D1','$10000000', '$1000'], ['D1/D2/D3', 'D1','$10000000', '$1000'], ['.W','.L']), 
+		Instruction('MOVEM', ['D1/D2/D3', 'D1','$10000000', '$1000'], ['D1','$10000000', '$1000'], ['.W','.L']), 
 		Instruction('ADD', src, ['D1']), # Only for src: No 'An' if size is '.B' 
 		Instruction('ADDA', src, ['A1'], ['.W','.L'], False),
 		Instruction('ADDI', ['#1'], dest, size, False),
@@ -80,36 +107,22 @@ if __name__ == '__main__':
 		Instruction('JSR', src, [''], [''], False),
 		Instruction('RTS', [''], [''], [''], False),
 	]
-	
-	print '\n'.join([
-		"*-----------------------------------------------------------",
-		"* Title      : Testing",
-		"* Written by : Robert Brandenburg, Danielle Jenkins, Shahin Nahar",
-		"* Date       : 2/13/14",
-		"* Description: Disassembler test file",
-		"*-----------------------------------------------------------",
-		"",
-		"START       ORG    $7000                ; first instruction of program",
-		"			NOP",
-		"            MOVE.B #10,D0",
-		"",
-		"* TODO: use all required opcodes in all possible combinations here",
-	])
 
+if __name__ == '__main__':
+
+	instructions = initInstructionList()
+
+	wString = list()
+
+	wString.append(getHeader())
 	for instruction in instructions:
-		instruction.display()  # Print all the things!
+		instruction.append(wString)  # Append all the things!
+	wString.append(getFooter())
 
-	print '\n'.join([
-		"",
-		"            STOP   #$7700          ; halt simulator",
-		"",
-		"* Put variables and constants here",
-		"",
-		"            END    START        ; last line of source",
-		"",
-		"",
-		"*~Font name~Courier New~",
-		"*~Font size~10~",
-		"*~Tab type~1~",
-		"*~Tab size~4~",
-	])
+	wString = '\n'.join(wString) # convert list to a newline deliminated string
+
+	f = open('testing.X68','w')
+	f.write(wString)
+	f.close()
+
+	print wString

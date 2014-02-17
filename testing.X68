@@ -6,7 +6,7 @@
 *-----------------------------------------------------------
 
 START       ORG    $7000                ; first instruction of program
-			NOP
+            NOP
             MOVE.B #10,D0
 
 * TODO: use all required opcodes in all possible combinations here
@@ -83,64 +83,48 @@ START       ORG    $7000                ; first instruction of program
             MOVE.L $1000, $10000000
             MOVE.L $1000, $1000
             MOVEQ.L #1, D1
-            MOVEM.W D1/D2/D3, D1/D2/D3
-            MOVEM.W D1/D2/D3, D1/D2/D3
             MOVEM.W D1/D2/D3, D1
             MOVEM.W D1, D1/D2/D3
             MOVEM.W D1/D2/D3, $10000000
             MOVEM.W $10000000, D1/D2/D3
             MOVEM.W D1/D2/D3, $1000
             MOVEM.W $1000, D1/D2/D3
-            MOVEM.W D1, D1/D2/D3
-            MOVEM.W D1/D2/D3, D1
             MOVEM.W D1, D1
             MOVEM.W D1, D1
             MOVEM.W D1, $10000000
             MOVEM.W $10000000, D1
             MOVEM.W D1, $1000
             MOVEM.W $1000, D1
-            MOVEM.W $10000000, D1/D2/D3
-            MOVEM.W D1/D2/D3, $10000000
             MOVEM.W $10000000, D1
             MOVEM.W D1, $10000000
             MOVEM.W $10000000, $10000000
             MOVEM.W $10000000, $10000000
             MOVEM.W $10000000, $1000
             MOVEM.W $1000, $10000000
-            MOVEM.W $1000, D1/D2/D3
-            MOVEM.W D1/D2/D3, $1000
             MOVEM.W $1000, D1
             MOVEM.W D1, $1000
             MOVEM.W $1000, $10000000
             MOVEM.W $10000000, $1000
             MOVEM.W $1000, $1000
             MOVEM.W $1000, $1000
-            MOVEM.L D1/D2/D3, D1/D2/D3
-            MOVEM.L D1/D2/D3, D1/D2/D3
             MOVEM.L D1/D2/D3, D1
             MOVEM.L D1, D1/D2/D3
             MOVEM.L D1/D2/D3, $10000000
             MOVEM.L $10000000, D1/D2/D3
             MOVEM.L D1/D2/D3, $1000
             MOVEM.L $1000, D1/D2/D3
-            MOVEM.L D1, D1/D2/D3
-            MOVEM.L D1/D2/D3, D1
             MOVEM.L D1, D1
             MOVEM.L D1, D1
             MOVEM.L D1, $10000000
             MOVEM.L $10000000, D1
             MOVEM.L D1, $1000
             MOVEM.L $1000, D1
-            MOVEM.L $10000000, D1/D2/D3
-            MOVEM.L D1/D2/D3, $10000000
             MOVEM.L $10000000, D1
             MOVEM.L D1, $10000000
             MOVEM.L $10000000, $10000000
             MOVEM.L $10000000, $10000000
             MOVEM.L $10000000, $1000
             MOVEM.L $1000, $10000000
-            MOVEM.L $1000, D1/D2/D3
-            MOVEM.L D1/D2/D3, $1000
             MOVEM.L $1000, D1
             MOVEM.L D1, $1000
             MOVEM.L $1000, $10000000
@@ -544,78 +528,6 @@ START       ORG    $7000                ; first instruction of program
             CMPI.L #1, $10000000
             CMPI.L #1, $1000
             BCC GO_TO_SR
-            BCC.B D1, D1
-            BCC.B D1, $10000000
-            BCC.B D1, $1000
-            BCC.B A1, D1
-            BCC.B A1, $10000000
-            BCC.B A1, $1000
-            BCC.B (A1), D1
-            BCC.B (A1), $10000000
-            BCC.B (A1), $1000
-            BCC.B #1, D1
-            BCC.B #1, $10000000
-            BCC.B #1, $1000
-            BCC.B (A1)+, D1
-            BCC.B (A1)+, $10000000
-            BCC.B (A1)+, $1000
-            BCC.B -(A1), D1
-            BCC.B -(A1), $10000000
-            BCC.B -(A1), $1000
-            BCC.B $10000000, D1
-            BCC.B $10000000, $10000000
-            BCC.B $10000000, $1000
-            BCC.B $1000, D1
-            BCC.B $1000, $10000000
-            BCC.B $1000, $1000
-            BCC.W D1, D1
-            BCC.W D1, $10000000
-            BCC.W D1, $1000
-            BCC.W A1, D1
-            BCC.W A1, $10000000
-            BCC.W A1, $1000
-            BCC.W (A1), D1
-            BCC.W (A1), $10000000
-            BCC.W (A1), $1000
-            BCC.W #1, D1
-            BCC.W #1, $10000000
-            BCC.W #1, $1000
-            BCC.W (A1)+, D1
-            BCC.W (A1)+, $10000000
-            BCC.W (A1)+, $1000
-            BCC.W -(A1), D1
-            BCC.W -(A1), $10000000
-            BCC.W -(A1), $1000
-            BCC.W $10000000, D1
-            BCC.W $10000000, $10000000
-            BCC.W $10000000, $1000
-            BCC.W $1000, D1
-            BCC.W $1000, $10000000
-            BCC.W $1000, $1000
-            BCC.L D1, D1
-            BCC.L D1, $10000000
-            BCC.L D1, $1000
-            BCC.L A1, D1
-            BCC.L A1, $10000000
-            BCC.L A1, $1000
-            BCC.L (A1), D1
-            BCC.L (A1), $10000000
-            BCC.L (A1), $1000
-            BCC.L #1, D1
-            BCC.L #1, $10000000
-            BCC.L #1, $1000
-            BCC.L (A1)+, D1
-            BCC.L (A1)+, $10000000
-            BCC.L (A1)+, $1000
-            BCC.L -(A1), D1
-            BCC.L -(A1), $10000000
-            BCC.L -(A1), $1000
-            BCC.L $10000000, D1
-            BCC.L $10000000, $10000000
-            BCC.L $10000000, $1000
-            BCC.L $1000, D1
-            BCC.L $1000, $10000000
-            BCC.L $1000, $1000
             JSR D1
             JSR A1
             JSR (A1)
