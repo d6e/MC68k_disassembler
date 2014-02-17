@@ -44,39 +44,38 @@ def initInstructionList():
 		###Instruct(opcode, src, dest, size, bidirectional=True, label='', AnForSizeB=True):
 		Instruction('MOVE', src, dest, size, False, '', False), # Only for src: No 'An' if size is '.B' 
 		Instruction('MOVEQ', ['#1'], ['D1'], ['.L'], False), 
-		Instruction('MOVEM', ['D1/D2/D3', 'D1','$10000000', '$1000'], ['D1','$10000000', '$1000'], ['.W','.L']), 
-		Instruction('ADD', src, ['D1'], size, True, '', False), # Only for src: No 'An' if size is '.B' 
+		Instruction('MOVEM', ['A1-A6','D1-D7', 'D1'], ['(A1)','$10000000', '$1000'], ['.W','.L']), 
+		Instruction('ADD', src, ['D1'], size, False, '', False), # Only for src: No 'An' if size is '.B' 
 		Instruction('ADDA', src, ['A1'], ['.W','.L'], False),
 		Instruction('ADDI', ['#1'], dest, size, False),
-		Instruction('SUB', src, ['D1'],size,True,'',False), # Only for src: No 'An' if size is '.B'
+		Instruction('SUB', src, ['D1'],size,False,'',False), # Only for src: No 'An' if size is '.B'
 		Instruction('SUBA', src, ['A1'], ['.W','.L'], False),
 		Instruction('SUBQ', ['#1'], dest, size, False, '', False), # Only for src: No 'An' if size is '.B'
-		Instruction('MULS', src, ['D1'], ['.W'], False),
-		Instruction('DIVU', src, ['D1'], ['.W'], False),
-		Instruction('LEA', src, ['A1'], ['.L'], False),
-		Instruction('CLR', src, [''], size, False),  # only one operand
-		Instruction('AND', src, ['D1']),
+		Instruction('MULS', ['D1', '(A1)', '#1', '(A1)+', '-(A1)','$10000000', '$1000'], ['D1'], ['.W'], False),
+		Instruction('DIVU', ['D1', '(A1)', '#1', '(A1)+', '-(A1)','$10000000', '$1000'], ['D1'], ['.W'], False),
+		Instruction('LEA', ['(A1)','$10000000', '$1000'], ['A1'], ['.L'], False),
+		Instruction('CLR', ['D1', '(A1)', '(A1)+', '-(A1)','$10000000', '$1000'], [''], size, False),  # only one operand
+		Instruction('AND', ['D1', '(A1)', '(A1)+', '-(A1)','$10000000', '$1000'], ['D1']),
 		Instruction('ANDI', ['#1'], dest, size, False),
 		Instruction('EOR', ['D1'], dest, size, False),
 		Instruction('EORI', ['#1'], dest, size, False),
 		Instruction('ASR', ['D1'],['D2'], size, False),
 		Instruction('ASR', ['#1'],['D2'], size, False),
-		Instruction('ASR', src, [''], size, False),  # only one operand
 		Instruction('LSL', ['D1'], ['D2'], size, False),
 		Instruction('LSL', ['#1'], ['D2'], size, False),
-		Instruction('LSL', src, [''], size, False),
 		Instruction('ROL', ['D1'], ['D2'], size, False),
 		Instruction('ROR', ['D1'], ['D2'], size, False),
-		Instruction('BCHG', ['D1'], dest, ['.B','.L'], False), # 'Dn' can only be '.L' for dest, all others are '.B'
-		Instruction('BCHG', ['#1'], dest, ['.B','.L'], False), # 'Dn' can only be '.L' for dest, all others are '.B'
+		Instruction('BCHG', ['D1'], ['(A1)', '(A1)+', '-(A1)','$10000000', '$1000'], ['.B'], False), # 'Dn' can only be '.L' for dest, all others are '.B'
+		Instruction('BCHG', ['D1'], ['D1'], ['.L'], False), # 'Dn' can only be '.L' for dest, all others are '.B'
+		Instruction('BCHG', ['#1'], ['(A1)', '(A1)+', '-(A1)','$10000000', '$1000'], ['.B'], False), # 'Dn' can only be '.L' for dest, all others are '.B'
 		Instruction('CMP', src, ['D1'], size, False, '', False), # Only for src: No 'An' if size is '.B'
 		Instruction('CMPA', src, ['A1'], ['.W','.L'], False),
 		Instruction('CMPI', ['#1'], dest, size, False),
-		Instruction('BCC', src, dest, size, False, 'GO_TO_SR'),  # Only label
+		# Instruction('BCC', src, dest, size, False, 'GO_TO_SR'),  # Only label
 		# Instruction('BGT', src, dest, size, False),
 		# Instruction('BLE', src, dest, size, False),
 		# Instruction('BVS', src, dest, size, False),
-		Instruction('JSR', src, [''], [''], False),
+		Instruction('JSR', ['(A1)', '$10000000', '$1000'], [''], [''], False),
 		Instruction('RTS', [''], [''], [''], False),
 	]
 

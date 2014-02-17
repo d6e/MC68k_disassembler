@@ -80,100 +80,65 @@ START       ORG    $7000                ; first instruction of program
             MOVE.L $1000, $10000000
             MOVE.L $1000, $1000
             MOVEQ.L #1, D1
-            MOVEM.W D1/D2/D3, D1
-            MOVEM.W D1, D1/D2/D3
-            MOVEM.W D1/D2/D3, $10000000
-            MOVEM.W $10000000, D1/D2/D3
-            MOVEM.W D1/D2/D3, $1000
-            MOVEM.W $1000, D1/D2/D3
-            MOVEM.W D1, D1
-            MOVEM.W D1, D1
+            MOVEM.W A1-A6, (A1)
+            MOVEM.W (A1), A1-A6
+            MOVEM.W A1-A6, $10000000
+            MOVEM.W $10000000, A1-A6
+            MOVEM.W A1-A6, $1000
+            MOVEM.W $1000, A1-A6
+            MOVEM.W D1-D7, (A1)
+            MOVEM.W (A1), D1-D7
+            MOVEM.W D1-D7, $10000000
+            MOVEM.W $10000000, D1-D7
+            MOVEM.W D1-D7, $1000
+            MOVEM.W $1000, D1-D7
+            MOVEM.W D1, (A1)
+            MOVEM.W (A1), D1
             MOVEM.W D1, $10000000
             MOVEM.W $10000000, D1
             MOVEM.W D1, $1000
             MOVEM.W $1000, D1
-            MOVEM.W $10000000, D1
-            MOVEM.W D1, $10000000
-            MOVEM.W $10000000, $10000000
-            MOVEM.W $10000000, $10000000
-            MOVEM.W $10000000, $1000
-            MOVEM.W $1000, $10000000
-            MOVEM.W $1000, D1
-            MOVEM.W D1, $1000
-            MOVEM.W $1000, $10000000
-            MOVEM.W $10000000, $1000
-            MOVEM.W $1000, $1000
-            MOVEM.W $1000, $1000
-            MOVEM.L D1/D2/D3, D1
-            MOVEM.L D1, D1/D2/D3
-            MOVEM.L D1/D2/D3, $10000000
-            MOVEM.L $10000000, D1/D2/D3
-            MOVEM.L D1/D2/D3, $1000
-            MOVEM.L $1000, D1/D2/D3
-            MOVEM.L D1, D1
-            MOVEM.L D1, D1
+            MOVEM.L A1-A6, (A1)
+            MOVEM.L (A1), A1-A6
+            MOVEM.L A1-A6, $10000000
+            MOVEM.L $10000000, A1-A6
+            MOVEM.L A1-A6, $1000
+            MOVEM.L $1000, A1-A6
+            MOVEM.L D1-D7, (A1)
+            MOVEM.L (A1), D1-D7
+            MOVEM.L D1-D7, $10000000
+            MOVEM.L $10000000, D1-D7
+            MOVEM.L D1-D7, $1000
+            MOVEM.L $1000, D1-D7
+            MOVEM.L D1, (A1)
+            MOVEM.L (A1), D1
             MOVEM.L D1, $10000000
             MOVEM.L $10000000, D1
             MOVEM.L D1, $1000
             MOVEM.L $1000, D1
-            MOVEM.L $10000000, D1
-            MOVEM.L D1, $10000000
-            MOVEM.L $10000000, $10000000
-            MOVEM.L $10000000, $10000000
-            MOVEM.L $10000000, $1000
-            MOVEM.L $1000, $10000000
-            MOVEM.L $1000, D1
-            MOVEM.L D1, $1000
-            MOVEM.L $1000, $10000000
-            MOVEM.L $10000000, $1000
-            MOVEM.L $1000, $1000
-            MOVEM.L $1000, $1000
-            ADD.B D1, D1
             ADD.B D1, D1
             ADD.B (A1), D1
-            ADD.B D1, (A1)
             ADD.B #1, D1
-            ADD.B D1, #1
             ADD.B (A1)+, D1
-            ADD.B D1, (A1)+
             ADD.B -(A1), D1
-            ADD.B D1, -(A1)
             ADD.B $10000000, D1
-            ADD.B D1, $10000000
             ADD.B $1000, D1
-            ADD.B D1, $1000
-            ADD.W D1, D1
             ADD.W D1, D1
             ADD.W A1, D1
-            ADD.W D1, A1
             ADD.W (A1), D1
-            ADD.W D1, (A1)
             ADD.W #1, D1
-            ADD.W D1, #1
             ADD.W (A1)+, D1
-            ADD.W D1, (A1)+
             ADD.W -(A1), D1
-            ADD.W D1, -(A1)
             ADD.W $10000000, D1
-            ADD.W D1, $10000000
             ADD.W $1000, D1
-            ADD.W D1, $1000
-            ADD.L D1, D1
             ADD.L D1, D1
             ADD.L A1, D1
-            ADD.L D1, A1
             ADD.L (A1), D1
-            ADD.L D1, (A1)
             ADD.L #1, D1
-            ADD.L D1, #1
             ADD.L (A1)+, D1
-            ADD.L D1, (A1)+
             ADD.L -(A1), D1
-            ADD.L D1, -(A1)
             ADD.L $10000000, D1
-            ADD.L D1, $10000000
             ADD.L $1000, D1
-            ADD.L D1, $1000
             ADDA.W D1, A1
             ADDA.W A1, A1
             ADDA.W (A1), A1
@@ -200,51 +165,28 @@ START       ORG    $7000                ; first instruction of program
             ADDI.L #1, $10000000
             ADDI.L #1, $1000
             SUB.B D1, D1
-            SUB.B D1, D1
             SUB.B (A1), D1
-            SUB.B D1, (A1)
             SUB.B #1, D1
-            SUB.B D1, #1
             SUB.B (A1)+, D1
-            SUB.B D1, (A1)+
             SUB.B -(A1), D1
-            SUB.B D1, -(A1)
             SUB.B $10000000, D1
-            SUB.B D1, $10000000
             SUB.B $1000, D1
-            SUB.B D1, $1000
-            SUB.W D1, D1
             SUB.W D1, D1
             SUB.W A1, D1
-            SUB.W D1, A1
             SUB.W (A1), D1
-            SUB.W D1, (A1)
             SUB.W #1, D1
-            SUB.W D1, #1
             SUB.W (A1)+, D1
-            SUB.W D1, (A1)+
             SUB.W -(A1), D1
-            SUB.W D1, -(A1)
             SUB.W $10000000, D1
-            SUB.W D1, $10000000
             SUB.W $1000, D1
-            SUB.W D1, $1000
-            SUB.L D1, D1
             SUB.L D1, D1
             SUB.L A1, D1
-            SUB.L D1, A1
             SUB.L (A1), D1
-            SUB.L D1, (A1)
             SUB.L #1, D1
-            SUB.L D1, #1
             SUB.L (A1)+, D1
-            SUB.L D1, (A1)+
             SUB.L -(A1), D1
-            SUB.L D1, -(A1)
             SUB.L $10000000, D1
-            SUB.L D1, $10000000
             SUB.L $1000, D1
-            SUB.L D1, $1000
             SUBA.W D1, A1
             SUBA.W A1, A1
             SUBA.W (A1), A1
@@ -271,7 +213,6 @@ START       ORG    $7000                ; first instruction of program
             SUBQ.L #1, $10000000
             SUBQ.L #1, $1000
             MULS.W D1, D1
-            MULS.W A1, D1
             MULS.W (A1), D1
             MULS.W #1, D1
             MULS.W (A1)+, D1
@@ -279,53 +220,37 @@ START       ORG    $7000                ; first instruction of program
             MULS.W $10000000, D1
             MULS.W $1000, D1
             DIVU.W D1, D1
-            DIVU.W A1, D1
             DIVU.W (A1), D1
             DIVU.W #1, D1
             DIVU.W (A1)+, D1
             DIVU.W -(A1), D1
             DIVU.W $10000000, D1
             DIVU.W $1000, D1
-            LEA.L D1, A1
-            LEA.L A1, A1
             LEA.L (A1), A1
-            LEA.L #1, A1
-            LEA.L (A1)+, A1
-            LEA.L -(A1), A1
             LEA.L $10000000, A1
             LEA.L $1000, A1
             CLR.B D1
-            CLR.B A1
             CLR.B (A1)
-            CLR.B #1
             CLR.B (A1)+
             CLR.B -(A1)
             CLR.B $10000000
             CLR.B $1000
             CLR.W D1
-            CLR.W A1
             CLR.W (A1)
-            CLR.W #1
             CLR.W (A1)+
             CLR.W -(A1)
             CLR.W $10000000
             CLR.W $1000
             CLR.L D1
-            CLR.L A1
             CLR.L (A1)
-            CLR.L #1
             CLR.L (A1)+
             CLR.L -(A1)
             CLR.L $10000000
             CLR.L $1000
             AND.B D1, D1
             AND.B D1, D1
-            AND.B A1, D1
-            AND.B D1, A1
             AND.B (A1), D1
             AND.B D1, (A1)
-            AND.B #1, D1
-            AND.B D1, #1
             AND.B (A1)+, D1
             AND.B D1, (A1)+
             AND.B -(A1), D1
@@ -336,12 +261,8 @@ START       ORG    $7000                ; first instruction of program
             AND.B D1, $1000
             AND.W D1, D1
             AND.W D1, D1
-            AND.W A1, D1
-            AND.W D1, A1
             AND.W (A1), D1
             AND.W D1, (A1)
-            AND.W #1, D1
-            AND.W D1, #1
             AND.W (A1)+, D1
             AND.W D1, (A1)+
             AND.W -(A1), D1
@@ -352,12 +273,8 @@ START       ORG    $7000                ; first instruction of program
             AND.W D1, $1000
             AND.L D1, D1
             AND.L D1, D1
-            AND.L A1, D1
-            AND.L D1, A1
             AND.L (A1), D1
             AND.L D1, (A1)
-            AND.L #1, D1
-            AND.L D1, #1
             AND.L (A1)+, D1
             AND.L D1, (A1)+
             AND.L -(A1), D1
@@ -399,78 +316,29 @@ START       ORG    $7000                ; first instruction of program
             ASR.B #1, D2
             ASR.W #1, D2
             ASR.L #1, D2
-            ASR.B D1
-            ASR.B A1
-            ASR.B (A1)
-            ASR.B #1
-            ASR.B (A1)+
-            ASR.B -(A1)
-            ASR.B $10000000
-            ASR.B $1000
-            ASR.W D1
-            ASR.W A1
-            ASR.W (A1)
-            ASR.W #1
-            ASR.W (A1)+
-            ASR.W -(A1)
-            ASR.W $10000000
-            ASR.W $1000
-            ASR.L D1
-            ASR.L A1
-            ASR.L (A1)
-            ASR.L #1
-            ASR.L (A1)+
-            ASR.L -(A1)
-            ASR.L $10000000
-            ASR.L $1000
             LSL.B D1, D2
             LSL.W D1, D2
             LSL.L D1, D2
             LSL.B #1, D2
             LSL.W #1, D2
             LSL.L #1, D2
-            LSL.B D1
-            LSL.B A1
-            LSL.B (A1)
-            LSL.B #1
-            LSL.B (A1)+
-            LSL.B -(A1)
-            LSL.B $10000000
-            LSL.B $1000
-            LSL.W D1
-            LSL.W A1
-            LSL.W (A1)
-            LSL.W #1
-            LSL.W (A1)+
-            LSL.W -(A1)
-            LSL.W $10000000
-            LSL.W $1000
-            LSL.L D1
-            LSL.L A1
-            LSL.L (A1)
-            LSL.L #1
-            LSL.L (A1)+
-            LSL.L -(A1)
-            LSL.L $10000000
-            LSL.L $1000
             ROL.B D1, D2
             ROL.W D1, D2
             ROL.L D1, D2
             ROR.B D1, D2
             ROR.W D1, D2
             ROR.L D1, D2
-            BCHG.B D1, D1
+            BCHG.B D1, (A1)
+            BCHG.B D1, (A1)+
+            BCHG.B D1, -(A1)
             BCHG.B D1, $10000000
             BCHG.B D1, $1000
             BCHG.L D1, D1
-            BCHG.L D1, $10000000
-            BCHG.L D1, $1000
-            BCHG.B #1, D1
+            BCHG.B #1, (A1)
+            BCHG.B #1, (A1)+
+            BCHG.B #1, -(A1)
             BCHG.B #1, $10000000
             BCHG.B #1, $1000
-            BCHG.L #1, D1
-            BCHG.L #1, $10000000
-            BCHG.L #1, $1000
             CMP.B D1, D1
             CMP.B (A1), D1
             CMP.B #1, D1
@@ -519,13 +387,7 @@ START       ORG    $7000                ; first instruction of program
             CMPI.L #1, D1
             CMPI.L #1, $10000000
             CMPI.L #1, $1000
-            BCC GO_TO_SR
-            JSR D1
-            JSR A1
             JSR (A1)
-            JSR #1
-            JSR (A1)+
-            JSR -(A1)
             JSR $10000000
             JSR $1000
             RTS 
