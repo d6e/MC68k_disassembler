@@ -18,7 +18,16 @@
 *    MOVEM.L A0-A3/D0-D7, -(A7) * copies all working registers to stack
 *    MOVEM.L (A7)+, A0-A3/D0-D7 *Restore the registers
 
-
+* Notes on AND filters (bit masking):
+* Example:
+*       0001 000 001 111 100   (say you want "001")
+*   AND 0000 000 111 000 000   (0 <-- don't want, 1 <-- do want)
+*       --------------------
+*     = 0000 000 001 000 000
+*
+* Relevant wiki page:
+*   https://en.wikipedia.org/wiki/Mask_(computing)#Masking_bits_to_0
+*
 
 *################ BEGIN MAIN ###############################
 *** All subroutine calls are made here ***
