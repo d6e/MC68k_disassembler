@@ -33,7 +33,7 @@
 *** All subroutine calls are made here ***
 START                   ORG        $1000       ; first instruction of program
                         BSR        PROMPT_INPUT            ; prompt the user for input
-                        BSR        READ_FIRST              ; read the first instruction
+                  ;      BSR        READ_FIRST              ; read the first instruction
 
 
 STOP                    STOP       #$2700          ; halt simulator, end of main
@@ -52,13 +52,9 @@ TAKE_USER_IN_S          MOVE.B      #1,D3
                         MOVE.B      #14,D0
                         TRAP        #15
                         
-                        MOVE.L      #$DEADBEEF,$7000
+                        ;MOVE.L      #$DEADBEEF,$7000
 
                         BSR         TAKE_USER_INPUT
-                        
-; (start address first, since this iteration of the project stops immediately after READ_FIRST.
-
-; TODO: ending address is similar process
 
 TAKE_USER_IN_E          MOVE.B      #0,D3
                         LEA         END_ADDR_MSG,A1  ; prompt user for ending address
@@ -324,15 +320,17 @@ SET_END_ADDR            CMP.L       A5,D7    ;if end address is lower than start
                         BLT         INVALID_END_ADDR           
                         
                         MOVEA.L     D7,A6  ;when a valid start address is inputted, store and ask the user for an end address.
+                        BSR         BEGIN_READ
+                        
+BEGIN_READ              MOVE.W      (A5)+,CURRENT_WORD ;look at the first instruction word at the starting address.
                         BSR         PREPARE_DISPLAY
+                        ;CLR         D3
+                        ;MOVE.W      CURRENT_WORD,D3
 
 *------------------- Add to display buffer -------------------
 ;At this point A5 is a valid start address and A6 is a valid end address.
-PREPARE_DISPLAY         MOVE.L      (A5),D1 ;TEMPORARY
-                        MOVE.B      #16,D2
-                        MOVE.B      #15,D0
-                        TRAP        #15
-                        
+;TODO: prepare the display buffer
+PREPARE_DISPLAY         BSR          READ_CURRENT_OP    ;TEMP (though we might still call this after the display buffer is prepared)                       
                         JMP         STOP
                         
                         
@@ -342,7 +340,31 @@ PREPARE_DISPLAY         MOVE.L      (A5),D1 ;TEMPORARY
 *------------------- Check if end of data -------------------
 *------------------- Ask user for input -------------------
 
-*------------------- Print found instruction (temporary) -------------------
+
+*################## END IO  #####################################
+*################## BEGIN OPCODE ##########################
+*** OPcode Subroutines are kept here ***
+
+*------------------- Read current OPcode -------------------
+READ_CURRENT_OP         BSR         CHECK_CONSTANTS
+                        ;CLR         D3  
+                        ;CLR         D4
+                        ;;MOVE.W      CURRENT_WORD,D3 ; By this point, the current word should store a potential beginning of an instruction     
+                        ;ANDI.W      #FILT_2BIT_1,D3 ; and A5 (current address we are reading) should have just been incremented to a point immediately after that word.
+ 
+*------------------ Check current word for constants---------
+; By this point, the current word should store a potential beginning of an instruction                   
+CHECK_CONSTANTS         BSR         CHECK_NOP
+
+CHECK_RESET             CMP         #RESET_CODE,(CURRENT_WORD) ; TODO: test that this is correct syntax
+                        BNE         CHECK_NOP
+                       
+RESET_FOUND             JMP         STOP  ;TODO: case for reset found    
+ 
+CHECK_NOP               CMP         #NOP_CODE,(CURRENT_WORD) ; TODO: test that this is correct syntax
+                        BNE         CHECK_STOP
+
+;NOTE: this SR is temporary. Once we have the display buffer, it will work differently.                 
 NOP_FOUND               LEA         DOLLAR,A1     ; '$'
                         MOVE.B      #14,D0
                         TRAP        #15
@@ -362,24 +384,26 @@ NOP_FOUND               LEA         DOLLAR,A1     ; '$'
                 
                         MOVE.B      #9,D0         ; terminate the program
                         TRAP        #15
-                        JMP         STOP          ; quit the program (TODO: Possibly do something else?)
+                        JMP         STOP          ; quit the program (TODO: once this works, keep reading instead.)
+                        
+CHECK_STOP              CMP         #STOP_CODE,(CURRENT_WORD)
+                        BNE         CHECK_NON_CONSTANTS
 
+STOP_FOUND              JMP         STOP  ;TODO: case for stop found               
 
-*################## END IO  #####################################
-*################## BEGIN OPCODE ##########################
-*** IO Subroutines are kept here ***
+;TODO: add cases for rest of valid constant OPcodes
 
-*------------------- Read first instruction -------------------
-READ_FIRST      ;TODO
-                ;MOVEA.W     TEST_ORIGIN,A2      ; test the first word of the program
-                ;TODO: instead of just comparing to NOP, branch based on digits.
+*----------------- Check current word for non-constants---------
+;NOTE: we currently know that CURRENT_WORD is not a constant by the time we reach this SR.
+
+CHECK_NON_CONSTANTS     JMP         STOP    ;TODO: CURRENT_WORD still holds current possible 16 bit instruction, so read it for current word.        
+
+                       
+
+                                                            
                 ;MOVE.W      NEXT_ADDR,D4    ;this would be a good place to postincrement.
                 ;CMP.W       #NOP_CODE,D4
                 ;BEQ         NOP_FOUND
-                ; put an "else" here
-                
-                RTS                       ; return
-
                 
                 ;TODO: process for reading hex instructions (after the first instruction):
                 ;           1) Go to start of instruction reading loop, passing in the address of next instruction.
@@ -509,6 +533,7 @@ CR                      EQU         $0D
 LF                      EQU         $0A
 RETURN                  DC.B        CR,LF,0
 SPACE                   DC.B        ' ',0
+DOLLAR                  DC.B        '$',0
 
 *output messages
     ;TODO: consider also giving the user the range of valid start/end addresses
@@ -529,13 +554,17 @@ INVALID_ADDR_H_MSG      DC.B        'Not a valid address (too high).',CR,LF
                         DC.B        'Please enter a valid address.',CR,LF,0
 
 *output instruction names
+RESET_MSG               DC.B        'RESET',0
 NOP_MSG                 DC.B        'NOP',0
+STOP_MSG                DC.B        'STOP',0
 
 *storage locations for input
 START_ADDR_IN           DS.B        20
 
-*other input-related variables/constants
+*other I/O-related variables/constants
 INPUTTING_START         SET         1 ;if 1, we are inputting start address. If 0, we are inputting end address.
+DISPLAY_BUFFER          DS.W        5
+CURRENT_WORD            DS.W        1 ;current first 16 bits of an instruction.
 
 *address constants
 MIN_ADDRESS             EQU         $00003000
@@ -546,25 +575,24 @@ TEST_ORIGIN             SET         $00007000
 NEXT_ADDR               SET         TEST_ORIGIN
 END_ADDR                SET         $00009000
 
-*constant OPcodes
-NOP_CODE                EQU         $4E71
-DOLLAR                  DC.B        '$',0
-
 *filters for isolating parts of a hexa instruction.
-*To filter an instruction, AND it with the desired filter.
-FILT_NIB1               EQU         $F000   ;first nibble:              XXXX 0000 0000 0000
+*To filter an instruction, ANDI it with the desired filter.
+FILT_2BIT_1             EQU         $C000   ;first 2 bits:              XX00 0000 0000 0000
+FILT_NIB_1              EQU         $F000   ;first nibble:              XXXX 0000 0000 0000
 FILT_MOVE_SIZE          EQU         $3000   ;Size of a move operation:  00XX 0000 0000 0000
 FILT_DEST_REG           EQU         $0E00   ;destination register:      0000 XXX0 0000 0000
 FILT_DEST_MD            EQU         $01A0   ;destination mode:          0000 000X XX00 0000
 FILT_SRC_MD             EQU         $0038   ;source mode:               0000 0000 00XX X000
 FILT_SRC_REG            EQU         $0007   ;source register:           0000 0000 0000 0XXX
 
-;TODO: consider other filters like OPmode and size.
-;FILT_DEST_REG    EQU        $0E00   ;destination regilster:     0000 XXX0 0000 0000
-;FILT_DEST_REG    EQU        $0E00   ;destination regilster:     0000 XXX0 0000 0000
+*constants for comparing with filtered instructions.
+CONST_ALL_0             EQU         $0000   ;all 0s:                    0000 0000 0000 0000
 
-        ;TODO: replace Xs with address of instruction and make message more general.
-    
+*full OPcode contstants
+RESET_CODE              EQU         $4E70   ;                           0100 1110 0111 0001
+NOP_CODE                EQU         $4E71   ;                           0100 1110 0111 0001
+STOP_CODE               EQU         $4E72   ;                           0100 1110 0111 0010
+
   
 *############# END VARIABLES/CONSTANTS #########################
 
