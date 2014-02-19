@@ -51,8 +51,6 @@ TAKE_USER_IN_S          MOVE.B      #1,D3
                         LEA         START_ADDR_MSG,A1  ; Prompt user for starting address
                         MOVE.B      #14,D0
                         TRAP        #15
-                        
-                        ;MOVE.L      #$DEADBEEF,$7000
 
                         BSR         TAKE_USER_INPUT
 
@@ -311,7 +309,7 @@ CONVERSION_DONE         LSL.L       #8,D7   ; Prepare for concatenation
 VALID_ADDR              CMPI        #1,D3
                         
                         BEQ         SET_START_ADDR
-                        BSR         SET_END_ADDR
+                        BSR         SET_END_ADDR              
                                                
 SET_START_ADDR          MOVEA.L     D7,A5  ;when a valid start address is inputted, store and ask the user for an end address.
                         BSR         TAKE_USER_IN_E
@@ -322,20 +320,32 @@ SET_END_ADDR            CMP.L       A5,D7    ;if end address is lower than start
                         MOVEA.L     D7,A6  ;when a valid start address is inputted, store and ask the user for an end address.
                         BSR         BEGIN_READ
                         
-BEGIN_READ              MOVE.W      (A5)+,CURRENT_WORD ;look at the first instruction word at the starting address.
+BEGIN_READ              MOVEA.L      A5,A4 ; keep track of address to print with A4. TODO: could also add this value to the display buffer.
+                        MOVE.W      (A5)+,CURRENT_WORD ;look at the first instruction word at the starting address.
                         BSR         PREPARE_DISPLAY
-                        ;CLR         D3
-                        ;MOVE.W      CURRENT_WORD,D3
 
 *------------------- Add to display buffer -------------------
 ;At this point A5 is a valid start address and A6 is a valid end address.
 ;TODO: prepare the display buffer
-PREPARE_DISPLAY         BSR          READ_CURRENT_OP    ;TEMP (though we might still call this after the display buffer is prepared)                       
-                        JMP         STOP
-                        
-                        
-
+PREPARE_DISPLAY         BSR         READ_CURRENT_OP    ;TEMP (though we might still call this after the display buffer is prepared)                       
+               
 *------------------- Move address pointer for data reading -------------------
+; This method is specifically for reading the next OPword.
+GO_TO_NEXT_OP           BSR         CHECK_DONE_READING
+
+CHECK_DONE_READING      CMPA        A6,A5
+                        BLT         CONFIRMED_NEXT_OP
+                        BSR         DONE_READING
+                        
+DONE_READING            LEA         DONE_READING_MSG,A1 ; when we reach the end address, say so and halt the program.
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        JMP         STOP
+                         
+CONFIRMED_NEXT_OP       CLR         CURRENT_WORD
+                        MOVEA.L      A5,A4 ; keep track of address to print with A4. 
+                        MOVE.W      (A5)+,CURRENT_WORD
+                        BSR         READ_CURRENT_OP
 *------------------- Print display buffer -------------------
 *------------------- Check if end of data -------------------
 *------------------- Ask user for input -------------------
@@ -346,10 +356,11 @@ PREPARE_DISPLAY         BSR          READ_CURRENT_OP    ;TEMP (though we might s
 *** OPcode Subroutines are kept here ***
 
 *------------------- Read current OPcode -------------------
+; By this point, CURRENT_WORD should store a potential beginning of an instruction, so we should not increment A5.
 READ_CURRENT_OP         BSR         CHECK_CONSTANTS
                         ;CLR         D3  
                         ;CLR         D4
-                        ;;MOVE.W      CURRENT_WORD,D3 ; By this point, the current word should store a potential beginning of an instruction     
+                        ;MOVE.W          
                         ;ANDI.W      #FILT_2BIT_1,D3 ; and A5 (current address we are reading) should have just been incremented to a point immediately after that word.
  
 *------------------ Check current word for constants---------
@@ -369,7 +380,7 @@ NOP_FOUND               LEA         DOLLAR,A1     ; '$'
                         MOVE.B      #14,D0
                         TRAP        #15
                 
-                        MOVE.L      #NEXT_ADDR,D1 ;display the address NOP was found at
+                        MOVE.L      A4,D1 ;display the address NOP was found at
                         MOVE.B      #16,D2
                         MOVE.B      #15,D0
                         TRAP        #15
@@ -381,10 +392,12 @@ NOP_FOUND               LEA         DOLLAR,A1     ; '$'
                         LEA         NOP_MSG,A1    ; 'NOP'
                         MOVE.B      #14,D0
                         TRAP        #15
-                
-                        MOVE.B      #9,D0         ; terminate the program
+                        
+                        LEA         RETURN,A1    ; (return)
+                        MOVE.B      #14,D0
                         TRAP        #15
-                        JMP         STOP          ; quit the program (TODO: once this works, keep reading instead.)
+               
+                        BSR         GO_TO_NEXT_OP
                         
 CHECK_STOP              CMP         #STOP_CODE,(CURRENT_WORD)
                         BNE         CHECK_NON_CONSTANTS
@@ -396,15 +409,65 @@ STOP_FOUND              JMP         STOP  ;TODO: case for stop found
 *----------------- Check current word for non-constants---------
 ;NOTE: we currently know that CURRENT_WORD is not a constant by the time we reach this SR.
 
-CHECK_NON_CONSTANTS     JMP         STOP    ;TODO: CURRENT_WORD still holds current possible 16 bit instruction, so read it for current word.        
+CHECK_NON_CONSTANTS     CLR         D3
+                        BSR         CHECK_MOVE_B
+                        
+CHECK_MOVE_B            MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_NIB_1,D3
+                        CMP         #CONST_MOVE_B,D3
+                        BNE         CHECK_MOVE_W
+                        
+;NOTE: this SR is temporary. will be different with display buffer.
+MOVE_B_FOUND            LEA         DOLLAR,A1     ; '$'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                
+                        MOVE.L      A4,D1 ;display the address MOVE.B was found at
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
+                        TRAP        #15
 
-                       
+                        LEA         SPACE,A1      ; ' '
+                        MOVE.B      #14,D0      
+                        TRAP        #15
+
+                        LEA         MOVE_B_MSG,A1    ; 'MOVE.B'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        ;TODO: at this point, need to print more information (parsed by EA, probably)
+                        
+                        LEA         RETURN,A1    ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+               
+                        BSR         GO_TO_NEXT_OP
+                        
+CHECK_MOVE_W            MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_NIB_1,D3
+                        CMP         #CONST_MOVE_W,D3
+                        BNE         CHECK_MOVE_L
+                        
+MOVE_W_FOUND    ;TODO
+                        
+CHECK_MOVE_L            MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_NIB_1,D3
+                        CMP         #CONST_MOVE_L,D3
+                        ;BNE         CHECK_MOVE_W
+                        JMP         STOP ;TODO: keep checking for more possible instructions
+                        
+MOVE_L_FOUND    ;TODO
+                        
+
+                        JMP         STOP    ;TODO: CURRENT_WORD still holds current possible 16 bit instruction, so read it for current word.        
+
+                        ;MOVE.B #10,D0
+                        ;MOVE.B D1, D1
+                        ;MOVE.B D1, $10000000
+                        ;MOVE.B D1, $1000
 
                                                             
-                ;MOVE.W      NEXT_ADDR,D4    ;this would be a good place to postincrement.
-                ;CMP.W       #NOP_CODE,D4
-                ;BEQ         NOP_FOUND
-                
+       
                 ;TODO: process for reading hex instructions (after the first instruction):
                 ;           1) Go to start of instruction reading loop, passing in the address of next instruction.
                 ;           2) Store a word (16 bits) from that address.
@@ -534,6 +597,7 @@ LF                      EQU         $0A
 RETURN                  DC.B        CR,LF,0
 SPACE                   DC.B        ' ',0
 DOLLAR                  DC.B        '$',0
+COMMA                   DC.B        ',',0
 
 *output messages
     ;TODO: consider also giving the user the range of valid start/end addresses
@@ -552,11 +616,15 @@ INVALID_ADDR_L_MSG      DC.B        'Not a valid address (too low).',CR,LF
                         
 INVALID_ADDR_H_MSG      DC.B        'Not a valid address (too high).',CR,LF
                         DC.B        'Please enter a valid address.',CR,LF,0
+                        
+DONE_READING_MSG        DC.B        'Done reading the program.',CR,LF,0
 
 *output instruction names
 RESET_MSG               DC.B        'RESET',0
 NOP_MSG                 DC.B        'NOP',0
 STOP_MSG                DC.B        'STOP',0
+
+MOVE_B_MSG              DC.B        'MOVE.B',0
 
 *storage locations for input
 START_ADDR_IN           DS.B        20
@@ -586,7 +654,12 @@ FILT_SRC_MD             EQU         $0038   ;source mode:               0000 000
 FILT_SRC_REG            EQU         $0007   ;source register:           0000 0000 0000 0XXX
 
 *constants for comparing with filtered instructions.
-CONST_ALL_0             EQU         $0000   ;all 0s:                    0000 0000 0000 0000
+*(These do not represent the complete insturctions
+CONST_ALL_0             EQU         $0000   ; all 0s:                   0000 0000 0000 0000
+    ;MOVE
+CONST_MOVE_B            EQU         $1000   ; MOVE.B (use first nib)    0001 0000 0000 0000
+CONST_MOVE_W            EQU         $3000   ; MOVE.W (use first nib)    0011 0000 0000 0000
+CONST_MOVE_L            EQU         $2000   ; MOVE.L (use first nib)    0010 0000 0000 0000
 
 *full OPcode contstants
 RESET_CODE              EQU         $4E70   ;                           0100 1110 0111 0001
