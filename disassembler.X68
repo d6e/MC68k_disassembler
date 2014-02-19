@@ -32,8 +32,8 @@
 *################ BEGIN MAIN ###############################
 *** All subroutine calls are made here ***
 START                   ORG        $1000       ; first instruction of program
-                        BRA        PROMPT_INPUT            ; prompt the user for input
-                        BRA        READ_FIRST              ; read the first instruction
+                        BSR        PROMPT_INPUT            ; prompt the user for input
+                        BSR        READ_FIRST              ; read the first instruction
 
 
 STOP                    STOP       #$2700          ; halt simulator, end of main
@@ -43,35 +43,29 @@ STOP                    STOP       #$2700          ; halt simulator, end of main
 *** IO Subroutines are kept here ***
 
 *-------------------- Print ASCII logo ----------------------
-PROMPT_INPUT            BRA         TAKE_USER_IN_S ;TODO: change to welcome/ASCII logo
+PROMPT_INPUT            BSR         TAKE_USER_IN_S ;TODO: change to welcome/ASCII logo
 *------------------- Prompt user for input -------------------
 
                 
 TAKE_USER_IN_S          MOVE.B      #1,D3
-                        LEA         INPUT_MSG_1,A1  ; Prompt user for starting address
+                        LEA         START_ADDR_MSG,A1  ; Prompt user for starting address
                         MOVE.B      #14,D0
                         TRAP        #15
                         
-                        
-                        
-;INPUTTING_START         SET         1 ;MOVE.B      #1,   ;flag that we are on start address.
-
                         MOVE.L      #$DEADBEEF,$7000
 
-                        
-
-                        BRA         TAKE_USER_INPUT
+                        BSR         TAKE_USER_INPUT
                         
 ; (start address first, since this iteration of the project stops immediately after READ_FIRST.
 
 ; TODO: ending address is similar process
 
 TAKE_USER_IN_E          MOVE.B      #0,D3
-                        LEA         INPUT_MSG_2,A1  ; prompt user for ending address
+                        LEA         END_ADDR_MSG,A1  ; prompt user for ending address
                         MOVE.B      #14,D0
                         TRAP        #15
                         
-                        BRA         TAKE_USER_INPUT
+                        BSR         TAKE_USER_INPUT
                         
 TAKE_USER_INPUT         MOVE.L      #$00000000,D1   ; need to clear out the data registers we are about to use to avoid junk data.   
                         MOVE.L      #$00000000,D5    
@@ -124,222 +118,222 @@ COUNT_INPUT_DIGITS      MOVEA.W     #$2001,A1
 
 *------------------- Convert to hex subroutine -------------------
 
-ASCII_TO_HEX            MOVE.L   #$00000000,D6      ; running total of converted hex number
+ASCII_TO_HEX            MOVE.L      #$00000000,D6      ; running total of converted hex number
                 
                         ;first digit
-                        MOVE.B   -(A1),D5  ; Move the raw ascii value of first digit into 3007.
-                        CMP      #$30,D5
-                        BLT      INVALID_ADDR_INPUT ;comes  from inputting invalid characters
-                        CMP      #$40,D5
-                        BEQ      INVALID_ADDR_INPUT
-                        CMP      #$46,D5
-                        BGT      INVALID_ADDR_INPUT   
+                        MOVE.B      -(A1),D5  ; Move the raw ascii value of first digit into 3007.
+                        CMP         #$30,D5
+                        BLT         INVALID_ADDR_INPUT ;comes  from inputting invalid characters
+                        CMP         #$40,D5
+                        BEQ         INVALID_ADDR_INPUT
+                        CMP         #$46,D5
+                        BGT         INVALID_ADDR_INPUT   
                         ; Convert ascii to hex for that digit.
-                        SUB      #$30,D5   ;
-                        CMP      #$A,D5
-                        BLT      DIG_CONV_DONE_1 ; Necessary to convert some ASCII values.
-                        SUB.B    #7, D5                      ; TODO: errors for invalid ASCII values.
+                        SUB         #$30,D5   ;
+                        CMP         #$A,D5
+                        BLT         DIG_CONV_DONE_1 ; Necessary to convert some ASCII values.
+                        SUB.B       #7, D5                      ; TODO: errors for invalid ASCII values.
                 
-DIG_CONV_DONE_1         ADD.W    D5,D6
-                        CMP      #1,D1
-                        BEQ      CONVERSION_DONE
+DIG_CONV_DONE_1         ADD.W       D5,D6
+                        CMP         #1,D1
+                        BEQ         CONVERSION_DONE
                 
                         ;second digit
-                        MOVE.L   #$00000000,D5
-                        MOVE.B   -(A1),D5
-                        CMP      #$30,D5
-                        BLT      INVALID_ADDR_INPUT ;comes  from inputting invalid characters
-                        CMP      #$40,D5
-                        BEQ      INVALID_ADDR_INPUT
-                        CMP      #$46,D5
-                        BGT      INVALID_ADDR_INPUT   
-                        SUB      #$30,D5
-                        CMP      #$A,D5            
-                        BLT      DIG_CONV_DONE_2    ;digit conversion done 1
-                        SUB.B    #7, D5             ; if we have A or greater, then we need to subtract 1.
+                        MOVE.L      #$00000000,D5
+                        MOVE.B      -(A1),D5
+                        CMP         #$30,D5
+                        BLT         INVALID_ADDR_INPUT ;comes  from inputting invalid characters
+                        CMP         #$40,D5
+                        BEQ         INVALID_ADDR_INPUT
+                        CMP         #$46,D5
+                        BGT         INVALID_ADDR_INPUT   
+                        SUB         #$30,D5
+                        CMP         #$A,D5            
+                        BLT         DIG_CONV_DONE_2    ;digit conversion done 1
+                        SUB.B       #7, D5             ; if we have A or greater, then we need to subtract 1.
              
-DIG_CONV_DONE_2         MULU.W   #$00000010,D5  ; this part adds $10 * (2nd digit) to our running total.
-                        ADD.W    D5,D6 
+DIG_CONV_DONE_2         MULU.W      #$00000010,D5  ; this part adds $10 * (2nd digit) to our running total.
+                        ADD.W       D5,D6 
                   
-                        CMP      #2,D1
-                        BEQ      CONVERSION_DONE
+                        CMP         #2,D1
+                        BEQ         CONVERSION_DONE
                 
                         ;third digit
-                        MOVE.L   #$00000000,D5
-                        MOVE.B   -(A1),D5
-                        CMP      #$30,D5
-                        BLT      INVALID_ADDR_INPUT ;comes  from inputting invalid characters
-                        CMP      #$40,D5
-                        BEQ      INVALID_ADDR_INPUT
-                        CMP      #$46,D5
-                        BGT      INVALID_ADDR_INPUT   
-                        SUB      #$30,D5
-                        CMP      #$A,D5
-                        BLT      DIG_CONV_DONE_3 
-                        SUB.B    #7, D5
+                        MOVE.L      #$00000000,D5
+                        MOVE.B      -(A1),D5
+                        CMP         #$30,D5
+                        BLT         INVALID_ADDR_INPUT ;comes  from inputting invalid characters
+                        CMP         #$40,D5
+                        BEQ         INVALID_ADDR_INPUT
+                        CMP         #$46,D5
+                        BGT         INVALID_ADDR_INPUT   
+                        SUB         #$30,D5
+                        CMP         #$A,D5
+                        BLT         DIG_CONV_DONE_3 
+                        SUB.B       #7, D5
                 
-DIG_CONV_DONE_3         MULU.W   #$00000100,D5
-                        ADD.W    D5,D6 
+DIG_CONV_DONE_3         MULU.W      #$00000100,D5
+                        ADD.W       D5,D6 
     
-                        CMP      #3,D1
-                        BEQ      CONVERSION_DONE
+                        CMP         #3,D1
+                        BEQ         CONVERSION_DONE
                 
                         ;fourth digit
-                        MOVE.L   #$00000000,D5
-                        MOVE.B   -(A1),D5
-                        CMP      #$30,D5
-                        BLT      INVALID_ADDR_INPUT ;comes  from inputting invalid characters
-                        CMP      #$40,D5
-                        BEQ      INVALID_ADDR_INPUT
-                        CMP      #$46,D5
-                        BGT      INVALID_ADDR_INPUT   
-                        SUB      #$30,D5
-                        CMP      #$A,D5
-                        BLT      DIG_CONV_DONE_4
-                        SUB.B    #7,D5
+                        MOVE.L      #$00000000,D5
+                        MOVE.B      -(A1),D5
+                        CMP         #$30,D5
+                        BLT         INVALID_ADDR_INPUT ;comes  from inputting invalid characters
+                        CMP         #$40,D5
+                        BEQ         INVALID_ADDR_INPUT
+                        CMP         #$46,D5
+                        BGT         INVALID_ADDR_INPUT   
+                        SUB         #$30,D5
+                        CMP         #$A,D5
+                        BLT         DIG_CONV_DONE_4
+                        SUB.B       #7,D5
                 
-DIG_CONV_DONE_4         MULU.W   #$00001000,D5
-                        ADD.W    D5,D6 
+DIG_CONV_DONE_4         MULU.W      #$00001000,D5
+                        ADD.W       D5,D6 
     
-                        CMP      #4,D1
-                        BEQ      CONVERSION_DONE
+                        CMP         #4,D1
+                        BEQ         CONVERSION_DONE
                 
                         ;fifth digit
-                        MOVE.L   #$00000000,D5
-                        MOVE.B   -(A1),D5
-                        CMP      #$30,D5
-                        BLT      INVALID_ADDR_INPUT ;comes  from inputting invalid characters
-                        CMP      #$40,D5
-                        BEQ      INVALID_ADDR_INPUT
-                        CMP      #$46,D5
-                        BGT      INVALID_ADDR_INPUT   
-                        SUB      #$30,D5
-                        CMP      #$A,D5
-                        BLT      DIG_CONV_DONE_5
-                        SUB.B    #$7, D5
+                        MOVE.L      #$00000000,D5
+                        MOVE.B      -(A1),D5
+                        CMP         #$30,D5
+                        BLT         INVALID_ADDR_INPUT ;comes  from inputting invalid characters
+                        CMP         #$40,D5
+                        BEQ         INVALID_ADDR_INPUT
+                        CMP         #$46,D5
+                        BGT         INVALID_ADDR_INPUT   
+                        SUB         #$30,D5
+                        CMP         #$A,D5
+                        BLT         DIG_CONV_DONE_5
+                        SUB.B       #$7, D5
                 
-DIG_CONV_DONE_5         MULU.W   #$0001,D5
-                        ADD.W    D5,D7 
+DIG_CONV_DONE_5         MULU.W      #$0001,D5
+                        ADD.W       D5,D7 
 
-                        CMP      #5,D1
-                        BEQ      CONVERSION_DONE
+                        CMP         #5,D1
+                        BEQ         CONVERSION_DONE
                 
                         ;sixth digit
-                        MOVE.L   #$00000000,D5
-                        MOVE.B   -(A1),D5
-                        CMP      #$30,D5
-                        BLT      INVALID_ADDR_INPUT ;comes  from inputting invalid characters
-                        CMP      #$40,D5
-                        BEQ      INVALID_ADDR_INPUT
-                        CMP      #$46,D5
-                        BGT      INVALID_ADDR_INPUT   
-                        SUB      #$30,D5
-                        CMP      #$A,D5
-                        BLT      DIG_CONV_DONE_6
-                        SUB.B    #$7, D5
+                        MOVE.L      #$00000000,D5
+                        MOVE.B      -(A1),D5
+                        CMP         #$30,D5
+                        BLT         INVALID_ADDR_INPUT ;comes  from inputting invalid characters
+                        CMP         #$40,D5
+                        BEQ         INVALID_ADDR_INPUT
+                        CMP         #$46,D5
+                        BGT         INVALID_ADDR_INPUT   
+                        SUB         #$30,D5
+                        CMP         #$A,D5
+                        BLT         DIG_CONV_DONE_6
+                        SUB.B       #$7, D5
                 
-DIG_CONV_DONE_6         MULU.W   #$0010,D5
-                        ADD.W    D5,D7
+DIG_CONV_DONE_6         MULU.W      #$0010,D5
+                        ADD.W       D5,D7
     
-                        CMP      #6,D1
-                        BEQ      CONVERSION_DONE
+                        CMP         #6,D1
+                        BEQ         CONVERSION_DONE
                 
                         ;seventh digit
-                        MOVE.L   #$00000000,D5
-                        MOVE.B   -(A1),D5
-                        CMP      #$30,D5
-                        BLT      INVALID_ADDR_INPUT ;comes  from inputting invalid characters
-                        CMP      #$40,D5
-                        BEQ      INVALID_ADDR_INPUT
-                        CMP      #$46,D5
-                        BGT      INVALID_ADDR_INPUT   
-                        SUB      #$30,D5
-                        CMP      #$A,D5
-                        BLT      DIG_CONV_DONE_7
-                        SUB.B    #7, D5
+                        MOVE.L      #$00000000,D5
+                        MOVE.B      -(A1),D5
+                        CMP         #$30,D5
+                        BLT         INVALID_ADDR_INPUT ;comes  from inputting invalid characters
+                        CMP         #$40,D5
+                        BEQ         INVALID_ADDR_INPUT
+                        CMP         #$46,D5
+                        BGT         INVALID_ADDR_INPUT   
+                        SUB         #$30,D5
+                        CMP         #$A,D5
+                        BLT         DIG_CONV_DONE_7
+                        SUB.B       #7, D5
                 
-DIG_CONV_DONE_7         MULU.W   #$0100,D5
-                        ADD.W    D5,D7
+DIG_CONV_DONE_7         MULU.W      #$0100,D5
+                        ADD.W       D5,D7
     
-                        CMP      #7,D1
-                        BEQ      CONVERSION_DONE
+                        CMP         #7,D1
+                        BEQ         CONVERSION_DONE
                 
                         ;eighth digit
-                        MOVE.L   #$00000000,D5
-                        MOVE.B   -(A1),D5
-                        CMP      #$30,D5
-                        BLT      INVALID_ADDR_INPUT ;comes  from inputting invalid characters
-                        CMP      #$40,D5
-                        BEQ      INVALID_ADDR_INPUT
-                        CMP      #$46,D5
-                        BGT      INVALID_ADDR_INPUT   
-                        SUB      #$30,D5
-                        CMP      #$A,D5
-                        BLT      DIG_CONV_DONE_8
-                        SUB.B    #7, D5
+                        MOVE.L      #$00000000,D5
+                        MOVE.B      -(A1),D5
+                        CMP         #$30,D5
+                        BLT         INVALID_ADDR_INPUT ;comes  from inputting invalid characters
+                        CMP         #$40,D5
+                        BEQ         INVALID_ADDR_INPUT
+                        CMP         #$46,D5
+                        BGT         INVALID_ADDR_INPUT   
+                        SUB         #$30,D5
+                        CMP         #$A,D5
+                        BLT         DIG_CONV_DONE_8
+                        SUB.B       #7, D5
                 
-DIG_CONV_DONE_8         MULU.W   #$1000,D5
-                        ADD.W    D5,D7
+DIG_CONV_DONE_8         MULU.W      #$1000,D5
+                        ADD.W       D5,D7
     
-                        CMP      #8,D1
-                        BEQ      CONVERSION_DONE    ;the input was valid and we are done with the conversion
+                        CMP         #8,D1
+                        BEQ         CONVERSION_DONE    ;the input was valid and we are done with the conversion
                 
-INVALID_ADDR_INPUT      LEA      INVALID_ADDR_MSG,A1    ;tell the user the address was invalid and prompt input again.
-                        MOVE.B   #14,D0
-                        TRAP     #15
+INVALID_ADDR_INPUT      LEA         INVALID_ADDR_MSG,A1    ;tell the user the address was invalid and prompt input again.
+                        MOVE.B      #14,D0
+                        TRAP        #15
                         
-                        BSR      TAKE_USER_INPUT
+                        BSR         TAKE_USER_INPUT
                         
-INVALID_END_ADDR        LEA      INVALID_END_ADDR_MSG,A1
-                        MOVE.B   #14,D0
-                        TRAP     #15
+INVALID_END_ADDR        LEA         INVALID_END_ADDR_MSG,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
                         
-                        BSR      TAKE_USER_INPUT
+                        BSR         TAKE_USER_INPUT
                         
-INVALID_ADDR_LOW        LEA      INVALID_ADDR_L_MSG,A1    ;tell the user the address was invalid and prompt input again.
-                        MOVE.B   #14,D0
-                        TRAP     #15
+INVALID_ADDR_LOW        LEA         INVALID_ADDR_L_MSG,A1    ;tell the user the address was invalid and prompt input again.
+                        MOVE.B      #14,D0
+                        TRAP        #15
                         
-                        BSR      TAKE_USER_INPUT
+                        BSR         TAKE_USER_INPUT
 
-INVALID_ADDR_HIGH       LEA      INVALID_ADDR_H_MSG,A1    ;tell the user the address was invalid and prompt input again.
-                        MOVE.B   #14,D0
-                        TRAP     #15
+INVALID_ADDR_HIGH       LEA         INVALID_ADDR_H_MSG,A1    ;tell the user the address was invalid and prompt input again.
+                        MOVE.B      #14,D0
+                        TRAP        #15
                         
-                        BSR      TAKE_USER_INPUT
+                        BSR         TAKE_USER_INPUT
                
-CONVERSION_DONE         LSL.L    #8,D7   ; Prepare for concatenation
-                        LSL.L    #8,D7   ; Got to perform the same operation twice to get it all the way to the left
-                        ADD.W    D6,D7  ; concatenate the two data registers into one value
+CONVERSION_DONE         LSL.L       #8,D7   ; Prepare for concatenation
+                        LSL.L       #8,D7   ; Got to perform the same operation twice to get it all the way to the left
+                        ADD.W       D6,D7  ; concatenate the two data registers into one value
                         
-                        CMP.L    #MIN_ADDRESS,D7
-                        BLT      INVALID_ADDR_LOW ;Not a valid address-- too low.
+                        CMP.L       #MIN_ADDRESS,D7
+                        BLT         INVALID_ADDR_LOW ;Not a valid address-- too low.
                         
-                        CMP.L    #MAX_ADDRESS,D7
-                        BGT      INVALID_ADDR_HIGH  ;Not a valid address-- too high.
+                        CMP.L       #MAX_ADDRESS,D7
+                        BGT         INVALID_ADDR_HIGH  ;Not a valid address-- too high.
                         
-VALID_ADDR              CMPI     #1,D3
+VALID_ADDR              CMPI        #1,D3
                         
-                        BEQ      SET_START_ADDR
-                        BSR      SET_END_ADDR
+                        BEQ         SET_START_ADDR
+                        BSR         SET_END_ADDR
                                                
-SET_START_ADDR          MOVEA.L  D7,A5  ;when a valid start address is inputted, store and ask the user for an end address.
-                        BSR      TAKE_USER_IN_E
+SET_START_ADDR          MOVEA.L     D7,A5  ;when a valid start address is inputted, store and ask the user for an end address.
+                        BSR         TAKE_USER_IN_E
 
-SET_END_ADDR            CMP.L    A5,D7    ;if end address is lower than start address, we get an error.
-                        BLT      INVALID_END_ADDR           
+SET_END_ADDR            CMP.L       A5,D7    ;if end address is lower than start address, we get an error.
+                        BLT         INVALID_END_ADDR           
                         
-                        MOVEA.L  D7,A6  ;when a valid start address is inputted, store and ask the user for an end address.
-                        BSR      PREPARE_DISPLAY
+                        MOVEA.L     D7,A6  ;when a valid start address is inputted, store and ask the user for an end address.
+                        BSR         PREPARE_DISPLAY
 
 *------------------- Add to display buffer -------------------
 ;At this point A5 is a valid start address and A6 is a valid end address.
-PREPARE_DISPLAY         MOVE.L   (A5),D1 ;TEMPORARY
-                        MOVE.B   #16,D2
-                        MOVE.B   #15,D0
-                        TRAP     #15
+PREPARE_DISPLAY         MOVE.L      (A5),D1 ;TEMPORARY
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
+                        TRAP        #15
                         
-                        JMP      STOP
+                        JMP         STOP
                         
                         
 
@@ -518,8 +512,8 @@ SPACE                   DC.B        ' ',0
 
 *output messages
     ;TODO: consider also giving the user the range of valid start/end addresses
-INPUT_MSG_1             DC.B        'Please enter a starting hex address to read from.',CR,LF,0
-INPUT_MSG_2             DC.B        'Please enter an ending hex address to read from.',CR,LF,0
+START_ADDR_MSG          DC.B        'Please enter a starting hex address to read from.',CR,LF,0
+END_ADDR_MSG            DC.B        'Please enter an ending hex address to read from.',CR,LF,0
 
 INVALID_LEN_MSG         DC.B        'Not a valid length for input address.',CR,LF
                         DC.B        'Please enter a valid-length address.',CR,LF,0
@@ -558,12 +552,12 @@ DOLLAR                  DC.B        '$',0
 
 *filters for isolating parts of a hexa instruction.
 *To filter an instruction, AND it with the desired filter.
-FILT_NIB1               EQU        $F000   ;first nibble:              XXXX 0000 0000 0000
-FILT_MOVE_SIZE          EQU        $3000   ;Size of a move operation:  00XX 0000 0000 0000
-FILT_DEST_REG           EQU        $0E00   ;destination register:      0000 XXX0 0000 0000
-FILT_DEST_MD            EQU        $01A0   ;destination mode:          0000 000X XX00 0000
-FILT_SRC_MD             EQU        $0038   ;source mode:               0000 0000 00XX X000
-FILT_SRC_REG            EQU        $0007   ;source register:           0000 0000 0000 0XXX
+FILT_NIB1               EQU         $F000   ;first nibble:              XXXX 0000 0000 0000
+FILT_MOVE_SIZE          EQU         $3000   ;Size of a move operation:  00XX 0000 0000 0000
+FILT_DEST_REG           EQU         $0E00   ;destination register:      0000 XXX0 0000 0000
+FILT_DEST_MD            EQU         $01A0   ;destination mode:          0000 000X XX00 0000
+FILT_SRC_MD             EQU         $0038   ;source mode:               0000 0000 00XX X000
+FILT_SRC_REG            EQU         $0007   ;source register:           0000 0000 0000 0XXX
 
 ;TODO: consider other filters like OPmode and size.
 ;FILT_DEST_REG    EQU        $0E00   ;destination regilster:     0000 XXX0 0000 0000
@@ -575,6 +569,7 @@ FILT_SRC_REG            EQU        $0007   ;source register:           0000 0000
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+
 
 
 *~Font name~Courier New~
