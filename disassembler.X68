@@ -435,15 +435,20 @@ MOVE_B_FOUND            LEA         DOLLAR,A1     ; '$'
                         
                         ;TODO: at this point, need to print more information (parsed by EA, probably)
                         ; now that we have a move instruction, we set our EA variables accordingly:
-                        BSR         READ_DEST_REG      ; EA will set CURRENT_DEST_REG to the correct register.
-                        BSR         READ_DEST_MODE     ; EA will set CURRENT_DEST_MD to the correct mode.
-                        BSR         READ_SOURCE_MODE   ; EA will set CURRENT_SRC_MD to the correct mode.
-                        BSR         READ_SOURCE_REG    ; EA will set CURRENT_SRC_REG to the correct register.
+                        BSR         READ_DEST_REG      ; EA will set CURRENT_DEST_REG.
+                        BSR         READ_DEST_MODE     ; EA will set CURRENT_DEST_MD.
+                        BSR         READ_SOURCE_MODE   ; EA will set CURRENT_SRC_MD.
+                        BSR         READ_SOURCE_REG    ; EA will set CURRENT_SRC_REG.
+                        
+                        ;TODO: need to check whether we need to read additional data before we start displaying the
+                        ;      instruction (for instance, this is necessary for MOVE.B #10,D0).
+                        BSR         READ_SOURCE_DATA    ; EA will set CURRENT_SOURCE_DATA if necessary. (TODO make subroutine)
+                        BSR         READ_DEST_DATA      ; EA will set CURRENT_DEST_DATA if necessary. (TODO make subroutine)
                         
                         ;TEMP
-                        LEA         DOLLAR,A1     ; '$'
-                        MOVE.B      #14,D0
-                        TRAP        #15
+                        ;LEA         DOLLAR,A1     ; '$'
+                        ;MOVE.B      #14,D0
+                        ;TRAP        #15
                         ;TEMP
                         
                         ; TODO: error checking first
@@ -648,13 +653,24 @@ READ_SOURCE_MODE        CLR         D4
                         
 *----------------------Check the source register of the current word.-----------------
 READ_SOURCE_REG         CLR         D4
-                        ;CLR         CURRENT_SRC_REG
                         MOVE.W      CURRENT_WORD,D4
                         ANDI.W      #FILT_SRC_REG,D4        ; turn D4 into 0000 0000 0000 0XXX. (no need for LSR in this case.)
                         MOVE.B      D4,CURRENT_SRC_REG
                         MOVE.B      D4,CURRENT_REG
                         RTS
-                      
+                        
+*----------------------Read additional source data associated with the current word (if necessary).----------------- 
+*This needs to postincrement A5 as necessary.
+READ_SOURCE_DATA        CLR         D4
+                        MOVE.W      CURRENT_WORD,D4
+                        ;TODO: finish writing this method (Robert)
+                        
+*----------------------Read additional destination data associated with the current word (if necessary).----------------- 
+*This needs to postincrement A5 as necessary.
+READ_DEST_DATA          CLR         D4
+                        MOVE.W      CURRENT_WORD,D4
+                        ;TODO: finish writing this method (Robert)
+                        
 *----------------------Display the source for the current instruction.-----------------
 *by this point, error checking should already be done and CURRENT_SRC_MD and CURRENT_SRC_REG should have the data we need.
 DISPLAY_SOURCE          MOVE.B      CURRENT_SRC_MD,CURRENT_MD
@@ -727,6 +743,10 @@ CHECK_IMMEDIATE_REG     CMP.B       #CONST_IMMEDIATE_REG,CURRENT_REG
                         ;TODO: increment A5 by the proper amount (seems to be word) and print out the value we find.
                         ;this method does not work. Also, we should print additional data for the source before
                         ;additional data for the destination.
+                        
+                        ;TODO: test and see what gets moved from A5 to A1. try other methods of loading the data.
+                        ;also keep in mind that this is one of many sections of code that will change once the output buffer is
+                        ;implemented.
                         MOVEA.W     (A5)+,A1
                         MOVE.B      #14,D0
                         TRAP        #15
@@ -790,13 +810,18 @@ INPUTTING_START         SET         1 ;if 1, we are inputting start address. If 
 DISPLAY_BUFFER          DS.W        5
 
 *EA/OPcode parsed instruction variables/constants
-CURRENT_WORD            DS.W        1 ;current first 16 bits of an instruction.
-CURRENT_MD              DS.B        1 ;current mode we are concerened with (ex: 000 for data register mode.)
-CURRENT_REG             DS.B        1 ;current register number (address, data, etc) that we are looking at. Ex: D0,A5,etc
-CURRENT_SRC_MD          DS.B        1 ;current source mode
-CURRENT_SRC_REG         DS.B        1 ;current source register
-CURRENT_DEST_MD         DS.B        1 ;current desination mode
-CURRENT_DEST_REG        DS.B        1 ;current desination register
+CURRENT_WORD            DS.W        1 ; current first 16 bits of an instruction.
+
+CURRENT_MD              DS.B        1 ; current mode we are concerened with (ex: 000 for data register mode.)
+CURRENT_REG             DS.B        1 ; current register number we are concerned with(address, data, etc) that we are looking at. Ex: D0,A5,etc
+
+CURRENT_SRC_MD          DS.B        1 ; current source mode
+CURRENT_SRC_REG         DS.B        1 ; current source register
+CURRENT_DEST_MD         DS.B        1 ; current desination mode
+CURRENT_DEST_REG        DS.B        1 ; current desination register
+
+CURRENT_SRC_DATA        DS.L        1 ; current additional data for source (like absolute addresses, immediate data, etc)
+CURRENT_DEST_DATA       DS.L        1 ; current additional data for destination (like absolute addresses, immediate data, etc) 
 
 *address constants
 MIN_ADDRESS             EQU         $00003000
