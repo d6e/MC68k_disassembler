@@ -327,7 +327,8 @@ BEGIN_READ              MOVEA.L      A5,A4 ; keep track of address to print with
 *------------------- Add to display buffer -------------------
 ;At this point A5 is a valid start address and A6 is a valid end address.
 ;TODO: prepare the display buffer
-PREPARE_DISPLAY         BSR         READ_CURRENT_OP    ;TEMP (though we might still call this after the display buffer is prepared)                       
+PREPARE_DISPLAY         BSR         READ_CURRENT_OP    ;TEMP (though we might still call this after the display buffer is prepared)  
+
                
 *------------------- Move address pointer for data reading -------------------
 ; This method is specifically for reading the next OPword.
