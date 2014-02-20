@@ -339,7 +339,7 @@ CONFIRMED_NEXT_OP       CLR         CURRENT_WORD
                         BSR         READ_CURRENT_OP
 *------------------- Print display buffer -------------------
 *------------------- Check if end of data -------------------
-CHECK_DONE_READING      CMPA        A6,A5
+CHECK_DONE_READING      CMPA        A6,A5       ; TODO: this comparison is not sufficient, because it will say that $8000 is less than $7000 (since $8000 is negative.)
                         BLT         CONFIRMED_NEXT_OP
                         BSR         DONE_READING
 *------------------- Ask user for input -------------------
@@ -440,6 +440,12 @@ MOVE_B_FOUND            LEA         DOLLAR,A1     ; '$'
                         BSR         READ_SOURCE_MODE   ; EA will set CURRENT_SRC_MD to the correct mode.
                         BSR         READ_SOURCE_REG    ; EA will set CURRENT_SRC_REG to the correct register.
                         
+                        ;TEMP
+                        LEA         DOLLAR,A1     ; '$'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        ;TEMP
+                        
                         ; TODO: error checking first
                         ;
                         ; possible errors:
@@ -459,6 +465,7 @@ MOVE_B_FOUND            LEA         DOLLAR,A1     ; '$'
                         TRAP        #15
                         
                         ; TODO: once we have the four values, proceed to parse the instruction accordingly.
+                        BSR         DISPLAY_SOURCE  ; Tell EA to parse and display the source 
                         
                         LEA         RETURN,A1    ; (return)
                         MOVE.B      #14,D0
@@ -613,6 +620,7 @@ READ_DEST_REG           CLR         D4
                         LSR.W       #8,D4                   ; turn D4 into 0000 0000 0000 0XXX
                         LSR.W       #1,D4   ;9 would be invalid, so we shift 8, then 1
                         MOVE.B      D4,CURRENT_DEST_REG
+                        MOVE.B      D4,CURRENT_REG
                         RTS
 
 *----------------------Check the destination mode of the current word.-------------
@@ -623,6 +631,7 @@ READ_DEST_MODE          CLR         D4
                         ANDI.W      #FILT_DEST_MD,D4        ; turn D4 into 0000 000X XX00 0000
                         LSR.W       #6,D4                   ; turn D4 into 0000 0000 0000 0XXX
                         MOVE.B      D4,CURRENT_DEST_MD
+                        MOVE.B      D4,CURRENT_MD
                         RTS
 
 ;By this point, CURRENT WORD holds the first 16 bits of an instruction we are looking at.
@@ -630,80 +639,102 @@ READ_DEST_MODE          CLR         D4
 *---------------------- Check the source mode of the current word.--------------------
 *(assuming the source is where it would be in MOVE).
 READ_SOURCE_MODE        CLR         D4
-                        ;CLR         CURRENT_SRC_MD 
                         MOVE.W      CURRENT_WORD,D4
                         ANDI.W      #FILT_SRC_MD,D4                 ; turn source mode into 0000 0000 00XX X000
                         LSR.W       #3,D4                           ; turn source mode into 0000 0000 0000 0XXX
                         MOVE.B      D4,CURRENT_SRC_MD
+                        MOVE.B      D4,CURRENT_MD
                         RTS
                         
-*----------------------Check the source register of the current word.-------------
+*----------------------Check the source register of the current word.-----------------
 READ_SOURCE_REG         CLR         D4
                         ;CLR         CURRENT_SRC_REG
                         MOVE.W      CURRENT_WORD,D4
                         ANDI.W      #FILT_SRC_REG,D4        ; turn D4 into 0000 0000 0000 0XXX. (no need for LSR in this case.)
                         MOVE.B      D4,CURRENT_SRC_REG
+                        MOVE.B      D4,CURRENT_REG
                         RTS
-               
-
-*------------TEMPORARY--------         
-CHECK_CURRENT_MD        BSR         CHECK_DATA_REG_MD       ; by the time we get here, D4 stores the value for our current mode.
+                      
+*----------------------Display the source for the current instruction.-----------------
+*by this point, error checking should already be done and CURRENT_SRC_MD and CURRENT_SRC_REG should have the data we need.
+DISPLAY_SOURCE          MOVE.B      CURRENT_SRC_MD,CURRENT_MD
+                        MOVE.B      CURRENT_SRC_REG,CURRENT_REG    ; necessary for some cases, like absolute addressing or immediate data.
+                        BSR         CHECK_DATA_REG_MD       
                         
-CHECK_DATA_REG_MD       CMP         #CONST_DATA_REG_MD,D4   ; check for D4 = ...0000
+*-----------------------Mode checks (for displaying)---------
+*these do not care whether the mode is for source or destination.
+CHECK_DATA_REG_MD       CMP         #CONST_DATA_REG_MD,CURRENT_MD   ; check for CURRENT_MD = ...0000
                         BNE         CHECK_ADDR_REG_MD
                         ;case for source mode is data register mode.
-                        MOVE.L      #CONST_DATA_REG_MD,CURRENT_MD
+                       
                         ;TEMP. should send some instruction to display buffer, instead.
-                        ;LEA         MSG_D,A1               ;print out 'D'
-                        ;MOVE.B      #14,D0
-                        ;TRAP        #15
+                        LEA         MSG_D,A1               ;print out 'D'
+                        MOVE.B      #14,D0
+                        TRAP        #15
                         
-                        ;BSR         READ_SOURCE_RE         ; since we know source is a data register, we now read source register.
-                                                           ; this will read and print (or add to display buffer) the number of the data register.
-                        
-                        ;LEA         COMMA,A1               ;print out ','
-                        ;MOVE.B      #14,D0
-                        ;TRAP        #15
+                        LEA         CURRENT_SRC_REG,A1      ;print out the number of the data register.
+                        MOVE.B      #14,D0
+                        TRAP        #15
                         
                         RTS
                         
-CHECK_ADDR_REG_MD       CMP         #CONST_ADDR_REG_MD,D4   ; check for D4 = ...0001
+CHECK_ADDR_REG_MD       CMP         #CONST_ADDR_REG_MD,CURRENT_MD   ; check for CURRENT_MD = ...0001
                         BNE         CHECK_ADDR_IND_MD
                         ;TODO: case for source mode is address register mode.
                         RTS
                         
-CHECK_ADDR_IND_MD       CMP         #CONST_ADDR_IND_MD,D4   ; check for D4 = ...0010
+CHECK_ADDR_IND_MD       CMP         #CONST_ADDR_IND_MD,CURRENT_MD   ; check for CURRENT_MD = ...0010
                         BNE         CHECK_ADDR_INCR_MD
                         ;TODO: case for source mode is address indirect mode.
                         RTS
 
-CHECK_ADDR_INCR_MD      CMP         #CONST_ADDR_INCR_MD,D4  ; check for D4 = ...0011
+CHECK_ADDR_INCR_MD      CMP         #CONST_ADDR_INCR_MD,CURRENT_MD  ; check for CURRENT_MD = ...0011
                         BNE         CHECK_ADDR_DECR_MD
                         ;TODO: case for source mode is address indirect postincrement mode.
                         RTS
 
-CHECK_ADDR_DECR_MD      CMP         #CONST_ADDR_DECR_MD,D4  ; check for D4 = ...0100
+CHECK_ADDR_DECR_MD      CMP         #CONST_ADDR_DECR_MD,CURRENT_MD  ; check for CURRENT_MD = ...0100
                         BNE         CHECK_ADDR_DISPLC_MD
                         ;TODO: case for source mode is address indirect postdecrement mode.
                         RTS     
 
-CHECK_ADDR_DISPLC_MD    CMP         #CONST_ADDR_DISPLC_MD,D4  ; check for D4 = ...0101
+CHECK_ADDR_DISPLC_MD    CMP         #CONST_ADDR_DISPLC_MD,CURRENT_MD  ; check for CURRENT_MD = ...0101
                         BNE         CHECK_ADDR_INDEX_MD
                         ;TODO: case for source mode is address with displacement mode.
                         RTS    
 
-CHECK_ADDR_INDEX_MD     CMP         #CONST_ADDR_INDEX_MD,D4  ; check for D4 = ...0110
+CHECK_ADDR_INDEX_MD     CMP         #CONST_ADDR_INDEX_MD,CURRENT_MD  ; check for CURRENT_MD = ...0110
                         BNE         CHECK_ADDR_MISC_MD
                         ;TODO: case for source mode is address with index mode.
                         RTS 
                          
-CHECK_ADDR_MISC_MD      CMP         #CONST_ADDR_MISC_MD,D4  ; check for D4 = ...0110
+CHECK_ADDR_MISC_MD      CMP         #CONST_ADDR_MISC_MD,CURRENT_MD  ; check for CURRENT_MD = ...0111
                         ;BNE         ;where to branch if it's not MISC? anything else should be impossible at this point. Maybe error?
                         ;TODO: case for source mode is miscellaneous
+                        ;TODO: instead of immediate, branch in order to: CHECK_COUNTR_DISPLC_REG, CHECK_COUNTR_INDEX_REG, CHECK_ABS_SHORT_REG, 
+                        ;       CHECK_ABS_LONG_REG, then CHECK_IMMEDIATE_REG 
+                        BSR         CHECK_IMMEDIATE_REG
                         RTS   
+*-----------------------Register checks (for displaying)---------
+*these do not care whether the register is for source or destination.
+*not for cases where reg is simply a number (like D5, A5, (A5), etc)
+CHECK_IMMEDIATE_REG     CMP.B       #CONST_IMMEDIATE_REG,CURRENT_REG
+                        ;TODO: BNE for not immediate
+                        LEA         HASH,A1               ;print out '#'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        ;TODO: increment A5 by the proper amount (seems to be word) and print out the value we find.
+                        ;this method does not work. Also, we should print additional data for the source before
+                        ;additional data for the destination.
+                        MOVEA.W     (A5)+,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        RTS
+                        
+                        ;TODO: in this case, we need to use MOVE.?  (A5)+,X where ? is the correct size and X is some temp value for printing.
 
-
-*------------TEMPORARY--------
 *###################### END EA ##################################
 *############# BEGIN VARIABLES/CONSTANTS #########################
 *** Variables and Constants are kept here ***
@@ -715,6 +746,7 @@ RETURN                  DC.B        CR,LF,0
 SPACE                   DC.B        ' ',0
 DOLLAR                  DC.B        '$',0
 COMMA                   DC.B        ',',0
+HASH                    DC.B        '#',0
 
 *output messages
     ;TODO: consider also giving the user the range of valid start/end addresses
@@ -760,7 +792,7 @@ DISPLAY_BUFFER          DS.W        5
 *EA/OPcode parsed instruction variables/constants
 CURRENT_WORD            DS.W        1 ;current first 16 bits of an instruction.
 CURRENT_MD              DS.B        1 ;current mode we are concerened with (ex: 000 for data register mode.)
-CURRENT_REG_NUM         DS.B        1 ;current register number (address, data, etc) that we are looking at. Ex: D0,A5,etc
+CURRENT_REG             DS.B        1 ;current register number (address, data, etc) that we are looking at. Ex: D0,A5,etc
 CURRENT_SRC_MD          DS.B        1 ;current source mode
 CURRENT_SRC_REG         DS.B        1 ;current source register
 CURRENT_DEST_MD         DS.B        1 ;current desination mode
