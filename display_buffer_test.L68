@@ -1,0 +1,52 @@
+00001000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.12.29
+Created On: 2/20/2014 7:00:53 PM
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      :
+00000000                             3  * Written by :
+00000000                             4  * Date       :
+00000000                             5  * Description:
+00000000                             6  *-----------------------------------------------------------
+00001000                             7      ORG    $1000
+00001000                             8  START:                  ; first instruction of program
+00001000                             9  
+00001000                            10  * Put program code here
+00001000                            11  
+00001000  4279 0000101A             12          CLR  DISPLAY_BUFFER
+00001006  47F9 0000101A             13          LEA DISPLAY_BUFFER, A3
+0000100C  3679 0000102E             14          MOVEA.W  MOVE_MESG, A3     
+00001012  325B                      15          MOVEA.W    (A3)+, A1        ;DISPLAY_BUFFER
+00001014                            16          
+00001014                            17         ; MOVEA.L DISPLAY_BUFFER, A1
+00001014  103C 000E                 18          MOVE.B #14,D0
+00001018  4E4F                      19          TRAP #15
+0000101A                            20  
+0000101A                            21  
+0000101A                            22  
+0000101A                            23  
+0000101A                            24  SIMHALT             ; halt simulator
+0000101A                            25  
+0000101A                            26  * Put variables and constants here
+0000101A                            27  
+0000101A                            28  
+0000101A                            29  STOP
+0000101A                            30      
+0000101A                            31  DISPLAY_BUFFER      DS.W        10           ; We need 10 words or 180 bits since each ascii character == 2 hex characters
+0000102E= 4D4F 5645 2E42 0000       32  MOVE_MESG           DC          'MOVE.B',0
+00001036                            33  
+00001036                            34  
+00001036                            35      END    START        ; last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+DISPLAY_BUFFER      101A
+MOVE_MESG           102E
+SIMHALT             101A
+START               1000
+STOP                101A
