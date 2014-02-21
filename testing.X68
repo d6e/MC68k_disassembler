@@ -15,20 +15,20 @@ START       ORG    $7000                ; first instruction of program
             MOVE.B (A1),$10000000
             MOVE.B (A1),$1000
             MOVE.B #1, D1
-            MOVE.B #1, $10000000
-            MOVE.B #1, $1000
-            MOVE.B (A1)+, D1
-            MOVE.B (A1)+, $10000000
-            MOVE.B (A1)+, $1000
-            MOVE.B -(A1), D1
-            MOVE.B -(A1), $10000000
-            MOVE.B -(A1), $1000
-            MOVE.B $10000000, D1
-            MOVE.B $10000000, $10000000
-            MOVE.B $10000000, $1000
-            MOVE.B $1000, D1
-            MOVE.B $1000, $10000000
-            MOVE.B $1000, $1000
+            MOVE.B #1,$10000000
+            MOVE.B #1,$1000
+            MOVE.B (A1)+,D1
+            MOVE.B (A1)+,$10000000
+            MOVE.B (A1)+,$1000
+            MOVE.B -(A1),D1
+            MOVE.B -(A1),$10000000
+            MOVE.B -(A1),$1000
+            MOVE.B $10000000,D1
+            MOVE.B $10000000,$10000000
+            MOVE.B $10000000,$1000
+            MOVE.B $1000,D1
+            MOVE.B $1000,$10000000
+            MOVE.B $1000,$1000
             MOVE.W D1, D1
             MOVE.W D1, $10000000
             MOVE.W D1, $1000
@@ -395,6 +395,7 @@ START       ORG    $7000                ; first instruction of program
 * Put variables and constants here
 
             END    START        ; last line of source
+
 
 
 
