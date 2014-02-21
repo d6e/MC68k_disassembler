@@ -8,12 +8,12 @@
 START       ORG    $7000                ; first instruction of program
             NOP
             MOVE.B #10,D0
-            MOVE.B D1, D1
-            MOVE.B D1, $10000000
-            MOVE.B D1, $1000
-            MOVE.B (A1), D1
-            MOVE.B (A1), $10000000
-            MOVE.B (A1), $1000
+            MOVE.B D1,D2
+            MOVE.B D1,$10000000
+            MOVE.B D1,$1000
+            MOVE.B (A1),D1
+            MOVE.B (A1),$10000000
+            MOVE.B (A1),$1000
             MOVE.B #1, D1
             MOVE.B #1, $10000000
             MOVE.B #1, $1000
@@ -395,6 +395,7 @@ START       ORG    $7000                ; first instruction of program
 * Put variables and constants here
 
             END    START        ; last line of source
+
 
 
 
