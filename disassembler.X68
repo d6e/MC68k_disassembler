@@ -83,8 +83,9 @@ STOP                    STOP       #$2700          ; halt simulator, end of main
 *################ BEGIN IO ###############################
 *** IO Subroutines are kept here ***
 
-*-------------------- Print ASCII logo ----------------------
-PROMPT_INPUT            MOVE.L      #$00000000,D0  			;clear the registers so they're clean upon restart
+*-------------------- Second run through ----------------------
+*** Things that have to be done before doing another run through the program
+RESTART_PREP            MOVE.L      #$00000000,D0  			;clear the registers so they're clean upon restart
                         MOVE.L      #$00000000,D1
                         MOVE.L      #$00000000,D2
                         MOVE.L      #$00000000,D3
@@ -98,18 +99,25 @@ PROMPT_INPUT            MOVE.L      #$00000000,D0  			;clear the registers so th
                         MOVE.L      #$00000000,A4
                         MOVE.L      #$00000000,A5
                         MOVE.L      #$00000000,A6
-
+                        
 BLANK_THE_SCREEN		ADD.B 		#1,D2         ; loop counter
 
                         LEA 		NEWLINE,A1    ; Print a bunch of newlines to blank the screen
                         MOVE.B 		#14,D0
                         TRAP 		#15
 
-                        CMPI.B 		#$F,D2   		  ; if the loop counter is less than 15
+                        CMPI.B 		#$20,D2   		  ; if the loop counter is less than 15
                         BLT 		BLANK_THE_SCREEN  ; loop some more printing more newlines
                         MOVE.L      #$00000000,D2 	  ; otherwise clear the data register so others can use it
 
-                        BRA         TAKE_USER_IN_S ;TODO: change to welcome/ASCII logo
+
+
+*-------------------- Print ASCII logo ----------------------
+PROMPT_INPUT            BRA         TAKE_USER_IN_S ;TODO: change to welcome/ASCII logo
+
+
+
+
 *------------------- Prompt user for input -------------------
 
                 
@@ -424,7 +432,7 @@ CONFIRM_DONE            LEA         RESTART_PROMPT_MSG,A1  ; Prompt user for res
                         TRAP        #15             		 ; and the length in D1.W.  
 
                         CMPI.B 		#$79,(A1) 							; if inputs 'y' 
-                        BEQ			START						; jump to beginning of program
+                        BEQ			RESTART_PREP						; jump to beginning of program
 
                         CMPI.B 		#$6E,(A1)					 			; if inputs 'n' 
                         BEQ			DONE_READING						; branch to DONE_READING subroutine
@@ -1592,6 +1600,7 @@ STOP_CODE               EQU         $4E72   ; STOP                              
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+
 
 
 
