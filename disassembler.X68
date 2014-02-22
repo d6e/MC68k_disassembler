@@ -84,7 +84,32 @@ STOP                    STOP       #$2700          ; halt simulator, end of main
 *** IO Subroutines are kept here ***
 
 *-------------------- Print ASCII logo ----------------------
-PROMPT_INPUT            BRA         TAKE_USER_IN_S ;TODO: change to welcome/ASCII logo
+PROMPT_INPUT            MOVE.L      #$00000000,D0  			;clear the registers so they're clean upon restart
+                        MOVE.L      #$00000000,D1
+                        MOVE.L      #$00000000,D2
+                        MOVE.L      #$00000000,D3
+                        MOVE.L      #$00000000,D4
+                        MOVE.L      #$00000000,D5
+                        MOVE.L      #$00000000,D6
+                        MOVE.L      #$00000000,D7
+                        MOVE.L      #$00000000,A1
+                        MOVE.L      #$00000000,A2
+                        MOVE.L      #$00000000,A3
+                        MOVE.L      #$00000000,A4
+                        MOVE.L      #$00000000,A5
+                        MOVE.L      #$00000000,A6
+
+BLANK_THE_SCREEN		ADD.B 		#1,D2         ; loop counter
+
+                        LEA 		NEWLINE,A1    ; Print a bunch of newlines to blank the screen
+                        MOVE.B 		#14,D0
+                        TRAP 		#15
+
+                        CMPI.B 		#$F,D2   		  ; if the loop counter is less than 15
+                        BLT 		BLANK_THE_SCREEN  ; loop some more printing more newlines
+                        MOVE.L      #$00000000,D2 	  ; otherwise clear the data register so others can use it
+
+                        BRA         TAKE_USER_IN_S ;TODO: change to welcome/ASCII logo
 *------------------- Prompt user for input -------------------
 
                 
@@ -386,9 +411,34 @@ CONFIRMED_NEXT_OP       CLR         CURRENT_WORD
 *------------------- Check if end of data -------------------
 CHECK_DONE_READING      CMPA        A6,A5       ; TODO: this comparison is not sufficient, because it will say that $8000 is less than $7000 (since $8000 is negative.)
                         BLT         CONFIRMED_NEXT_OP
-                        BRA         DONE_READING
+                        BRA         CONFIRM_DONE
                         
 *------------------- Confirm end of data -------------------
+*** Confirm with user whether to end the program or restart
+CONFIRM_DONE            LEA         RESTART_PROMPT_MSG,A1  ; Prompt user for restart
+                        MOVE.B      #14,D0
+                        TRAP        #15
+
+                        MOVE.B      #2,D0          			 ; Take user input for next address.
+                        MOVEA.W     #$2200,A1       ; Store the ascii input in A1,(note that we might not want to use 2200 here)
+                        TRAP        #15             		 ; and the length in D1.W.  
+
+                        CMPI.B 		#$79,(A1) 							; if inputs 'y' 
+                        BEQ			START						; jump to beginning of program
+
+                        CMPI.B 		#$6E,(A1)					 			; if inputs 'n' 
+                        BEQ			DONE_READING						; branch to DONE_READING subroutine
+
+                        BRA 		USER_RESTART_IN_ERR 			 			; otherwise, print error message and goto DONE_READING 
+
+*------------------- Error Restart ------------------- 
+USER_RESTART_IN_ERR     LEA 		RESTART_ERROR_STR,A1 ; Print out error message 			
+                        MOVE.B 		#14,D0
+                        TRAP 		#15
+
+                        BRA 		CONFIRM_DONE     ; reconfirm whether to restart again
+
+*------------------- Print done -------------------                       
 DONE_READING            LEA         DONE_READING_MSG,A1 ; when we reach the end address, say so and halt the program. TODO: ask user whether we want to read the data again.
                         MOVE.B      #14,D0
                         TRAP        #15
@@ -1394,6 +1444,9 @@ INPUTTING_START         SET         1 ;if 1, we are inputting start address. If 
 OPCODE_BUFFER           DS.L        1 ; can hold at most 4 characters
 SIZE_BUFFER             DS.W        1 ;cand hold at most 2 characters
 DISPLAY_BUFFER          DS.W        5
+RESTART_PROMPT_MSG      DC.B        'Restart? (y/n)',0
+RESTART_ERROR_STR       DC.B 		'That is not a valid response.',CR,LF,0
+NEWLINE 				DC.B 		CR,LF,0
 
 *EA/OPcode parsed instruction variables/constants
 CURRENT_WORD            DS.W        1 ; current first 16 bits of an instruction.
@@ -1539,6 +1592,8 @@ STOP_CODE               EQU         $4E72   ; STOP                              
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+
+
 
 
 
