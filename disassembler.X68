@@ -369,7 +369,7 @@ PREPARE_DISPLAY         BRA         READ_CURRENT_OP    ;TEMP (though we might st
 GO_TO_NEXT_OP           BRA         CHECK_DONE_READING
                          
 CONFIRMED_NEXT_OP       CLR         CURRENT_WORD
-                        MOVEA.L     A5,A4 ; keep track of address to print with A4. 
+                        MOVEA.L      A5,A4 ; keep track of address to print with A4. 
                         MOVE.W      (A5)+,CURRENT_WORD
                         BRA         READ_CURRENT_OP
                         
@@ -779,7 +779,7 @@ CHECK_EXT               CLR         D3
                         
 *-----------------------Check current word for MOVEM------------------------------------  
 *MOVEM can be W or L.                  
-CHECK_MOVEM             CLR         D3                  
+CHECK_MOVEM             CLR         D3
                         MOVE.W      CURRENT_WORD,D3
                         ANDI.W      #FILT_MOVEM,D3
                         CMP         #CONST_MOVEM,D3
@@ -882,8 +882,8 @@ DISPLAY_MOVE_DATA       BSR         DISPLAY_SOURCE     ; Tell EA to parse and di
                         MOVE.B      #14,D0
                         TRAP        #15
 
-                        RTS  
-
+                        RTS        
+                         
 *-----------------------MOVEQ-related Subroutines------------------------------------
 
 *-----------------------Case for finding MOVEQ------------------------------------
@@ -943,7 +943,7 @@ READ_MOVEQ_DATA         CLR         D4
     *   -SUB    (B,W,L)
   ; see comment block at the top of the program for the full list of codes.
   ; see huge comment block at the top of OPcode section for tentative OPcode parsing implementation plan.
-  
+ 
 *-----------------------EXT-related Subroutines------------------------------------
 EXT_FOUND               JMP         STOP ;TODO: case for EXT found
 

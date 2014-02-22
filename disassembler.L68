@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.14.00
-Created On: 2/21/2014 9:03:43 PM
+Created On: 2/21/2014 9:58:33 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      : Disassembler
@@ -373,7 +373,7 @@ Created On: 2/21/2014 9:03:43 PM
 000012F2  6000 0014                369  GO_TO_NEXT_OP           BRA         CHECK_DONE_READING
 000012F6                           370                           
 000012F6  4279 00001D04            371  CONFIRMED_NEXT_OP       CLR         CURRENT_WORD
-000012FC  284D                     372                          MOVEA.L     A5,A4 ; keep track of address to print with A4. 
+000012FC  284D                     372                          MOVEA.L      A5,A4 ; keep track of address to print with A4. 
 000012FE  33DD 00001D04            373                          MOVE.W      (A5)+,CURRENT_WORD
 00001304  6000 001A                374                          BRA         READ_CURRENT_OP
 00001308                           375                          
@@ -783,7 +783,7 @@ Created On: 2/21/2014 9:03:43 PM
 00001522                           779                          
 00001522                           780  *-----------------------Check current word for MOVEM------------------------------------  
 00001522                           781  *MOVEM can be W or L.                  
-00001522  4243                     782  CHECK_MOVEM             CLR         D3                  
+00001522  4243                     782  CHECK_MOVEM             CLR         D3
 00001524  3639 00001D04            783                          MOVE.W      CURRENT_WORD,D3
 0000152A  0243 FB80                784                          ANDI.W      #FILT_MOVEM,D3
 0000152E  B67C 8880                785                          CMP         #CONST_MOVEM,D3
@@ -886,8 +886,8 @@ Created On: 2/21/2014 9:03:43 PM
 000015FC  103C 000E                882                          MOVE.B      #14,D0
 00001600  4E4F                     883                          TRAP        #15
 00001602                           884  
-00001602  4E75                     885                          RTS  
-00001604                           886  
+00001602  4E75                     885                          RTS        
+00001604                           886                           
 00001604                           887  *-----------------------MOVEQ-related Subroutines------------------------------------
 00001604                           888  
 00001604                           889  *-----------------------Case for finding MOVEQ------------------------------------
@@ -947,7 +947,7 @@ Created On: 2/21/2014 9:03:43 PM
 00001692                           943      *   -SUB    (B,W,L)
 00001692                           944    ; see comment block at the top of the program for the full list of codes.
 00001692                           945    ; see huge comment block at the top of OPcode section for tentative OPcode parsing implementation plan.
-00001692                           946    
+00001692                           946   
 00001692                           947  *-----------------------EXT-related Subroutines------------------------------------
 00001692  4EF8 1004                948  EXT_FOUND               JMP         STOP ;TODO: case for EXT found
 00001696                           949  
