@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.14.00
-Created On: 2/20/2014 11:04:38 AM
+Created On: 2/21/2014 10:16:04 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :
@@ -13,30 +13,13 @@ Created On: 2/20/2014 11:04:38 AM
 00001000                             9  
 00001000                            10  * Put program code here
 00001000                            11  
-00001000                            12  
-Line 13 ERROR: Comma expected
-00001000                            13      MOVE.B #10          D0
-Line 14 ERROR: Comma expected
-00001000                            14      MOVE.B #1000        D1
-Line 15 ERROR: Comma expected
-00001000                            15      MOVE.B #10000000    D2
-Line 16 ERROR: Comma expected
-00001000                            16      MOVE.W #10          D4
-Line 17 ERROR: Comma expected
-00001000                            17      MOVE.W #1000        D5
-Line 18 ERROR: Comma expected
-00001000                            18      MOVE.W #10000000    D6
-00001000                            19  
-00001000                            20  
-00001000                            21  
-00001000                            22  
-00001000  FFFF FFFF                 23      SIMHALT             ; halt simulator
-00001004                            24  
-00001004                            25  * Put variables and constants here
-00001004                            26  
-00001004                            27      END    START        ; last line of source
+00001000  FFFF FFFF                 12      SIMHALT             ; halt simulator
+00001004                            13  
+00001004                            14  * Put variables and constants here
+00001004                            15  
+00001004                            16      END    START        ; last line of source
 
-6 errors detected
+No errors detected
 No warnings generated
 
 

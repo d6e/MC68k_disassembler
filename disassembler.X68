@@ -64,6 +64,11 @@
 *
 *----------------I/O TODOS (DANIELLE)-----------------------------
 * (TODOs for I/O go here.)
+*   - Complete display buffer
+*   - Print only a screenful at a time
+*   - At the end ask the user if they want to restart
+*   - Drop dollar sign if it appears in input
+*
 *----------------EA TODOS  (SHAHIN)-----------------------------
 * (TODOs for EA go here.)
 *################ BEGIN MAIN ###############################
@@ -1533,6 +1538,7 @@ STOP_CODE               EQU         $4E72   ; STOP                              
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+
 
 
 
