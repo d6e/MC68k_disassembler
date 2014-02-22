@@ -68,6 +68,7 @@
 *   - Print only a screenful at a time
 *   - At the end ask the user if they want to restart
 *   - Drop dollar sign if it appears in input
+*   - Hex to ASCII converter
 *
 *----------------EA TODOS  (SHAHIN)-----------------------------
 * (TODOs for EA go here.)
@@ -1538,6 +1539,7 @@ STOP_CODE               EQU         $4E72   ; STOP                              
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+
 
 
 
