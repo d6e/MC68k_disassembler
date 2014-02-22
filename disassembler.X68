@@ -569,13 +569,16 @@ STOP_FOUND              JMP         STOP  ;TODO: case for stop found. (NOTE that
 *----------------- Check current word for non-constants---------
 ;NOTE: we currently know that CURRENT_WORD is not a constant by the time we reach this SR.
 
-CHECK_NON_CONSTANTS     BSR         CHECK_MOVE
-                        BSR         CHECK_MOVEQ
+CHECK_NON_CONSTANTS     BSR         CHECK_MOVE        ; MOVE is a special case because of how its first nibble is structured.     
+                        BSR         CHECK_MOVEQ       ; MOVEQ is also a special case.
+                        BSR         CHECK_NIB1_0000 
+                        BSR         CHECK_NIB1_0100 
                         
-                        ;BSR        CHECK_MOVEM
-                        ;BSR        CHECK_ADD
-                        ;BSR        CHECK_ADDA
-                        ; TODO: 
+                        ; TODO: BSR to checks for other special cases, along with nibbles.
+                        
+                        ;NOTE: we do not check for most specific instructions here.
+
+                        ; TODO: go into the subroutines below and *fully* implement the followings:
                         *   -MOVEM  (W,L)
                         *   -ADD    (B,W,L) (will need shahin's size filter for this and below)
                         *   -ADDA   (W,L)
@@ -584,8 +587,160 @@ CHECK_NON_CONSTANTS     BSR         CHECK_MOVE
                         ;etc
                         JMP         STOP
                         ;TODO: check for other instructions instead of stopping if it's not one of these.
+  
+*-----------------------First 4bit checks go here-----------------------------------
+  
+*-----------------------Check if the current word starts with 0000--------------------
+CHECK_NIB1_0000         CLR         D3
+                        MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_NIB_1,D3  ; filter out the first 4 bits of the word
+                        CMP         #CONST_ALL_0,D3 ; see if they are all 0
+                        BEQ         CONFIRM_NIB1_0000
+                        RTS 
                         
+CHECK_NIB1_0100         CLR         D3 
+                        MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_NIB_1,D3      ; filter out the first 4 bits of the word
+                        CMP         #CONST_NIB1_0100,D3 ; see if they are 0100
+                        BEQ         CONFIRM_NIB1_0100
+                        RTS                        
+                        
+*-----------------------First 4bit confirms go here--------------------------------------
+
+*-----------------------Cases where the current word starts with 0000--------------------                       
+CONFIRM_NIB1_0000       CLR         D3
+                        MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_BIT_8,D3  ; turn word into 0000 000X 0000 0000
+                        LSR.W       #8,D3           ; turn word into 0000 0000 0000 000X
+                        CMP         #CONST_ALL_0,D3 ; see if the word is still 0.
+                        BEQ         CONFIRM_0000_XXX0
+                        ; if we get to here, then the word must be BCHG, BCLR, BSET, or MOVEP.
+                        ; BCHG is required
+                        ; if our disassembler doesn't consider any of those valid, there should be an error message here.
+                        RTS 
+                        
+; at this point, the word is of the form 0000 XXX0...
+CONFIRM_0000_XXX0       CLR         D3
+                        MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_DEST_REG,D3  ; turn word into 0000 XXX0 0000 0000          
+                        
+                        ; now figure out which operation we have: (note that constants have been ruled out by this point)
+                        
+                        CMP         #CONST_ORI_DEST_REG,D3  ; ORI 
+                        BEQ         ORI_FOUND           
+                        
+                        CMP         #CONST_ANDI_DEST_REG,D3 ; ANDI 
+                        BEQ         ANDI_FOUND
+                        
+                        CMP         #CONST_SUBI_DEST_REG,D3 ; SUBI
+                        BEQ         SUBI_FOUND
+                        ;
+                        CMP         #CONST_ADDI_DEST_REG,D3 ; ADDI
+                        BEQ         ADDI_FOUND
+                        
+                        CMP         #CONST_EORI_DEST_REG,D3 ; EORI
+                        BEQ         EORI_FOUND
+                        
+                        CMP         #CONST_CMPI_DEST_REG,D3 ; CMPI
+                        BEQ         CMPI_FOUND
+                        
+                        ;TODO: remaining: BTST, BCHG, BCLR, or BSET. 
+                        ;      if none of them, an error case should occur here.
+                        ;     (note that BCHG is required, though we don't know which version.)
+                        
+                        RTS     ;change RTS to whatever branch instruction is appropriate here.
+                        
+*-----------------------Cases where the current word starts with 0100-----------------
+
+    ; if we were doing every OPcode, would start by checking for MOVE from SR, MOVE to CCR, and MOVE to SR at the top of this SR.
+    ; instead, we start with NEGX.
+CONFIRM_NIB1_0100       CLR         D3              
+                        MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_BIT_5,D3  ; turn word into 0000 X000 0000 0000
+                        LSR.W       #8,D3           ; turn word into 0000 0000 0000 000X
+                        LSR.W       #3,D3
+                        CMP         #CONST_ALL_0,D3 ; see if the word is still 0.
+                        BEQ         CONFIRM_0100_0XXX   ; branch based on the 5th bit.
+                        BRA         CONFIRM_0100_1XXX
+                        
+CONFIRM_0100_0XXX       CLR         D3              
+                        MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_NIB_2,D3  ; turn word into 0000 XXXX 0000 0000
+                        
+                        ; now figure out which operation we have:
+                        
+                        CMP         #CONST_NEGX_OP,D3
+                        BEQ         NEGX_FOUND
+                        
+                        CMP         #CONST_CLR_OP,D3
+                        BEQ         CLR_FOUND
+                        
+                        CMP         #CONST_NEG_OP,D3
+                        BEQ         NEG_FOUND
+                        
+                        CMP         #CONST_NOT_OP,D3
+                        BEQ         NOT_FOUND         ; note that we could likely make a conflicting SR name with one.
+                        
+                        ; TODO: we definitely have an error at this point.
+                        
+                        RTS     ;change RTS to whatever we want based on error. (probably some error case which will then branch to reading next OPcode.)
+                        
+CONFIRM_0100_1XXX       CLR         D3
+                        MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_NIB_2,D3  ; turn word into 0000 XXXX 0000 0000
+                        
+                        CMP         #CONST_NIB2_1000,D3
+                        BEQ         CONFIRM_0100_1000
+
+                        CMP         #CONST_NIB2_1010,D3
+                        BEQ         CONFIRM_0100_1010 
+
+                        CMP         #CONST_NIB2_1110,D3
+                        BEQ         CONFIRM_0100_1110 
+                        
+                        ; TODO: remaining possibilities are MOVEM, LEA, or CHK. (the first two are required.)
+
+                        JMP         STOP                      
+                   
+CONFIRM_0100_1000       JMP         STOP                       
+; TODO: check for EXT, NBCD, SWAP, or PEA.               
+ 
+CONFIRM_0100_1010       JMP         STOP  
+; TODO: check for TAS or TST. (ILLEGAL is already ruled out.)         
+       
+CONFIRM_0100_1110       JMP         STOP       
+; TODO: check for TRAP, LINK, UNLK, MOVE USP, JSR, or JMP. (some of these are required.)
+
+*-----------------------Cases where the current word starts with 0101-----------------
+    ;TODO: ADDQ, SUBQ, Scc, DBcc (some of these are required)
+ 
+*-----------------------Cases where the current word starts with 0110-----------------
+    ;TODO: BRA, BSR, Bcc (some of these are required)   
+    
+*-----------------------Cases where the current word starts with 1000-----------------
+    ;TODO: DIVU, DIVS, SBCD, OR (some of these are required)   
+    
+*-----------------------Cases where the current word starts with 1001-----------------
+    ;TODO: SUB, SUBX, SUBA (some of these are required) 
+ 
+*-----------------------Cases where the current word starts with 1011-----------------
+    ;TODO: EOR, CMPM, CMP, CMPA (some of these are required)  
+    
+*-----------------------Cases where the current word starts with 1100-----------------
+    ;TODO: MULU, MULS, ABCD, EXG, AND (some of these are required) 
+    
+*-----------------------Cases where the current word starts with 1101-----------------
+    ;TODO: ADD, ADDX, ADDA (some of these are required) 
+    
+*-----------------------Cases where the current word starts with 1110-----------------
+    ;TODO: ASR, ASL, LSR, LSL, ROXR, ROXL, ROR, ROL (these are all repeated twice on the sheet for some reason) 
+                                                    ;(some of these are required) 
+ 
+*-----------------------Special OPcode (but not constants) have checks here------------
+* includes MOVE, MOVEQ, etc
+                                
 *-----------------------Check current word for MOVE------------------------------------
+*MOVE can be B,W, or L.
 CHECK_MOVE              CLR         D3
                         MOVE.W      CURRENT_WORD,D3
                         ANDI.W      #FILT_NIB_1,D3
@@ -598,13 +753,56 @@ CHECK_MOVE              CLR         D3
                         RTS 
                         
 *-----------------------Check current word for MOVEQ------------------------------------
-*unlike MOVE, MOVEQ can only be long-sized.                       
+*MOVEQ can only be L.                       
 CHECK_MOVEQ             CLR         D3
                         MOVE.W      CURRENT_WORD,D3
                         ANDI.W      #FILT_NIB_1,D3
                         CMP         #CONST_MOVEQ,D3
                         BEQ         MOVEQ_FOUND
                         RTS 
+                        
+*-----------------------Check current word for MOVEM------------------------------------  
+*MOVEM can be W or L.                  
+CHECK_MOVEM             CLR         D3
+                        MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_NIB_1,D3
+                        CMP         #CONST_MOVEQ,D3
+                        BEQ         MOVEQ_FOUND
+                        RTS 
+                        
+*---------------------- END OPWORD CHECKS -----------------------------------------
+
+*---------------------- BEGIN CASES FOR FOUND OPCODES------------------------------
+
+*-----------------------ORI-related Subroutines------------------------------------
+ORI_FOUND               JMP         STOP ;TODO: case for ORI found
+
+ *----------------------ANDI-related Subroutines------------------------------------
+ANDI_FOUND              JMP         STOP ;TODO: case for ANDI found
+
+ *----------------------SUBI-related Subroutines------------------------------------
+SUBI_FOUND              JMP         STOP ;TODO: case for SUBI found
+
+ *----------------------ADDI-related Subroutines------------------------------------
+ADDI_FOUND              JMP         STOP ;TODO: case for ADDI found
+ 
+*-----------------------EORI-related Subroutines------------------------------------
+EORI_FOUND              JMP         STOP ;TODO: case for EORI found
+ 
+*-----------------------CMPI-related Subroutines------------------------------------
+CMPI_FOUND              JMP         STOP ;TODO: case for CMPI found
+
+*-----------------------NEGX-related Subroutines------------------------------------
+NEGX_FOUND              JMP         STOP ;TODO: case for NEGX found 
+
+*-----------------------CLR-related Subroutines------------------------------------
+CLR_FOUND               JMP         STOP ;TODO: case for CLR found 
+
+*-----------------------NEG-related Subroutines------------------------------------
+NEG_FOUND               JMP         STOP ;TODO: case for NEG found 
+
+*-----------------------NOT-related Subroutines------------------------------------
+NOT_FOUND               JMP         STOP ;TODO: case for NOT found 
  
 *-----------------------MOVE-related Subroutines------------------------------------
 
@@ -1209,8 +1407,11 @@ END_ADDR                SET         $00009000
     * general filters
 FILT_2BIT_1             EQU         $0000C000   ;first 2 bits:                          XX00 0000 0000 0000
 FILT_NIB_1              EQU         $0000F000   ;first nibble:                          XXXX 0000 0000 0000
+FILT_NIB_2              EQU         $00000F00   ;second nibble:                         0000 XXXX 0000 0000
+FILT_BIT_5              EQU         $00000800   ;5th bit:                               0000 X000 0000 0000
+FILT_BIT_8              EQU         $00000100   ;8th bit:                               0000 000X 0000 0000
 
-    * source/destination filters (not for bidirectional operations)
+    * source/destination filters (not applicable for bidirectional operations)
 FILT_DEST_REG           EQU         $00000E00   ;destination register:                  0000 XXX0 0000 0000
 FILT_DEST_MD            EQU         $000001C0   ;destination mode:                      0000 000X XX00 0000
 FILT_SRC_MD             EQU         $00000038   ;source mode:                           0000 0000 00XX X000
@@ -1226,14 +1427,51 @@ FILT_MOVEQ_DATA         EQU         $00FF       ;Data of MOVEQ instruction:     
 * constants for comparing with filtered instructions. X means 'don't care' (and will be set to 0 by previous filter)
 *(These do not represent the complete insturctions.)
 *(Also note that repetition is allowed for clarity's sake, so two constants can share a value.)
+    * general filters
 CONST_ALL_0             EQU         $0000    ; all 0s:                               0000 0000 0000 0000
+CONST_NIB1_0100         EQU         $4000    ; first nibble is 0100                  0100 XXXX XXXX XXXX
+CONST_NIB2_1000         EQU         $0800    ; second nibble is 1000                 XXXX 1000 XXXX XXXX
+CONST_NIB2_1010         EQU         $0A00    ; second nibble is 1010                 XXXX 1010 XXXX XXXX
+CONST_NIB2_1110         EQU         $0E00    ; second nibble is 1110                 XXXX 1110 XXXX XXXX
+
+* Immediate operation constants
+    * ANDI
+CONST_ORI_DEST_REG      EQU         $0000    ; confirm ORI                           XXXX 000X XXXX XXXX
+    * ANDI
+CONST_ANDI_DEST_REG     EQU         $0200    ; confirm ANDI                          XXXX 001X XXXX XXXX
+    * SUBI
+CONST_SUBI_DEST_REG     EQU         $0400    ; confirm SUBI                          XXXX 010X XXXX XXXX
+    * ADDI
+CONST_ADDI_DEST_REG     EQU         $0600    ; confirm ADDI                          XXXX 011X XXXX XXXX
+    * EORI
+CONST_EORI_DEST_REG     EQU         $0A00    ; confirm EORI                          XXXX 101X XXXX XXXX
+    * CMPI
+CONST_CMPI_DEST_REG     EQU         $0C00    ; confirm CMPI                          XXXX 110X XXXX XXXX
+
+* Constants for matching based on 2nd nibble
+    *NEGX
+CONST_NEGX_OP           EQU         $0000    ; confirm NEGX                          XXXX 0000 XXXX XXXX
+    *CLR
+CONST_CLR_OP            EQU         $0200    ; confirm CLR                           XXXX 0010 XXXX XXXX
+    *NEG
+CONST_NEG_OP            EQU         $0400    ; confirm NEG                           XXXX 0100 XXXX XXXX
+    *NOT
+CONST_NOT_OP            EQU         $0600    ; confirm NOT                           XXXX 0110 XXXX XXXX
+
+* Other constants
+    * BTST,BCHG,BCLR,BSET
+CONST_B_OP              EQU         $0800    ; BTST,BCHG,BCLR,BSET                   XXXX 100X XXXX XXXX
+
     * MOVE
 CONST_MOVE_B            EQU         $1000    ; MOVE.B (use first nib)                0001 XXXX XXXX XXXX
 CONST_MOVE_W            EQU         $3000    ; MOVE.W (use first nib)                0011 XXXX XXXX XXXX
 CONST_MOVE_L            EQU         $2000    ; MOVE.L (use first nib)                0010 XXXX XXXX XXXX
+
     * MOVEQ
-CONST_MOVEQ             EQU         $7000    ; MOVEQ.L (use first nib)               0111 XXXX XXXX XXXX             
+CONST_MOVEQ             EQU         $7000    ; MOVEQ.L (use first nib)               0111 XXXX XXXX XXXX    
+         
 * Mode/register constants
+
     * Mode values
 CONST_DATA_REG_MD       EQU         $00      ; Data register mode:     Dn            XXXX X000
 CONST_ADDR_REG_MD       EQU         $01      ; Address register mode:  An            XXXX X001
@@ -1243,6 +1481,7 @@ CONST_ADDR_DECR_MD      EQU         $04      ; Address predecr. mode:  -(An)    
 CONST_ADDR_DISPLC_MD    EQU         $05      ; Address w/ displacement:(d16,An)      XXXX X101
 CONST_ADDR_INDEX_MD     EQU         $06      ; Address w/ index:       (d8,PC,Xn)    XXXX X110
 CONST_ADDR_MISC_MD      EQU         $07      ; Various other addressing modes        XXXX X111
+
     * Constant register values (should not be necessary for register numbers like D5)
 CONST_COUNTR_DISPLC_REG EQU         $02      ; Counter w/ displacement:(d16,PC)      XXXX X010
 CONST_COUNTR_INDEX_REG  EQU         $03      ; Counter w/ index:       (d16,PC,Xn)   XXXX X011
