@@ -779,7 +779,7 @@ CHECK_EXT               CLR         D3
                         
 *-----------------------Check current word for MOVEM------------------------------------  
 *MOVEM can be W or L.                  
-CHECK_MOVEM             CLR         D3                  
+CHECK_MOVEM             CLR         D3                         
                         MOVE.W      CURRENT_WORD,D3
                         ANDI.W      #FILT_MOVEM,D3
                         CMP         #CONST_MOVEM,D3
@@ -947,8 +947,10 @@ READ_MOVEQ_DATA         CLR         D4
 *-----------------------EXT-related Subroutines------------------------------------
 EXT_FOUND               JMP         STOP ;TODO: case for EXT found
 
+;TODO: first thing: read the correct size for MOVEM
 *-----------------------MOVEM-related Subroutines------------------------------------
-MOVEM_FOUND             JMP         STOP ;TODO: case for MOVEM found (currently the next goal)      
+MOVEM_FOUND             ; TODO: filter out size and set CURRENT_OP_SIZE accordingly
+                        JMP         STOP ;TODO: case for MOVEM found (currently the next goal)      
   
 *-----------------------ORI-related Subroutines------------------------------------
 ORI_FOUND               JMP         STOP ;TODO: case for ORI found
