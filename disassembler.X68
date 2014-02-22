@@ -28,13 +28,48 @@
 * Relevant wiki page:
 *   https://en.wikipedia.org/wiki/Mask_(computing)#Masking_bits_to_0
 *
+*################ TODO LIST ################################
+*----------------OPcode TODOS (ROBERT)-----------------------------
+*
+* Fix the current bugs with MOVEs performed on absolute addresses. Not sure why these errors occur.
+*   -consult the bug report before trying to debug.
+* Continue decoding OPcodes in the following order: (with sizes)
+*   NOTE: I will delete OPcodes from this list as I implement them.
 
+*   -MOVEM  (W,L)
+*   -ADD    (B,W,L) (will need shahin's size filter for this and below)
+*   -ADDA   (W,L)
+*   -ADDI   (B,W,L)
+*   -SUB    (B,W,L)
+*   -SUBA   (W,L)
+*   -SUBQ   (B,W,L)
+*   -MULS   (W)     (not MULU?)
+*   -DIVU   (W      (not DIVU?)
+*   -LEA    (?)
+*   -CLR    (B,W,L)
+*   -AND    (B,W,L)
+*   -ANDI   (B,W,L)
+*   -EOR    (B,W,L)
+*   -EORI   (B,W,L)
+*   -ASR    (B,W,L) (no ASL?)
+*   -LSL    (B,W,L) (no LSR?)
+*   -ROL    (B,W,L)
+*   -ROR    (B,W,L)
+*   -BCHG   (?)
+*   -CMP    (B,W,L)
+*   -CMPA   (W,L)
+*   -CMPI   (B,W,L)
+*   -JSR    (N/A)
+*   (add others if we have time)
+*
+*----------------I/O TODOS (DANIELLE)-----------------------------
+* (TODOs for I/O go here.)
+*----------------EA TODOS  (SHAHIN)-----------------------------
+* (TODOs for EA go here.)
 *################ BEGIN MAIN ###############################
 *** All subroutine calls are made here ***
 START                   ORG        $1000       ; first instruction of program
-                        BSR        PROMPT_INPUT            ; prompt the user for input
-                  ;      BSR        READ_FIRST              ; read the first instruction
-
+                        BRA        PROMPT_INPUT            ; prompt the user for input
 
 STOP                    STOP       #$2700          ; halt simulator, end of main
 
@@ -43,7 +78,7 @@ STOP                    STOP       #$2700          ; halt simulator, end of main
 *** IO Subroutines are kept here ***
 
 *-------------------- Print ASCII logo ----------------------
-PROMPT_INPUT            BSR         TAKE_USER_IN_S ;TODO: change to welcome/ASCII logo
+PROMPT_INPUT            BRA         TAKE_USER_IN_S ;TODO: change to welcome/ASCII logo
 *------------------- Prompt user for input -------------------
 
                 
@@ -52,14 +87,14 @@ TAKE_USER_IN_S          MOVE.B      #1,D3
                         MOVE.B      #14,D0
                         TRAP        #15
 
-                        BSR         TAKE_USER_INPUT
+                        BRA         TAKE_USER_INPUT
 
 TAKE_USER_IN_E          MOVE.B      #0,D3
                         LEA         END_ADDR_MSG,A1  ; prompt user for ending address
                         MOVE.B      #14,D0
                         TRAP        #15
                         
-                        BSR         TAKE_USER_INPUT
+                        BRA         TAKE_USER_INPUT
                         
 TAKE_USER_INPUT         MOVE.L      #$00000000,D1   ; need to clear out the data registers we are about to use to avoid junk data.   
                         MOVE.L      #$00000000,D5    
@@ -276,25 +311,25 @@ INVALID_ADDR_INPUT      LEA         INVALID_ADDR_MSG,A1    ;tell the user the ad
                         MOVE.B      #14,D0
                         TRAP        #15
                         
-                        BSR         TAKE_USER_INPUT
+                        BRA         TAKE_USER_INPUT
                         
 INVALID_END_ADDR        LEA         INVALID_END_ADDR_MSG,A1
                         MOVE.B      #14,D0
                         TRAP        #15
                         
-                        BSR         TAKE_USER_INPUT
+                        BRA         TAKE_USER_INPUT
                         
 INVALID_ADDR_LOW        LEA         INVALID_ADDR_L_MSG,A1    ;tell the user the address was invalid and prompt input again.
                         MOVE.B      #14,D0
                         TRAP        #15
                         
-                        BSR         TAKE_USER_INPUT
+                        BRA         TAKE_USER_INPUT
 
 INVALID_ADDR_HIGH       LEA         INVALID_ADDR_H_MSG,A1    ;tell the user the address was invalid and prompt input again.
                         MOVE.B      #14,D0
                         TRAP        #15
                         
-                        BSR         TAKE_USER_INPUT
+                        BRA         TAKE_USER_INPUT
                
 CONVERSION_DONE         LSL.L       #8,D7   ; Prepare for concatenation
                         LSL.L       #8,D7   ; Got to perform the same operation twice to get it all the way to the left
@@ -309,40 +344,42 @@ CONVERSION_DONE         LSL.L       #8,D7   ; Prepare for concatenation
 VALID_ADDR              CMPI        #1,D3
                         
                         BEQ         SET_START_ADDR
-                        BSR         SET_END_ADDR              
+                        BRA         SET_END_ADDR              
                                                
 SET_START_ADDR          MOVEA.L     D7,A5  ;when a valid start address is inputted, store and ask the user for an end address.
-                        BSR         TAKE_USER_IN_E
+                        BRA         TAKE_USER_IN_E
 
 SET_END_ADDR            CMP.L       A5,D7    ;if end address is lower than start address, we get an error.
                         BLT         INVALID_END_ADDR           
                         
                         MOVEA.L     D7,A6  ;when a valid start address is inputted, store and ask the user for an end address.
-                        BSR         BEGIN_READ
+                        BRA         BEGIN_READ
                         
 BEGIN_READ              MOVEA.L      A5,A4 ; keep track of address to print with A4. TODO: could also add this value to the display buffer.
                         MOVE.W      (A5)+,CURRENT_WORD ;look at the first instruction word at the starting address.
-                        BSR         PREPARE_DISPLAY
+                        BRA         PREPARE_DISPLAY
 
 *------------------- Add to display buffer -------------------
 ;At this point A5 is a valid start address and A6 is a valid end address.
 ;TODO: prepare the display buffer
-PREPARE_DISPLAY         BSR         READ_CURRENT_OP    ;TEMP (though we might still call this after the display buffer is prepared)  
-
+PREPARE_DISPLAY         BRA         READ_CURRENT_OP    ;TEMP (though we might still call this after the display buffer is prepared)                       
                
 *------------------- Move address pointer for data reading -------------------
 ; This method is specifically for reading the next OPword.
-GO_TO_NEXT_OP           BSR         CHECK_DONE_READING
+GO_TO_NEXT_OP           BRA         CHECK_DONE_READING
                          
 CONFIRMED_NEXT_OP       CLR         CURRENT_WORD
                         MOVEA.L      A5,A4 ; keep track of address to print with A4. 
                         MOVE.W      (A5)+,CURRENT_WORD
-                        BSR         READ_CURRENT_OP
+                        BRA         READ_CURRENT_OP
 *------------------- Print display buffer -------------------
+
+;TODO
+
 *------------------- Check if end of data -------------------
 CHECK_DONE_READING      CMPA        A6,A5       ; TODO: this comparison is not sufficient, because it will say that $8000 is less than $7000 (since $8000 is negative.)
                         BLT         CONFIRMED_NEXT_OP
-                        BSR         DONE_READING
+                        BRA         DONE_READING
 *------------------- Ask user for input -------------------
 DONE_READING            LEA         DONE_READING_MSG,A1 ; when we reach the end address, say so and halt the program. TODO: ask user whether we want to read the data again.
                         MOVE.B      #14,D0
@@ -352,159 +389,8 @@ DONE_READING            LEA         DONE_READING_MSG,A1 ; when we reach the end 
 *################## BEGIN OPCODE ##########################
 *** OPcode Subroutines are kept here ***
 
-*------------------- Read current OPcode -------------------
-; By this point, CURRENT_WORD should store a potential beginning of an instruction, so we should not increment A5.
-READ_CURRENT_OP         BSR         CHECK_CONSTANTS
-                        ;CLR         D3  
-                        ;CLR         D4
-                        ;MOVE.W          
-                        ;ANDI.W      #FILT_2BIT_1,D3 ; and A5 (current address we are reading) should have just been incremented to a point immediately after that word.
- 
-*------------------ Check current word for constants---------
-; By this point, the current word should store a potential beginning of an instruction                   
-CHECK_CONSTANTS         BSR         CHECK_NOP
-
-CHECK_RESET             CMP         #RESET_CODE,(CURRENT_WORD) ; TODO: test that this is correct syntax
-                        BNE         CHECK_NOP
-                       
-RESET_FOUND             JMP         STOP  ;TODO: case for reset found    
- 
-CHECK_NOP               CMP         #NOP_CODE,(CURRENT_WORD) ; TODO: test that this is correct syntax
-                        BNE         CHECK_STOP
-
-;NOTE: this SR is temporary. Once we have the display buffer, it will work differently.                 
-NOP_FOUND               LEA         DOLLAR,A1     ; '$'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                
-                        MOVE.L      A4,D1         ; display the address NOP was found at
-                        MOVE.B      #16,D2
-                        MOVE.B      #15,D0
-                        TRAP        #15
-
-                        LEA         SPACE,A1      ; ' '
-                        MOVE.B      #14,D0      
-                        TRAP        #15
-
-                        LEA         NOP_MSG,A1    ; 'NOP'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        
-                        LEA         RETURN,A1    ; (return)
-                        MOVE.B      #14,D0
-                        TRAP        #15
-               
-                        BSR         GO_TO_NEXT_OP   ; when we are done parsing and displaying the MOVE instruction, go to the next OPcode.
-                        
-CHECK_STOP              CMP         #STOP_CODE,(CURRENT_WORD)
-                        BNE         CHECK_NON_CONSTANTS
-
-STOP_FOUND              JMP         STOP  ;TODO: case for stop found               
-
-;TODO: add cases for rest of valid constant OPcodes here
-
-*----------------- Check current word for non-constants---------
-;NOTE: we currently know that CURRENT_WORD is not a constant by the time we reach this SR.
-
-CHECK_NON_CONSTANTS     CLR         D3
-                        BSR         CHECK_MOVE_B
-                        
-CHECK_MOVE_B            MOVE.W      CURRENT_WORD,D3
-                        ANDI.W      #FILT_NIB_1,D3
-                        CMP         #CONST_MOVE_B,D3
-                        BNE         CHECK_MOVE_W
-                        
-;NOTE: this SR is temporary. will be different with display buffer.
-MOVE_B_FOUND            MOVE.B      #BYTE_SIZE,CURRENT_OP_SIZE
-
-                        LEA         DOLLAR,A1     ; '$'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                
-                        MOVE.L      A4,D1 ;display the address MOVE.B was found at
-                        MOVE.B      #16,D2
-                        MOVE.B      #15,D0
-                        TRAP        #15
-
-                        LEA         SPACE,A1         ; ' '
-                        MOVE.B      #14,D0      
-                        TRAP        #15
-
-                        ;FROM TEST:
-                        ;MOVE.B #10,D0
-                        ;MOVE.B D1, D1
-                        ;MOVE.B D1, $10000000
-                        ;MOVE.B D1, $1000
-                        
-                        ; TODO: error checking first
-                        ;
-                        ; possible errors:
-                        ;       CURRENT_DEST_MD = CONST_IMMEDIATE_REG (immediate data cannot be a destination)
-                        ;       CURRENT_SRC_MD  = CONST_ADDR_REG_MD   (byte is not a valid size for this move)
-                        ;       CURRENT_DEST_MD = CONST_ADDR_REG_MD   (byte is not a valid size, although we should be using MOVEA at this point, not MOVE.)
-                        ;       TODO: figure out other possible errors.
-                        
-                        ; after we confirm that there are no errors, we begin sending information about the MOVE instruction to our temp variables.
-                        
-                        
-                        ; at this point, need to read more information (parsed by EA, probably)
-                        ; now that we have a move instruction, we set our EA variables accordingly:
-                        BSR         READ_DEST_REG      ; EA will set CURRENT_DEST_REG.
-                        BSR         READ_DEST_MODE     ; EA will set CURRENT_DEST_MD.
-                        BSR         READ_SOURCE_MODE   ; EA will set CURRENT_SRC_MD.
-                        BSR         READ_SOURCE_REG    ; EA will set CURRENT_SRC_REG.
-                        
-                        ;      need to check whether we need to read additional data before we start displaying the
-                        ;      instruction (for instance, this is necessary for MOVE.B #10,D0).
-                        BSR         READ_SOURCE_DATA    ; EA will set CURRENT_SOURCE_DATA if necessary.
-                        BSR         READ_DEST_DATA      ; EA will set CURRENT_DEST_DATA if necessary. 
-                       
-                        LEA         MOVE_B_MSG,A1    ; 'MOVE.B'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        
-                        LEA         SPACE,A1         ; ' '
-                        MOVE.B      #14,D0      
-                        TRAP        #15
-                        
-                        ; once we have the four (or five, or six) values, proceed to parse the instruction accordingly.
-                        BSR         DISPLAY_SOURCE  ; Tell EA to parse and display the source. EX: (A1)   D3    #10   $1000 etc
-                        
-                        LEA         COMMA,A1         ; ','
-                        MOVE.B      #14,D0      
-                        TRAP        #15
-                        
-                        BSR         DISPLAY_DEST    ; Tell EA to parse and display the destination.
-                        
-                        LEA         RETURN,A1    ; (return)
-                        MOVE.B      #14,D0
-                        TRAP        #15
-               
-                        BSR         GO_TO_NEXT_OP
-                        
-CHECK_MOVE_W            MOVE.W      CURRENT_WORD,D3
-                        ANDI.W      #FILT_NIB_1,D3
-                        CMP         #CONST_MOVE_W,D3
-                        BNE         CHECK_MOVE_L
-                        
-MOVE_W_FOUND            JMP         STOP ;TODO: MOVE.W
-                        
-CHECK_MOVE_L            MOVE.W      CURRENT_WORD,D3
-                        ANDI.W      #FILT_NIB_1,D3
-                        CMP         #CONST_MOVE_L,D3
-                        ;BNE         CHECK_MOVE_W
-                        JMP         STOP ;TODO: keep checking for more possible instructions
-                        
-MOVE_L_FOUND            JMP         STOP ;TODO: MOVE.L
-                        
-
-                        JMP         STOP    ;TODO: CURRENT_WORD still holds current possible 16 bit instruction, so read it for current word.        
-
-                       
-
-                                                            
-       
-                ;TODO: process for reading hex instructions (after the first instruction):
+; planned process for reading hex instructions:
+        ; NOTE: this process is tentative and subject to change as OPcode person implements. 
                 ;           1) Go to start of instruction reading loop, passing in the address of next instruction.
                 ;           2) Store a word (16 bits) from that address.
                 ;           3) Read the first 4 bits of the word using a filter.
@@ -618,27 +504,481 @@ MOVE_L_FOUND            JMP         STOP ;TODO: MOVE.L
                 ;      should first have a default "Error" subroutine which the program
                 ;      branches to once all other possibilities have been ruled out.
 
+*------------------- Read current OPcode -------------------
+; By this point, CURRENT_WORD should store a potential beginning of an instruction, so we should not increment A5.
+READ_CURRENT_OP         BRA         CHECK_CONSTANTS
+                        
+  
+*------------------- Display current address we are reading -------------------
+DISPLAY_CURRENT_ADDRESS LEA         DOLLAR,A1       ; '$'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                
+                        MOVE.L      A4,D1           ; display the address the instruction was found at
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
+                        TRAP        #15
+
+                        LEA         SPACE,A1        ; ' '
+                        MOVE.B      #14,D0      
+                        TRAP        #15     
+                        
+                        RTS
+ 
+*------------------ Check current word for constants---------
+; By this point, the current word should store a potential beginning of an instruction.                   
+CHECK_CONSTANTS         CMP         #RESET_CODE,(CURRENT_WORD)
+                        BEQ         RESET_FOUND
+                        CMP         #NOP_CODE,(CURRENT_WORD)
+                        BEQ         NOP_FOUND
+                        CMP         #STOP_CODE,(CURRENT_WORD)
+                        BEQ         STOP_FOUND
+                        BRA         CHECK_NON_CONSTANTS     ;Once we rule out all the constants we know of, we check for non-constants.
+
+; TODO: change the structure of these subroutines to be like the nice structure used in EA SRs.
+                       
+RESET_FOUND             BSR         DISPLAY_CURRENT_ADDRESS
+
+                        LEA         RESET_MSG,A1    ; 'RESET'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         RETURN,A1       ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+               
+                        BRA         GO_TO_NEXT_OP   
+ 
+; NOTE: this SR is temporary. Once we have the display buffer, it will work differently.                 
+NOP_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
+
+                        LEA         NOP_MSG,A1    ; 'NOP'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         RETURN,A1     ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+               
+                        BRA         GO_TO_NEXT_OP   ; when we are done parsing and displaying the NOP instruction, go to the next OPcode.
+
+STOP_FOUND              JMP         STOP  ;TODO: case for stop found. (NOTE that STOP instructions have additional data.)               
+
+;TODO: add cases for rest of valid constant OPcodes here
+
+*----------------- Check current word for non-constants---------
+;NOTE: we currently know that CURRENT_WORD is not a constant by the time we reach this SR.
+
+CHECK_NON_CONSTANTS     BSR         CHECK_MOVE        ; MOVE is a special case because of how its first nibble is structured.     
+                        BSR         CHECK_MOVEQ       ; MOVEQ is also a special case.
+                        BSR         CHECK_NIB1_0000 
+                        BSR         CHECK_NIB1_0100 
+                        
+                        ; TODO: BSR to checks for other special cases, along with nibbles.
+                        
+                        ;NOTE: we do not check for most specific instructions here.
+
+                        ; TODO: go into the subroutines below and *fully* implement the followings:
+                        *   -MOVEM  (W,L)
+                        *   -ADD    (B,W,L) (will need shahin's size filter for this and below)
+                        *   -ADDA   (W,L)
+                        *   -ADDI   (B,W,L)
+                        *   -SUB    (B,W,L)
+                        ;etc
+                        JMP         STOP
+                        ;TODO: check for other instructions instead of stopping if it's not one of these.
+  
+*-----------------------First 4bit checks go here-----------------------------------
+  
+*-----------------------Check if the current word starts with 0000--------------------
+CHECK_NIB1_0000         CLR         D3
+                        MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_NIB_1,D3  ; filter out the first 4 bits of the word
+                        CMP         #CONST_ALL_0,D3 ; see if they are all 0
+                        BEQ         CONFIRM_NIB1_0000
+                        RTS 
+                        
+CHECK_NIB1_0100         CLR         D3 
+                        MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_NIB_1,D3      ; filter out the first 4 bits of the word
+                        CMP         #CONST_NIB1_0100,D3 ; see if they are 0100
+                        BEQ         CONFIRM_NIB1_0100
+                        RTS                        
+                        
+*-----------------------First 4bit confirms go here--------------------------------------
+
+*-----------------------Cases where the current word starts with 0000--------------------                       
+CONFIRM_NIB1_0000       CLR         D3
+                        MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_BIT_8,D3  ; turn word into 0000 000X 0000 0000
+                        LSR.W       #8,D3           ; turn word into 0000 0000 0000 000X
+                        CMP         #CONST_ALL_0,D3 ; see if the word is still 0.
+                        BEQ         CONFIRM_0000_XXX0
+                        ; if we get to here, then the word must be BCHG, BCLR, BSET, or MOVEP.
+                        ; BCHG is required
+                        ; if our disassembler doesn't consider any of those valid, there should be an error message here.
+                        RTS 
+                        
+; at this point, the word is of the form 0000 XXX0...
+CONFIRM_0000_XXX0       CLR         D3
+                        MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_DEST_REG,D3  ; turn word into 0000 XXX0 0000 0000          
+                        
+                        ; now figure out which operation we have: (note that constants have been ruled out by this point)
+                        
+                        CMP         #CONST_ORI_DEST_REG,D3  ; ORI 
+                        BEQ         ORI_FOUND           
+                        
+                        CMP         #CONST_ANDI_DEST_REG,D3 ; ANDI 
+                        BEQ         ANDI_FOUND
+                        
+                        CMP         #CONST_SUBI_DEST_REG,D3 ; SUBI
+                        BEQ         SUBI_FOUND
+                        ;
+                        CMP         #CONST_ADDI_DEST_REG,D3 ; ADDI
+                        BEQ         ADDI_FOUND
+                        
+                        CMP         #CONST_EORI_DEST_REG,D3 ; EORI
+                        BEQ         EORI_FOUND
+                        
+                        CMP         #CONST_CMPI_DEST_REG,D3 ; CMPI
+                        BEQ         CMPI_FOUND
+                        
+                        ;TODO: remaining: BTST, BCHG, BCLR, or BSET. 
+                        ;      if none of them, an error case should occur here.
+                        ;     (note that BCHG is required, though we don't know which version.)
+                        
+                        RTS     ;change RTS to whatever branch instruction is appropriate here.
+                        
+*-----------------------Cases where the current word starts with 0100-----------------
+
+    ; if we were doing every OPcode, would start by checking for MOVE from SR, MOVE to CCR, and MOVE to SR at the top of this SR.
+    ; instead, we start with NEGX.
+CONFIRM_NIB1_0100       CLR         D3              
+                        MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_BIT_5,D3  ; turn word into 0000 X000 0000 0000
+                        LSR.W       #8,D3           ; turn word into 0000 0000 0000 000X
+                        LSR.W       #3,D3
+                        CMP         #CONST_ALL_0,D3 ; see if the word is still 0.
+                        BEQ         CONFIRM_0100_0XXX   ; branch based on the 5th bit.
+                        BRA         CONFIRM_0100_1XXX
+                        
+CONFIRM_0100_0XXX       CLR         D3              
+                        MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_NIB_2,D3  ; turn word into 0000 XXXX 0000 0000
+                        
+                        ; now figure out which operation we have:
+                        
+                        CMP         #CONST_NEGX_OP,D3
+                        BEQ         NEGX_FOUND
+                        
+                        CMP         #CONST_CLR_OP,D3
+                        BEQ         CLR_FOUND
+                        
+                        CMP         #CONST_NEG_OP,D3
+                        BEQ         NEG_FOUND
+                        
+                        CMP         #CONST_NOT_OP,D3
+                        BEQ         NOT_FOUND         ; note that we could likely make a conflicting SR name with one.
+                        
+                        ; TODO: we definitely have an error at this point.
+                        
+                        RTS     ;change RTS to whatever we want based on error. (probably some error case which will then branch to reading next OPcode.)
+                        
+CONFIRM_0100_1XXX       CLR         D3
+                        MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_NIB_2,D3  ; turn word into 0000 XXXX 0000 0000
+                        
+                        CMP         #CONST_NIB2_1000,D3
+                        BEQ         CONFIRM_0100_1000
+
+                        CMP         #CONST_NIB2_1010,D3
+                        BEQ         CONFIRM_0100_1010 
+
+                        CMP         #CONST_NIB2_1110,D3
+                        BEQ         CONFIRM_0100_1110 
+                        
+                        ; TODO: remaining possibilities are MOVEM, LEA, or CHK. (the first two are required.)
+
+                        JMP         STOP                      
+                   
+CONFIRM_0100_1000       JMP         STOP                       
+; TODO: check for EXT, NBCD, SWAP, or PEA.               
+ 
+CONFIRM_0100_1010       JMP         STOP  
+; TODO: check for TAS or TST. (ILLEGAL is already ruled out.)         
+       
+CONFIRM_0100_1110       JMP         STOP       
+; TODO: check for TRAP, LINK, UNLK, MOVE USP, JSR, or JMP. (some of these are required.)
+
+*-----------------------Cases where the current word starts with 0101-----------------
+    ;TODO: ADDQ, SUBQ, Scc, DBcc (some of these are required)
+ 
+*-----------------------Cases where the current word starts with 0110-----------------
+    ;TODO: BRA, BSR, Bcc (some of these are required)   
+    
+*-----------------------Cases where the current word starts with 1000-----------------
+    ;TODO: DIVU, DIVS, SBCD, OR (some of these are required)   
+    
+*-----------------------Cases where the current word starts with 1001-----------------
+    ;TODO: SUB, SUBX, SUBA (some of these are required) 
+ 
+*-----------------------Cases where the current word starts with 1011-----------------
+    ;TODO: EOR, CMPM, CMP, CMPA (some of these are required)  
+    
+*-----------------------Cases where the current word starts with 1100-----------------
+    ;TODO: MULU, MULS, ABCD, EXG, AND (some of these are required) 
+    
+*-----------------------Cases where the current word starts with 1101-----------------
+    ;TODO: ADD, ADDX, ADDA (some of these are required) 
+    
+*-----------------------Cases where the current word starts with 1110-----------------
+    ;TODO: ASR, ASL, LSR, LSL, ROXR, ROXL, ROR, ROL (these are all repeated twice on the sheet for some reason) 
+                                                    ;(some of these are required) 
+ 
+*-----------------------Special OPcode (but not constants) have checks here------------
+* includes MOVE, MOVEQ, etc
+                                
+*-----------------------Check current word for MOVE------------------------------------
+*MOVE can be B,W, or L.
+CHECK_MOVE              CLR         D3
+                        MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_NIB_1,D3
+                        CMP         #CONST_MOVE_B,D3
+                        BEQ         MOVE_B_FOUND
+                        CMP         #CONST_MOVE_W,D3
+                        BEQ         MOVE_W_FOUND
+                        CMP         #CONST_MOVE_L,D3
+                        BEQ         MOVE_L_FOUND
+                        RTS 
+                        
+*-----------------------Check current word for MOVEQ------------------------------------
+*MOVEQ can only be L.                       
+CHECK_MOVEQ             CLR         D3
+                        MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_NIB_1,D3
+                        CMP         #CONST_MOVEQ,D3
+                        BEQ         MOVEQ_FOUND
+                        RTS 
+                        
+*-----------------------Check current word for MOVEM------------------------------------  
+*MOVEM can be W or L.                  
+CHECK_MOVEM             CLR         D3
+                        MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_NIB_1,D3
+                        CMP         #CONST_MOVEQ,D3
+                        BEQ         MOVEQ_FOUND
+                        RTS 
+                        
+*---------------------- END OPWORD CHECKS -----------------------------------------
+
+*---------------------- BEGIN CASES FOR FOUND OPCODES------------------------------
+
+*-----------------------ORI-related Subroutines------------------------------------
+ORI_FOUND               JMP         STOP ;TODO: case for ORI found
+
+ *----------------------ANDI-related Subroutines------------------------------------
+ANDI_FOUND              JMP         STOP ;TODO: case for ANDI found
+
+ *----------------------SUBI-related Subroutines------------------------------------
+SUBI_FOUND              JMP         STOP ;TODO: case for SUBI found
+
+ *----------------------ADDI-related Subroutines------------------------------------
+ADDI_FOUND              JMP         STOP ;TODO: case for ADDI found
+ 
+*-----------------------EORI-related Subroutines------------------------------------
+EORI_FOUND              JMP         STOP ;TODO: case for EORI found
+ 
+*-----------------------CMPI-related Subroutines------------------------------------
+CMPI_FOUND              JMP         STOP ;TODO: case for CMPI found
+
+*-----------------------NEGX-related Subroutines------------------------------------
+NEGX_FOUND              JMP         STOP ;TODO: case for NEGX found 
+
+*-----------------------CLR-related Subroutines------------------------------------
+CLR_FOUND               JMP         STOP ;TODO: case for CLR found 
+
+*-----------------------NEG-related Subroutines------------------------------------
+NEG_FOUND               JMP         STOP ;TODO: case for NEG found 
+
+*-----------------------NOT-related Subroutines------------------------------------
+NOT_FOUND               JMP         STOP ;TODO: case for NOT found 
+ 
+*-----------------------MOVE-related Subroutines------------------------------------
+
+*-----------------------Cases for finding different MOVE OPcodes------------------------------------
+*MOVE.B
+MOVE_B_FOUND            MOVE.B      #BYTE_SIZE,CURRENT_OP_SIZE
+                        BSR         DISPLAY_CURRENT_ADDRESS
+                        BSR         PARSE_MOVE_DATA                           
+                       
+                        LEA         MOVE_B_MSG,A1      ; 'MOVE.B'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         SPACE,A1           ; ' '
+                        MOVE.B      #14,D0      
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_MOVE_DATA
+                        BRA         GO_TO_NEXT_OP
+
+*MOVE.W                        
+MOVE_W_FOUND            MOVE.B      #WORD_SIZE,CURRENT_OP_SIZE
+                        BSR         DISPLAY_CURRENT_ADDRESS
+                        BSR         PARSE_MOVE_DATA       
+                        
+                        LEA         MOVE_W_MSG,A1      ; 'MOVE.W'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         SPACE,A1           ; ' '
+                        MOVE.B      #14,D0      
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_MOVE_DATA
+                        BRA         GO_TO_NEXT_OP  
+
+*MOVE.L                        
+MOVE_L_FOUND            MOVE.B      #LONG_SIZE,CURRENT_OP_SIZE
+                        BSR         DISPLAY_CURRENT_ADDRESS
+                        BSR         PARSE_MOVE_DATA       
+                        
+                        LEA         MOVE_L_MSG,A1      ; 'MOVE.L'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         SPACE,A1           ; ' '
+                        MOVE.B      #14,D0      
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_MOVE_DATA
+                        BRA         GO_TO_NEXT_OP 
+                       
+*-----------------------Parse data for any-sized MOVE instruction---------------------
+*Note that the size of the MOVE is stored in CURRENT_OP_SIZE.
+PARSE_MOVE_DATA         ; TODO: error checking 
+                        ;(maybe after reading the first 4 instruction parts, but before reading additional data)
+                        ;IMPORTANT: remember that different MOVE error are specific to different MOVE sizes.
+                        ; example: MOVE.B  A0,D3 is invalid. However, MOVE.W  A0,D3 is valid.
+                        ;
+                        ; possible errors:
+                        ;       CURRENT_DEST_MD = CONST_IMMEDIATE_REG (immediate data cannot be a destination)
+                        ;       CURRENT_SRC_MD  = CONST_ADDR_REG_MD   (byte is not a valid size for this move)
+                        ;       CURRENT_DEST_MD = CONST_ADDR_REG_MD   (byte is not a valid size, although we should be using MOVEA at this point, not MOVE.)
+                        ;       TODO: figure out other possible errors.
+                        
+                        ; after we confirm that there are no errors, we know that we can safely check for additional data and display the instruction.
+                        
+                        
+                        ; at this point, need to read more information (parsed by EA, probably)
+                        ; now that we have a move instruction, we set our EA variables accordingly:
+                        BSR         READ_DEST_REG      ; EA will set CURRENT_DEST_REG.
+                        BSR         READ_DEST_MODE     ; EA will set CURRENT_DEST_MD.
+                        BSR         READ_SOURCE_MODE   ; EA will set CURRENT_SRC_MD.
+                        BSR         READ_SOURCE_REG    ; EA will set CURRENT_SRC_REG.
+                        
+                        ; need to check whether we need to read additional data before we start displaying the
+                        ; instruction (for instance, this is necessary for MOVE.B #10,D0).
+                        BSR         READ_SOURCE_DATA   ; EA will set CURRENT_SOURCE_DATA if necessary.
+                        BSR         READ_DEST_DATA     ; EA will set CURRENT_DEST_DATA if necessary. 
+                        RTS         
+
+DISPLAY_MOVE_DATA       BSR         DISPLAY_SOURCE     ; Tell EA to parse and display the source. EX: (A1)   D3    #10   $1000 etc
+                        
+                        LEA         COMMA,A1           ; ','
+                        MOVE.B      #14,D0      
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_DEST       ; Tell EA to parse and display the destination.
+                        
+                        LEA         RETURN,A1          ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+
+                        RTS        
+                         
+*-----------------------MOVEQ-related Subroutines------------------------------------
+
+*-----------------------Case for finding MOVEQ------------------------------------
+MOVEQ_FOUND             MOVE.B      #LONG_SIZE,CURRENT_OP_SIZE
+                        BSR         DISPLAY_CURRENT_ADDRESS
+                        BSR         PARSE_MOVEQ_DATA       
+                        
+                        LEA         MOVEQ_MSG,A1      ; 'MOVEQ'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         SPACE,A1           ; ' '
+                        MOVE.B      #14,D0      
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_MOVEQ_DATA
+                        BRA         GO_TO_NEXT_OP  
+
+PARSE_MOVEQ_DATA        ;TODO: check that 0000 000X 0000 0000 equals zero. If not, error.
+                        
+                        BSR         READ_DEST_REG                       ; EA will set CURRENT_DEST_REG.
+                        MOVE.B      #CONST_DATA_REG_MD,CURRENT_DEST_MD  ; data register is the only allowed destination for MOVEQ.
+                        BSR         READ_MOVEQ_DATA                     ; 0000 0000 XXXX XXXX will set CURRENT_SOURCE_DATA (I think.)
+                        
+                        MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_SRC_MD
+                        MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_SRC_REG
+                        
+                        RTS 
+
+DISPLAY_MOVEQ_DATA      BSR         DISPLAY_SOURCE     ; Tell EA to parse and display the source. 
+                        
+                        LEA         COMMA,A1           ; ','
+                        MOVE.B      #14,D0      
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_DEST       ; Tell EA to parse and display the destination.
+                        
+                        LEA         RETURN,A1          ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+
+                        RTS        
+
+;NOTE: this SR is stored here and not in EA because it is specific to MOVEQ.
+READ_MOVEQ_DATA         CLR         D4
+                        CLR         CURRENT_SRC_DATA
+                        MOVE.W      CURRENT_WORD,D4
+                        ANDI.W      #FILT_MOVEQ_DATA,D4        ; turn D4 into 0000 0000 XXXX XXXX (no shift necessary)
+                        MOVE.W      D4,CURRENT_SRC_DATA
+                        RTS
+                    
+  ; TODO: 
+    *   -MOVEM  (W,L)
+    *   -ADD    (B,W,L) (will need shahin's size filter for this and below)
+    *   -ADDA   (W,L)
+    *   -ADDI   (B,W,L)
+    *   -SUB    (B,W,L)
+  ; see comment block at the top of the program for the full list of codes.
+  ; see huge comment block at the top of OPcode section for tentative OPcode parsing implementation plan.
+
 *###################### END OPCODE ##################################
 *###################### BEGIN EA ##################################
 *** EA Subroutines are kept here ***
 *----------------------Check the destination register of the current word.-------------
 READ_DEST_REG           CLR         D4
+                        CLR.B       CURRENT_DEST_REG
                         MOVE.W      CURRENT_WORD,D4
                         ANDI.W      #FILT_DEST_REG,D4       ; turn D4 into 0000 XXX0 0000 0000
                         LSR.W       #8,D4                   ; turn D4 into 0000 0000 0000 0XXX
                         LSR.W       #1,D4                   ; 9 would be invalid, so we shift 8, then 1
                         MOVE.B      D4,CURRENT_DEST_REG
-                        MOVE.B      D4,CURRENT_REG
                         RTS
 
 *----------------------Check the destination mode of the current word.-------------
 *(assuming the destination is where it would be in MOVE).
 READ_DEST_MODE          CLR         D4
+                        CLR.B       CURRENT_DEST_MD
                         MOVE.W      CURRENT_WORD,D4
                         ANDI.W      #FILT_DEST_MD,D4        ; turn D4 into 0000 000X XX00 0000
                         LSR.W       #6,D4                   ; turn D4 into 0000 0000 0000 0XXX
                         MOVE.B      D4,CURRENT_DEST_MD
-                        MOVE.B      D4,CURRENT_MD
                         RTS
 
 ;By this point, CURRENT WORD holds the first 16 bits of an instruction we are looking at.
@@ -646,75 +986,66 @@ READ_DEST_MODE          CLR         D4
 *---------------------- Check the source mode of the current word.--------------------
 *(assuming the source is where it would be in MOVE).
 READ_SOURCE_MODE        CLR         D4
+                        CLR.B       CURRENT_SRC_MD
                         MOVE.W      CURRENT_WORD,D4
                         ANDI.W      #FILT_SRC_MD,D4                 ; turn source mode into 0000 0000 00XX X000
                         LSR.W       #3,D4                           ; turn source mode into 0000 0000 0000 0XXX
                         MOVE.B      D4,CURRENT_SRC_MD
-                        MOVE.B      D4,CURRENT_MD
                         RTS
                         
 *----------------------Check the source register of the current word.-----------------
 READ_SOURCE_REG         CLR         D4
+                        CLR.B       CURRENT_SRC_REG
                         MOVE.W      CURRENT_WORD,D4
                         ANDI.W      #FILT_SRC_REG,D4        ; turn D4 into 0000 0000 0000 0XXX. (no need for LSR in this case.)
                         MOVE.B      D4,CURRENT_SRC_REG
-                        MOVE.B      D4,CURRENT_REG
                         RTS
+*--------TODO: READ_OP_SIZE---------
                         
 *----------------------Read additional source data associated with the current word (if necessary).----------------- 
 *This needs to postincrement A5 as necessary.
-READ_SOURCE_DATA        CLR         D4
-                        MOVE.W      CURRENT_WORD,D4
-                        ANDI.W      #FILT_SRC_MD,D4         ; check the source mode of D4
-                        LSR.W       #3,D4
-                        CMP         #CONST_ADDR_MISC_MD,D4  ; see if we have a source mode that requires additional data.
-                        BEQ         CONFIRM_READ_SRC_DATA   ; if so, we then we read the register for more information about the type of additional data we need to read.                    
+READ_SOURCE_DATA        CLR         CURRENT_SRC_DATA
+                        CLR         CURRENT_DATA
+                        CMP.B       #CONST_ADDR_MISC_MD,CURRENT_SRC_MD ; check the source mode
+                        BEQ         CONFIRM_READ_SRC_DATA              ; see if we have a source mode that requires additional data.               
                         RTS
                         
-CONFIRM_READ_SRC_DATA   CLR         D4                           
-                        MOVE.W      CURRENT_WORD,D4
-                        ANDI.W      #FILT_SRC_REG,D4             ; put the source register in D4  
-
+CONFIRM_READ_SRC_DATA   CLR.B       CURRENT_REG
+                        MOVE.B      CURRENT_SRC_REG,CURRENT_REG
                         BSR         CONFIRM_READ_DATA
                         MOVE.L      CURRENT_DATA,CURRENT_SRC_DATA
                         RTS
  
 *----------------------Read additional destination data associated with the current word (if necessary).----------------- 
 *This needs to postincrement A5 as necessary.                       
-READ_DEST_DATA          CLR         D4
-                        MOVE.W      CURRENT_WORD,D4
-                        ANDI.W      #FILT_DEST_MD,D4         ; check the destination mode of D4
-                        LSR.W       #6,D4
-                        CMP         #CONST_ADDR_MISC_MD,D4   ; see if we have a destination mode that requires additional data.
-                        BEQ         CONFIRM_READ_DEST_DATA   ; if so, we then we read the register for more information about the type of additional data we need to read.                    
+READ_DEST_DATA          CLR         CURRENT_DEST_DATA
+                        CLR         CURRENT_DATA
+                        CMP.B       #CONST_ADDR_MISC_MD,CURRENT_DEST_MD  ; check the destination mode.
+                        BEQ         CONFIRM_READ_DEST_DATA               ; see if we have a destination mode that requires additional data.                  
                         RTS
                                             
-CONFIRM_READ_DEST_DATA  CLR         D4                           
-                        MOVE.W      CURRENT_WORD,D4
-                        ANDI.W      #FILT_SRC_REG,D4             ; put the destination register in D4  
-                        LSR.W       #8,D4
-                        LSR.W       #1,D4
-                        
+CONFIRM_READ_DEST_DATA  CLR.B       CURRENT_REG
+                        MOVE.B      CURRENT_DEST_REG,CURRENT_REG
                         BSR         CONFIRM_READ_DATA
                         MOVE.L      CURRENT_DATA,CURRENT_DEST_DATA
                         RTS
 
 *-----------------------Read some additional data.----------------------------------------------------------
       ; This same subroutine is used for reading source and destination data.
-      ; By this point, D4 holds whatever register we currently care about. (could also use CURRENT_REG)         
-CONFIRM_READ_DATA       CMP         #CONST_COUNTR_DISPLC_REG,D4  ; see if we are reading counter w/ displacement
+      ; By this point, CURRENT_REG holds whatever register we currently care about. (could also use CURRENT_REG)         
+CONFIRM_READ_DATA       CMP.B       #CONST_COUNTR_DISPLC_REG,CURRENT_REG      ; see if we are reading counter w/ displacement
                         BEQ         READ_COUNTR_DISPLC_DATA
                    
-                        CMP         #CONST_COUNTR_INDEX_REG,D4   ; see if we are reading counter w/ index
+                        CMP.B       #CONST_COUNTR_INDEX_REG,CURRENT_REG       ; see if we are reading counter w/ index
                         BEQ         READ_COUNTR_INDEX_DATA
                         
-                        CMP         #CONST_ABS_SHORT_REG,D4      ; see if we are reading absolute short address
+                        CMP.B       #CONST_ABS_SHORT_REG,CURRENT_REG          ; see if we are reading absolute short address
                         BEQ         READ_ABS_SHORT_DATA
                         
-                        CMP         #CONST_ABS_LONG_REG,D4       ; see if we are reading absolute long address
+                        CMP.B       #CONST_ABS_LONG_REG,CURRENT_REG           ; see if we are reading absolute long address
                         BEQ         READ_ABS_LONG_DATA 
                         
-                        CMP         #CONST_IMMEDIATE_REG,D4       ; see if we are reading immediate data
+                        CMP.B       #CONST_IMMEDIATE_REG,CURRENT_REG          ; see if we are reading immediate data
                         BEQ         READ_IMMEDIATE_DATA
      
                         RTS
@@ -724,74 +1055,54 @@ READ_COUNTR_DISPLC_DATA RTS ; TODO: read data for counter w/ displacement (d16,P
 
 READ_COUNTR_INDEX_DATA  RTS ; TODO: read data for counter w/ index        (d16,PC,Xn)
 
-READ_ABS_SHORT_DATA     RTS ; TODO: read data for absolute short address  (xxx).W
-
-READ_ABS_LONG_DATA      RTS ; TODO: read data for absolute long address   (xxx).L
-
-READ_IMMEDIATE_DATA     BSR         CHECK_IMM_BYTE
+*-----------------------Read additional absolute word address---------------------------
+READ_ABS_SHORT_DATA     MOVE.W      (A5)+,CURRENT_DATA ; read data for absolute short address  (xxx).W
                         RTS
 
-    ; if this is a byte operation, we read an additional word.
-CHECK_IMM_BYTE          CLR         D4
-                        MOVE.B      CURRENT_OP_SIZE,D4
-                        CMP         #BYTE_SIZE,D4
+*-----------------------Read additional absolute long address---------------------------
+READ_ABS_LONG_DATA      MOVE.L      (A5)+,CURRENT_DATA ; read data for absolute long address   (xxx).L
+                        RTS
+
+*-----------------------Read additional immediate data---------------------------
+READ_IMMEDIATE_DATA     CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE   ; see if we are reading immediate byte data
                         BEQ         READ_IMMEDIATE_DATA_W
-                        CLR         D4                          ; this redundancy might be necessary for this subroutine to work
-                        MOVE.B      CURRENT_OP_SIZE,D4
-                        CMP         #BYTE_SIZE,D4  
-                        BNE         CHECK_IMM_WORD              ; only go to next SR if we are not reading a byte. otherwise, return now.
-                        RTS
 
-    ; if this is a word operation, we read an additional word.                        
-CHECK_IMM_WORD          CLR         D4
-                        MOVE.B      CURRENT_OP_SIZE,D4
-                        CMP         #WORD_SIZE,D4
+                        CMP.B       #WORD_SIZE,CURRENT_OP_SIZE   ; see if we are reading immediate word data
                         BEQ         READ_IMMEDIATE_DATA_W
-                        CMP         #WORD_SIZE,(CURRENT_OP_SIZE) ;TODO: change this part to be like CHECK_IMM_BYTE once that method is working.
-                        BNE         CHECK_IMM_LONG
-                        RTS
 
-    ; if this is a long operation, we read an additional long.                        
-CHECK_IMM_LONG          CLR         D4
-                        MOVE.B      CURRENT_OP_SIZE,D4
-                        CMP         #LONG_SIZE,D4
+                        CMP.B       #LONG_SIZE,CURRENT_OP_SIZE   ; see if we are reading immediate long data
                         BEQ         READ_IMMEDIATE_DATA_L
-                        CMP         #LONG_SIZE,(CURRENT_OP_SIZE) ;TODO: change this part to be like CHECK_IMM_BYTE once that method is working.
-                        BNE         CHECK_IMM_WORD
+                        ;TODO: error case goes here
                         RTS
 
-READ_IMMEDIATE_DATA_W   MOVE.W      (A5)+,CURRENT_DATA ; read an additional word and store its value in CURRENT_DATA
+READ_IMMEDIATE_DATA_W   CLR         CURRENT_DATA
+                        MOVE.W      (A5)+,CURRENT_DATA
                         RTS
                         
-READ_IMMEDIATE_DATA_L   MOVE.L      (A5)+,CURRENT_DATA
+READ_IMMEDIATE_DATA_L   CLR         CURRENT_DATA
+                        MOVE.L      (A5)+,CURRENT_DATA
                         RTS
-                        
-; TODO: need to check for all these possibilities
-;CONST_COUNTR_DISPLC_REG EQU         $02      ; Counter w/ displacement:      XXXX X010
-;CONST_COUNTR_INDEX_REG  EQU         $03      ; Counter w/ index:          XXXX X011
-;CONST_ABS_SHORT_REG     EQU         $00      ; Absolute word:          (xxx).W       XXXX X000
-;CONST_ABS_LONG_REG      EQU         $01      ; Absolute long:          (xxx).L       XXXX X001
-;CONST_IMMEDIATE_REG 
-                        ;TODO: finish writing this method (Robert)
-                        
-*----------------------Read additional destination data associated with the current word (if necessary).----------------- 
-*NOTE: pretty sure we will not use this method at all.
-;READ_DEST_DATA          CLR         D4
-;                        MOVE.W      CURRENT_WORD,D4
-;                        ;TODO: finish writing this method (Robert)
                         
 *----------------------Display the source for the current instruction.-----------------
 *by this point, error checking should already be done and CURRENT_SRC_MD and CURRENT_SRC_REG should have the data we need.
-DISPLAY_SOURCE          MOVE.B      CURRENT_SRC_MD,CURRENT_MD
-                        MOVE.B      CURRENT_SRC_REG,CURRENT_REG    ; necessary for some cases, like absolute addressing or immediate data.
+DISPLAY_SOURCE          CLR.B       CURRENT_MD
+                        CLR.B       CURRENT_REG
+                        CLR.L       CURRENT_DATA
+                        
+                        MOVE.B      CURRENT_SRC_MD,CURRENT_MD
+                        MOVE.B      CURRENT_SRC_REG,CURRENT_REG    
                         MOVE.L      CURRENT_SRC_DATA,CURRENT_DATA
                         BSR         CHECK_ADDRESSING_MODES   
                         RTS  
                         
 *----------------------Display the destination for the current instruction.-----------------
 *by this point, error checking should already be done and CURRENT_DEST_MD and CURRENT_DEST_REG should have the data we need.
-DISPLAY_DEST            MOVE.B      CURRENT_DEST_MD,CURRENT_MD
-                        MOVE.B      CURRENT_DEST_REG,CURRENT_REG    ; necessary for some cases, like absolute addressing or immediate data.
+DISPLAY_DEST            CLR.B       CURRENT_MD
+                        CLR.B       CURRENT_REG
+                        CLR.L       CURRENT_DATA
+                        
+                        MOVE.B      CURRENT_DEST_MD,CURRENT_MD
+                        MOVE.B      CURRENT_DEST_REG,CURRENT_REG    
                         MOVE.L      CURRENT_DEST_DATA,CURRENT_DATA
                         BSR         CHECK_ADDRESSING_MODES     
                         RTS  
@@ -800,69 +1111,180 @@ DISPLAY_DEST            MOVE.B      CURRENT_DEST_MD,CURRENT_MD
                         
 *-----------------------Mode checks (for displaying)---------
 *these do not care whether the mode is for source or destination.
-CHECK_ADDRESSING_MODES  BSR         CHECK_DATA_REG_MD
+CHECK_ADDRESSING_MODES  CMP.B       #CONST_DATA_REG_MD,CURRENT_MD   ; check for CURRENT_MD = ...0000
+                        BEQ         DISPLAY_DATA_REG
+                        CMP.B       #CONST_ADDR_REG_MD,CURRENT_MD    ; check for CURRENT_MD = ...0001
+                        BEQ         DISPLAY_ADDR_REG
+                        CMP.B       #CONST_ADDR_IND_MD,CURRENT_MD    ; check for CURRENT_MD = ...0010
+                        BEQ         DISPLAY_ADDR_IND
+                        CMP.B       #CONST_ADDR_INCR_MD,CURRENT_MD   ; check for CURRENT_MD = ...0011
+                        BEQ         DISPLAY_ADDR_INCR
+                        CMP.B       #CONST_ADDR_DECR_MD,CURRENT_MD   ; check for CURRENT_MD = ...0100
+                        BEQ         DISPLAY_ADDR_DECR
+                        CMP.B       #CONST_ADDR_DISPLC_MD,CURRENT_MD ; check for CURRENT_MD = ...0101
+                        BEQ         DISPLAY_ADDR_DISPLC
+                        CMP.B       #CONST_ADDR_INDEX_MD,CURRENT_MD  ; check for CURRENT_MD = ...0110
+                        BEQ         DISPLAY_ADDR_INDEX
+                        CMP.B       #CONST_ADDR_MISC_MD,CURRENT_MD   ; check for CURRENT_MD = ...0111
+                        BEQ         CHECK_MISC_ADDRESSINGS
+                        ;TODO: error cases? 
                         RTS
            
-CHECK_DATA_REG_MD       CMP.B       #CONST_DATA_REG_MD,CURRENT_MD   ; check for CURRENT_MD = ...0000
-                        BNE         CHECK_ADDR_REG_MD
-                        ;case for source mode is data register mode.
+; case for displaying data register.          
+DISPLAY_DATA_REG        LEA         MSG_D,A1               ; print out 'D' (later, send this to dislpay buffer)
+                        MOVE.B      #14,D0
+                        TRAP        #15
                        
-                        ;TEMP. should send some instruction to display buffer, instead.
-                        LEA         MSG_D,A1               ;print out 'D'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        
-                        LEA         CURRENT_SRC_REG,A1      ;print out the number of the data register.
-                        MOVE.B      #14,D0
+                        CLR         D1
+                        MOVE.B      (CURRENT_REG),D1      ; print out the number of the data register.
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
                         TRAP        #15
                         
                         RTS
+
+; case for displaying address register. 
+DISPLAY_ADDR_REG        LEA         MSG_A,A1               ; print out 'A'
+                        MOVE.B      #14,D0
+                        TRAP        #15
                         
-CHECK_ADDR_REG_MD       CMP.B       #CONST_ADDR_REG_MD,CURRENT_MD   ; check for CURRENT_MD = ...0001
-                        BNE         CHECK_ADDR_IND_MD
-                        ;TODO: case for source mode is address register mode.
-                        RTS
+                        CLR         D1
+                        MOVE.B      (CURRENT_REG),D1       ; print out the number of the data register.
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
+                        TRAP        #15
                         
-CHECK_ADDR_IND_MD       CMP.B       #CONST_ADDR_IND_MD,CURRENT_MD   ; check for CURRENT_MD = ...0010
-                        BNE         CHECK_ADDR_INCR_MD
-                        ;TODO: case for source mode is address indirect mode.
                         RTS
 
-CHECK_ADDR_INCR_MD      CMP.B       #CONST_ADDR_INCR_MD,CURRENT_MD  ; check for CURRENT_MD = ...0011
-                        BNE         CHECK_ADDR_DECR_MD
-                        ;TODO: case for source mode is address indirect postincrement mode.
+; case for displaying address register indirect.                        
+DISPLAY_ADDR_IND        LEA         OPEN_PARENS,A1         ; print out '(' (later, send this to dislpay buffer)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         MSG_A,A1               ; print out 'A'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        CLR         D1
+                        MOVE.B      (CURRENT_REG),D1      ; print out the number of the data register.
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
+                        TRAP        #15
+                        
+                        LEA         CLOSE_PARENS,A1       ; print out ')'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        RTS
+                        
+; case for displaying address indirect postincrement.
+DISPLAY_ADDR_INCR       LEA         OPEN_PARENS,A1        ; print out '(' (later, send this to dislpay buffer)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         MSG_A,A1              ; print out 'A'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        CLR         D1
+                        MOVE.B      (CURRENT_REG),D1      ; print out the number of the data register.
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
+                        TRAP        #15
+                        
+                        LEA         CLOSE_PARENS,A1       ; print out ')'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         PLUS,A1               ; print out '+'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        RTS
+                        
+; case for displaying address indirect preedecrement mode.
+DISPLAY_ADDR_DECR       LEA         MINUS,A1               ; print out '-'
+                        MOVE.B      #14,D0
+                        TRAP        #15                                           
+
+                        LEA         OPEN_PARENS,A1        ; print out '(' (later, send this to dislpay buffer)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         MSG_A,A1              ; print out 'A'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        CLR         D1
+                        MOVE.B      (CURRENT_REG),D1      ; print out the number of the data register.
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
+                        TRAP        #15
+                        
+                        LEA         CLOSE_PARENS,A1       ; print out ')'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
                         RTS
 
-CHECK_ADDR_DECR_MD      CMP.B       #CONST_ADDR_DECR_MD,CURRENT_MD  ; check for CURRENT_MD = ...0100
-                        BNE         CHECK_ADDR_DISPLC_MD
-                        ;TODO: case for source mode is address indirect postdecrement mode.
+DISPLAY_ADDR_DISPLC     ;TODO: case for source mode is address with displacement mode.
+                        RTS
+
+DISPLAY_ADDR_INDEX      ;TODO: case for source mode is address with index mode.
                         RTS     
 
-CHECK_ADDR_DISPLC_MD    CMP.B       #CONST_ADDR_DISPLC_MD,CURRENT_MD  ; check for CURRENT_MD = ...0101
-                        BNE         CHECK_ADDR_INDEX_MD
-                        ;TODO: case for source mode is address with displacement mode.
-                        RTS    
-
-CHECK_ADDR_INDEX_MD     CMP.B       #CONST_ADDR_INDEX_MD,CURRENT_MD  ; check for CURRENT_MD = ...0110
-                        BNE         CHECK_ADDR_MISC_MD
-                        ;TODO: case for source mode is address with index mode.
-                        RTS 
-                         
-CHECK_ADDR_MISC_MD      CMP.B       #CONST_ADDR_MISC_MD,CURRENT_MD  ; check for CURRENT_MD = ...0111
-                        ;BNE         ;where to branch if it's not MISC? anything else should be impossible at this point. Maybe error?
- 
-                        ;TODO: instead of immediate, branch in order to: CHECK_COUNTR_DISPLC_REG, CHECK_COUNTR_INDEX_REG, CHECK_ABS_SHORT_REG, 
-                        ;       CHECK_ABS_LONG_REG, then CHECK_IMMEDIATE_REG 
-                        BSR         CHECK_IMMEDIATE_REG
-                        RTS   
 *-----------------------Register checks (for displaying only)---------
 *these do not care whether the register is for source or destination.
-*not for cases where reg is simply a number (like D5, A5, (A5), etc)
+*not for cases where reg is simply a number (like D5, A5, (A5), etc),
+*only for miscellaneous addressings where mode is 111.                        
+CHECK_MISC_ADDRESSINGS  CMP.B       #CONST_COUNTR_DISPLC_REG,CURRENT_REG
+                        BEQ         DISPLAY_COUNTR_DISPLC
+                        
+                        CMP.B       #CONST_COUNTR_INDEX_REG,CURRENT_REG
+                        BEQ         DISPLAY_COUNTR_INDEX
+                        
+                        CMP.B       #CONST_ABS_SHORT_REG,CURRENT_REG
+                        BEQ         DISPLAY_ABS_SHORT
+                        
+                        CMP.B       #CONST_ABS_LONG_REG,CURRENT_REG
+                        BEQ         DISPLAY_ABS_LONG
+                        
+                        CMP.B       #CONST_IMMEDIATE_REG,CURRENT_REG
+                        BEQ         DISPLAY_IMMEDIATE
+                        
+                        ; TODO: error case?
+                        
+                        RTS    
 
-; TODO: change this method once we have the additional data stored in CURRENT_DATA.
-CHECK_IMMEDIATE_REG     CMP.B       #CONST_IMMEDIATE_REG,CURRENT_REG
-                        ;TODO: BNE for not immediate
-                        LEA         HASH,A1               ; print out '#'. (NOTE: should send this to display buffer instead.)
+DISPLAY_COUNTR_DISPLC   RTS         ;TODO   
+
+DISPLAY_COUNTR_INDEX    RTS         ;TODO   
+
+DISPLAY_ABS_SHORT       LEA         DOLLAR,A1             ; print out '$'. 
+                        MOVE.B      #14,D0
+                        TRAP        #15
+
+                        CLR         D1
+                        MOVE.W      (CURRENT_DATA),D1     ; print out the absolute short address we are concerned with in hex. 
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
+                        TRAP        #15
+                        
+                        RTS 
+                         
+DISPLAY_ABS_LONG        LEA         DOLLAR,A1             ; print out '$'. 
+                        MOVE.B      #14,D0
+                        TRAP        #15
+ 
+                        CLR         D1
+                        MOVE.L      (CURRENT_DATA),D1     ; print out the absolute long address we are concerned with in hex. 
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
+                        TRAP        #15
+                        
+                        RTS   
+
+DISPLAY_IMMEDIATE       LEA         HASH,A1               ; print out '#'. (NOTE: should send this to display buffer instead.)
                         MOVE.B      #14,D0
                         TRAP        #15
                         
@@ -870,14 +1292,13 @@ CHECK_IMMEDIATE_REG     CMP.B       #CONST_IMMEDIATE_REG,CURRENT_REG
                         MOVE.B      #14,D0
                         TRAP        #15
                         
-                        LEA         CURRENT_DATA,A1       ; print out the immediate data we are concerned with. (NOTE: this doesn't work right now.)
-                        MOVE.B      #14,D0  
+                        MOVE.W      (CURRENT_DATA),D1     ; print out the immediate data we are concerned with in hex. 
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
                         TRAP        #15
                         
                         RTS
                         
-                        ;TODO: in this case, we need to use MOVE.?  (A5)+,X where ? is the correct size and X is some temp value for printing.
-
 *###################### END EA ##################################
 *############# BEGIN VARIABLES/CONSTANTS #########################
 *** Variables and Constants are kept here ***
@@ -890,6 +1311,10 @@ SPACE                   DC.B        ' ',0
 DOLLAR                  DC.B        '$',0
 COMMA                   DC.B        ',',0
 HASH                    DC.B        '#',0
+OPEN_PARENS             DC.B        '(',0
+CLOSE_PARENS            DC.B        ')',0
+PLUS                    DC.B        '+',0
+MINUS                   DC.B        '-',0
 
 *output messages
     ;TODO: consider also giving the user the range of valid start/end addresses
@@ -912,16 +1337,24 @@ INVALID_ADDR_H_MSG      DC.B        'Not a valid address (too high).',CR,LF
 DONE_READING_MSG        DC.B        'Done reading the program.',CR,LF,0
 
 *output instruction names (OPcodes)
+    ;sizes
+BYTE_SIZE_MSG           DC.B        '.B',0
+WORD_SIZE_MSG           DC.B        '.W',0
+LONG_SIZE_MSG           DC.B        '.L',0
+
     ;constants
 RESET_MSG               DC.B        'RESET',0
 NOP_MSG                 DC.B        'NOP',0
 STOP_MSG                DC.B        'STOP',0
     ;moves
+MOVE_MSG                DC.B        'MOVE',0
 MOVE_B_MSG              DC.B        'MOVE.B',0
 MOVE_W_MSG              DC.B        'MOVE.W',0
 MOVE_L_MSG              DC.B        'MOVE.L',0
 
-*other output instruction message constans
+MOVEQ_MSG               DC.B        'MOVEQ',0
+
+*other output instruction message constants
 MSG_D                   DC.B        'D',0
 MSG_A                   DC.B        'A',0
 
@@ -930,6 +1363,8 @@ START_ADDR_IN           DS.B        20
 
 *other I/O-related variables/constants
 INPUTTING_START         SET         1 ;if 1, we are inputting start address. If 0, we are inputting end address.
+OPCODE_BUFFER           DS.L        1 ; can hold at most 4 characters
+SIZE_BUFFER             DS.W        1 ;cand hold at most 2 characters
 DISPLAY_BUFFER          DS.W        5
 
 *EA/OPcode parsed instruction variables/constants
@@ -948,10 +1383,14 @@ CURRENT_DATA            DS.L        1 ; current addition data we are concerned w
 CURRENT_SRC_DATA        DS.L        1 ; current additional data for source (like absolute addresses, immediate data, etc)
 CURRENT_DEST_DATA       DS.L        1 ; current additional data for destination (like absolute addresses, immediate data, etc) 
 
-*size constans
-BYTE_SIZE               EQU         $01 ; 0000 0001
-WORD_SIZE               EQU         $03 ; 0000 0011
+*size constants
+BYTE_SIZE                EQU         $00 ; 0000 0000
+WORD_SIZE                EQU         $01 ; 0000 0001
 LONG_SIZE               EQU         $02 ; 0000 0010
+
+BYTE_SIZE_M              EQU         $01 ; 0000 0001
+WORD_SIZE_M              EQU         $03 ; 0000 0011
+LONG_SIZE_M              EQU         $02 ; 0000 0010
 
 *address constants
 MIN_ADDRESS             EQU         $00003000
@@ -964,23 +1403,76 @@ END_ADDR                SET         $00009000
 
 *filters for isolating parts of a hexa instruction. X means 'unknown' and can be 0 or one after ANDI filter.
 *To filter an instruction, ANDI it with the desired filter.
-FILT_2BIT_1             EQU         $C000   ;first 2 bits:                          XX00 0000 0000 0000
-FILT_NIB_1              EQU         $F000   ;first nibble:                          XXXX 0000 0000 0000
-FILT_MOVE_SIZE          EQU         $3000   ;Size of a move operation:              00XX 0000 0000 0000
-FILT_DEST_REG           EQU         $0E00   ;destination register:                  0000 XXX0 0000 0000
-FILT_DEST_MD            EQU         $01A0   ;destination mode:                      0000 000X XX00 0000
-FILT_SRC_MD             EQU         $0038   ;source mode:                           0000 0000 00XX X000
-FILT_SRC_REG            EQU         $0007   ;source register:                       0000 0000 0000 0XXX
+
+    * general filters
+FILT_2BIT_1             EQU         $0000C000   ;first 2 bits:                          XX00 0000 0000 0000
+FILT_NIB_1              EQU         $0000F000   ;first nibble:                          XXXX 0000 0000 0000
+FILT_NIB_2              EQU         $00000F00   ;second nibble:                         0000 XXXX 0000 0000
+FILT_BIT_5              EQU         $00000800   ;5th bit:                               0000 X000 0000 0000
+FILT_BIT_8              EQU         $00000100   ;8th bit:                               0000 000X 0000 0000
+
+    * source/destination filters (not applicable for bidirectional operations)
+FILT_DEST_REG           EQU         $00000E00   ;destination register:                  0000 XXX0 0000 0000
+FILT_DEST_MD            EQU         $000001C0   ;destination mode:                      0000 000X XX00 0000
+FILT_SRC_MD             EQU         $00000038   ;source mode:                           0000 0000 00XX X000
+FILT_SRC_REG            EQU         $00000007   ;source register:                       0000 0000 0000 0XXX
+
+    * move filters
+FILT_MOVE_SIZE          EQU         $00003000   ;Size of a move operation:              00XX 0000 0000 0000
+
+    * filters for BRA, BSR, BCC, and MOVEQ (the same filter, but named differently for clarity.)
+FILT_DISPLACEMENT       EQU         $00FF       ;Displacment of branch instruction:     0000 0000 XXXX XXXX
+FILT_MOVEQ_DATA         EQU         $00FF       ;Data of MOVEQ instruction:             0000 0000 XXXX XXXX
 
 *constants for comparing with filtered instructions. X means 'don't care' (and will be set to 0 by previous filter)
 *(These do not represent the complete insturctions.)
 *(Also note that repetition is allowed for clarity's sake, so two constants can share a value.)
+    * general filters
 CONST_ALL_0             EQU         $0000   ; all 0s:                               0000 0000 0000 0000
-    ;MOVE
-CONST_MOVE_B            EQU         $1000   ; MOVE.B (use first nib)                0001 0000 0000 0000
-CONST_MOVE_W            EQU         $3000   ; MOVE.W (use first nib)                0011 0000 0000 0000
-CONST_MOVE_L            EQU         $2000   ; MOVE.L (use first nib)                0010 0000 0000 0000
-    ;Mode values
+CONST_NIB1_0100         EQU         $4000    ; first nibble is 0100                  0100 XXXX XXXX XXXX
+CONST_NIB2_1000         EQU         $0800    ; second nibble is 1000                 XXXX 1000 XXXX XXXX
+CONST_NIB2_1010         EQU         $0A00    ; second nibble is 1010                 XXXX 1010 XXXX XXXX
+CONST_NIB2_1110         EQU         $0E00    ; second nibble is 1110                 XXXX 1110 XXXX XXXX
+
+* Immediate operation constants
+    * ANDI
+CONST_ORI_DEST_REG      EQU         $0000    ; confirm ORI                           XXXX 000X XXXX XXXX
+    * ANDI
+CONST_ANDI_DEST_REG     EQU         $0200    ; confirm ANDI                          XXXX 001X XXXX XXXX
+    * SUBI
+CONST_SUBI_DEST_REG     EQU         $0400    ; confirm SUBI                          XXXX 010X XXXX XXXX
+    * ADDI
+CONST_ADDI_DEST_REG     EQU         $0600    ; confirm ADDI                          XXXX 011X XXXX XXXX
+    * EORI
+CONST_EORI_DEST_REG     EQU         $0A00    ; confirm EORI                          XXXX 101X XXXX XXXX
+    * CMPI
+CONST_CMPI_DEST_REG     EQU         $0C00    ; confirm CMPI                          XXXX 110X XXXX XXXX
+
+* Constants for matching based on 2nd nibble
+    *NEGX
+CONST_NEGX_OP           EQU         $0000    ; confirm NEGX                          XXXX 0000 XXXX XXXX
+    *CLR
+CONST_CLR_OP            EQU         $0200    ; confirm CLR                           XXXX 0010 XXXX XXXX
+    *NEG
+CONST_NEG_OP            EQU         $0400    ; confirm NEG                           XXXX 0100 XXXX XXXX
+    *NOT
+CONST_NOT_OP            EQU         $0600    ; confirm NOT                           XXXX 0110 XXXX XXXX
+
+* Other constants
+    * BTST,BCHG,BCLR,BSET
+CONST_B_OP              EQU         $0800    ; BTST,BCHG,BCLR,BSET                   XXXX 100X XXXX XXXX
+
+    * MOVE
+CONST_MOVE_B            EQU         $1000    ; MOVE.B (use first nib)                0001 XXXX XXXX XXXX
+CONST_MOVE_W            EQU         $3000    ; MOVE.W (use first nib)                0011 XXXX XXXX XXXX
+CONST_MOVE_L            EQU         $2000    ; MOVE.L (use first nib)                0010 XXXX XXXX XXXX
+
+    * MOVEQ
+CONST_MOVEQ             EQU         $7000    ; MOVEQ.L (use first nib)               0111 XXXX XXXX XXXX    
+         
+* Mode/register constants
+
+    * Mode values
 CONST_DATA_REG_MD       EQU         $00      ; Data register mode:     Dn            XXXX X000
 CONST_ADDR_REG_MD       EQU         $01      ; Address register mode:  An            XXXX X001
 CONST_ADDR_IND_MD       EQU         $02      ; Address indirect mode:  (An)          XXXX X010
@@ -989,7 +1481,8 @@ CONST_ADDR_DECR_MD      EQU         $04      ; Address predecr. mode:  -(An)    
 CONST_ADDR_DISPLC_MD    EQU         $05      ; Address w/ displacement:(d16,An)      XXXX X101
 CONST_ADDR_INDEX_MD     EQU         $06      ; Address w/ index:       (d8,PC,Xn)    XXXX X110
 CONST_ADDR_MISC_MD      EQU         $07      ; Various other addressing modes        XXXX X111
-     ;Constant register values (should not be necessary for register numbers like D5)
+
+    * Constant register values (should not be necessary for register numbers like D5)
 CONST_COUNTR_DISPLC_REG EQU         $02      ; Counter w/ displacement:(d16,PC)      XXXX X010
 CONST_COUNTR_INDEX_REG  EQU         $03      ; Counter w/ index:       (d16,PC,Xn)   XXXX X011
 CONST_ABS_SHORT_REG     EQU         $00      ; Absolute word:          (xxx).W       XXXX X000
@@ -1005,6 +1498,7 @@ STOP_CODE               EQU         $4E72   ; STOP                              
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+
 
 
 
