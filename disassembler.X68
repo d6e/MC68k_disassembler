@@ -369,9 +369,10 @@ PREPARE_DISPLAY         BRA         READ_CURRENT_OP    ;TEMP (though we might st
 GO_TO_NEXT_OP           BRA         CHECK_DONE_READING
                          
 CONFIRMED_NEXT_OP       CLR         CURRENT_WORD
-                        MOVEA.L      A5,A4 ; keep track of address to print with A4. 
+                        MOVEA.L     A5,A4 ; keep track of address to print with A4. 
                         MOVE.W      (A5)+,CURRENT_WORD
                         BRA         READ_CURRENT_OP
+                        
 *------------------- Print display buffer -------------------
 
 ;TODO
@@ -380,11 +381,13 @@ CONFIRMED_NEXT_OP       CLR         CURRENT_WORD
 CHECK_DONE_READING      CMPA        A6,A5       ; TODO: this comparison is not sufficient, because it will say that $8000 is less than $7000 (since $8000 is negative.)
                         BLT         CONFIRMED_NEXT_OP
                         BRA         DONE_READING
-*------------------- Ask user for input -------------------
+                        
+*------------------- Confirm end of data -------------------
 DONE_READING            LEA         DONE_READING_MSG,A1 ; when we reach the end address, say so and halt the program. TODO: ask user whether we want to read the data again.
                         MOVE.B      #14,D0
                         TRAP        #15
                         JMP         STOP
+                        
 *################## END IO  #####################################
 *################## BEGIN OPCODE ##########################
 *** OPcode Subroutines are kept here ***
@@ -571,6 +574,8 @@ STOP_FOUND              JMP         STOP  ;TODO: case for stop found. (NOTE that
 
 CHECK_NON_CONSTANTS     BSR         CHECK_MOVE        ; MOVE is a special case because of how its first nibble is structured.     
                         BSR         CHECK_MOVEQ       ; MOVEQ is also a special case.
+                        BSR         CHECK_EXT         ; need to rule out EXT before checking MOVEM, because they have very similar OPcodes.
+                        BSR         CHECK_MOVEM      
                         BSR         CHECK_NIB1_0000 
                         BSR         CHECK_NIB1_0100 
                         
@@ -683,7 +688,7 @@ CONFIRM_0100_0XXX       CLR         D3
                         
                         ; TODO: we definitely have an error at this point.
                         
-                        RTS     ;change RTS to whatever we want based on error. (probably some error case which will then branch to reading next OPcode.)
+                        JMP         STOP     ;change STOP to whatever we want based on error. (probably some error case which will then branch to reading next OPcode.)
                         
 CONFIRM_0100_1XXX       CLR         D3
                         MOVE.W      CURRENT_WORD,D3
@@ -697,7 +702,7 @@ CONFIRM_0100_1XXX       CLR         D3
 
                         CMP         #CONST_NIB2_1110,D3
                         BEQ         CONFIRM_0100_1110 
-                        
+                        ; TODO: make MOVEM a special case since it has an unusual OPcode.
                         ; TODO: remaining possibilities are MOVEM, LEA, or CHK. (the first two are required.)
 
                         JMP         STOP                      
@@ -761,49 +766,30 @@ CHECK_MOVEQ             CLR         D3
                         BEQ         MOVEQ_FOUND
                         RTS 
                         
+
+*-----------------------Check current word for EXT------------------------------------  
+*check EXT before MOVEM, since they can be easily confused.
+*EXT can be W or L.                  
+CHECK_EXT               CLR         D3                  
+                        MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_EXT,D3
+                        CMP         #CONST_EXT,D3
+                        BEQ         EXT_FOUND
+                        RTS 
+                        
 *-----------------------Check current word for MOVEM------------------------------------  
 *MOVEM can be W or L.                  
-CHECK_MOVEM             CLR         D3
+CHECK_MOVEM             CLR         D3                  
                         MOVE.W      CURRENT_WORD,D3
-                        ANDI.W      #FILT_NIB_1,D3
-                        CMP         #CONST_MOVEQ,D3
-                        BEQ         MOVEQ_FOUND
+                        ANDI.W      #FILT_MOVEM,D3
+                        CMP         #CONST_MOVEM,D3
+                        BEQ         MOVEM_FOUND
                         RTS 
                         
 *---------------------- END OPWORD CHECKS -----------------------------------------
 
 *---------------------- BEGIN CASES FOR FOUND OPCODES------------------------------
 
-*-----------------------ORI-related Subroutines------------------------------------
-ORI_FOUND               JMP         STOP ;TODO: case for ORI found
-
- *----------------------ANDI-related Subroutines------------------------------------
-ANDI_FOUND              JMP         STOP ;TODO: case for ANDI found
-
- *----------------------SUBI-related Subroutines------------------------------------
-SUBI_FOUND              JMP         STOP ;TODO: case for SUBI found
-
- *----------------------ADDI-related Subroutines------------------------------------
-ADDI_FOUND              JMP         STOP ;TODO: case for ADDI found
- 
-*-----------------------EORI-related Subroutines------------------------------------
-EORI_FOUND              JMP         STOP ;TODO: case for EORI found
- 
-*-----------------------CMPI-related Subroutines------------------------------------
-CMPI_FOUND              JMP         STOP ;TODO: case for CMPI found
-
-*-----------------------NEGX-related Subroutines------------------------------------
-NEGX_FOUND              JMP         STOP ;TODO: case for NEGX found 
-
-*-----------------------CLR-related Subroutines------------------------------------
-CLR_FOUND               JMP         STOP ;TODO: case for CLR found 
-
-*-----------------------NEG-related Subroutines------------------------------------
-NEG_FOUND               JMP         STOP ;TODO: case for NEG found 
-
-*-----------------------NOT-related Subroutines------------------------------------
-NOT_FOUND               JMP         STOP ;TODO: case for NOT found 
- 
 *-----------------------MOVE-related Subroutines------------------------------------
 
 *-----------------------Cases for finding different MOVE OPcodes------------------------------------
@@ -896,8 +882,8 @@ DISPLAY_MOVE_DATA       BSR         DISPLAY_SOURCE     ; Tell EA to parse and di
                         MOVE.B      #14,D0
                         TRAP        #15
 
-                        RTS        
-                         
+                        RTS  
+
 *-----------------------MOVEQ-related Subroutines------------------------------------
 
 *-----------------------Case for finding MOVEQ------------------------------------
@@ -949,7 +935,7 @@ READ_MOVEQ_DATA         CLR         D4
                         MOVE.W      D4,CURRENT_SRC_DATA
                         RTS
                     
-  ; TODO: 
+  ; TODO: (in order)
     *   -MOVEM  (W,L)
     *   -ADD    (B,W,L) (will need shahin's size filter for this and below)
     *   -ADDA   (W,L)
@@ -957,7 +943,43 @@ READ_MOVEQ_DATA         CLR         D4
     *   -SUB    (B,W,L)
   ; see comment block at the top of the program for the full list of codes.
   ; see huge comment block at the top of OPcode section for tentative OPcode parsing implementation plan.
+  
+*-----------------------EXT-related Subroutines------------------------------------
+EXT_FOUND               JMP         STOP ;TODO: case for EXT found
+
+*-----------------------MOVEM-related Subroutines------------------------------------
+MOVEM_FOUND             JMP         STOP ;TODO: case for MOVEM found (currently the next goal)      
+  
+*-----------------------ORI-related Subroutines------------------------------------
+ORI_FOUND               JMP         STOP ;TODO: case for ORI found
+
+ *----------------------ANDI-related Subroutines------------------------------------
+ANDI_FOUND              JMP         STOP ;TODO: case for ANDI found
+
+ *----------------------SUBI-related Subroutines------------------------------------
+SUBI_FOUND              JMP         STOP ;TODO: case for SUBI found
+
+ *----------------------ADDI-related Subroutines------------------------------------
+ADDI_FOUND              JMP         STOP ;TODO: case for ADDI found
  
+*-----------------------EORI-related Subroutines------------------------------------
+EORI_FOUND              JMP         STOP ;TODO: case for EORI found
+ 
+*-----------------------CMPI-related Subroutines------------------------------------
+CMPI_FOUND              JMP         STOP ;TODO: case for CMPI found
+
+*-----------------------NEGX-related Subroutines------------------------------------
+NEGX_FOUND              JMP         STOP ;TODO: case for NEGX found 
+
+*-----------------------CLR-related Subroutines------------------------------------
+CLR_FOUND               JMP         STOP ;TODO: case for CLR found 
+
+*-----------------------NEG-related Subroutines------------------------------------
+NEG_FOUND               JMP         STOP ;TODO: case for NEG found 
+
+*-----------------------NOT-related Subroutines------------------------------------
+NOT_FOUND               JMP         STOP ;TODO: case for NOT found 
+                    
 *###################### END OPCODE ##################################
 *###################### BEGIN EA ##################################
 *** EA Subroutines are kept here ***
@@ -1403,7 +1425,8 @@ END_ADDR                SET         $00009000
 
 *filters for isolating parts of a hexa instruction. X means 'unknown' and can be 0 or one after ANDI filter.
 *To filter an instruction, ANDI it with the desired filter.
-
+*note: I'm not sure if it matters much whether you have the 4 leading 0s in these filters, but I don't want to
+*risk changing it. Therefore, some filters have leading 0s and some do not.
     * general filters
 FILT_2BIT_1             EQU         $0000C000   ;first 2 bits:                          XX00 0000 0000 0000
 FILT_NIB_1              EQU         $0000F000   ;first nibble:                          XXXX 0000 0000 0000
@@ -1419,10 +1442,16 @@ FILT_SRC_REG            EQU         $00000007   ;source register:               
 
     * move filters
 FILT_MOVE_SIZE          EQU         $00003000   ;Size of a move operation:              00XX 0000 0000 0000
+FILT_MOVEM              EQU         $FB80       ; check for a MOVEM instruction:        XXXX X0XX X000 0000
 
     * filters for BRA, BSR, BCC, and MOVEQ (the same filter, but named differently for clarity.)
 FILT_DISPLACEMENT       EQU         $00FF       ;Displacment of branch instruction:     0000 0000 XXXX XXXX
 FILT_MOVEQ_DATA         EQU         $00FF       ;Data of MOVEQ instruction:             0000 0000 XXXX XXXX
+
+    * EXT filter
+FILT_EXT                EQU         $FFB8       ; check for an EXT instruction:         XXXX XXXX X0XX X000
+
+    
 
 * constants for comparing with filtered instructions. X means 'don't care' (and will be set to 0 by previous filter)
 *(These do not represent the complete insturctions.)
@@ -1458,6 +1487,9 @@ CONST_NEG_OP            EQU         $0400    ; confirm NEG                      
     *NOT
 CONST_NOT_OP            EQU         $0600    ; confirm NOT                           XXXX 0110 XXXX XXXX
 
+* EXT constant
+CONST_EXT               EQU         $4880    ; confirm EXT                           0100 1000 1X00 0XXX
+
 * Other constants
     * BTST,BCHG,BCLR,BSET
 CONST_B_OP              EQU         $0800    ; BTST,BCHG,BCLR,BSET                   XXXX 100X XXXX XXXX
@@ -1469,6 +1501,9 @@ CONST_MOVE_L            EQU         $2000    ; MOVE.L (use first nib)           
 
     * MOVEQ
 CONST_MOVEQ             EQU         $7000    ; MOVEQ.L (use first nib)               0111 XXXX XXXX XXXX    
+         
+    * MOVEM                      
+CONST_MOVEM             EQU         $8880    ; confirm MOVEM (use FILT_MOVEM)        0100 1X00 1XXX XXXX            
          
 * Mode/register constants
 
