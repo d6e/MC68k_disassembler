@@ -1475,6 +1475,52 @@ ADDA_FOUND              JMP         STOP ;TODO: case for ADDA
 *###################### END OPCODE ##################################
 *###################### BEGIN EA ##################################
 *** EA Subroutines are kept here ***
+; TODO
+; Mode has fixed 3 digits for the following cases 
+;                Dn           000     Reg No. Dn
+;                An           001     Reg No. An
+;               (An)          010     Reg No. An
+;               (An)+         011     Reg No. An
+;              -(An)          100     Reg No. An
+;               (d16,An)      101     Reg No. An
+;               (d8,An, Xn)   101     Reg No. An
+
+; Mode and Register are fixed for the following cases
+;                             mode    register
+;               (XXX).W       111     000
+;               (XXX).L       111     001
+;               #<data>       111     100
+;               d16, PC       111     010
+;               (d8,PC,Xn)    111     011
+; reading one of the fixed Mode and Register means there is additional move data
+
+;TODO 
+;       check the different error condition of MOVE
+                ;IMPORTANT: remember that different MOVE error are specific to different MOVE sizes.
+                        ; example: MOVE.B  A0,D3 is invalid. However, MOVE.W  A0,D3 is valid.
+                        ;
+                        ; possible errors:
+                        ;       CURRENT_DEST_MD = CONST_IMMEDIATE_REG (immediate data cannot be a destination)
+                        ;       CURRENT_SRC_MD  = CONST_ADDR_REG_MD   (byte is not a valid size for this move)
+                        ;       CURRENT_DEST_MD = CONST_ADDR_REG_MD   (byte is not a valid size, although we should be using MOVEA at this point, not MOVE.)
+                        ;       TODO: figure out other possible errors.
+;       need to check whether we need to read additional data before we start displaying the
+                        ; instruction (for instance, this is necessary for MOVE.B #10,D0).
+
+;       check the different error condition of MOVEM
+                        ;  Possible errors:
+                        ;       Size = word or long, byte is not possible
+                        ;       Dn, An, #<data> is not allowed
+                        ;       for register to memory,( MOVEM list,<ea> ) (An)+ is not possible
+                        ;       for momory to register (MOVEM <ea>, list) -(An) is not allowed
+;     
+; TODO: 
+    *   -MOVEM  (W,L)
+    *   -ADD    (B,W,L) (will need shahin's size filter for this and below)
+    *   -ADDA   (W,L)
+    *   -ADDI   (B,W,L)
+    *   -SUB    (B,W,L)
+
 *----------------------Check the destination register of the current word.-------------
 READ_DEST_REG           CLR         D4
                         CLR.B       CURRENT_DEST_REG
@@ -1514,7 +1560,14 @@ READ_SOURCE_REG         CLR         D4
                         ANDI.W      #FILT_SRC_REG,D4        ; turn D4 into 0000 0000 0000 0XXX. (no need for LSR in this case.)
                         MOVE.B      D4,CURRENT_SRC_REG
                         RTS
-*--------TODO: READ_OP_SIZE---------
+*-----------------------Read the opearion size----------------------------------------// Shahin
+READ_OP_SIZE           CLR          D4
+                       CLR.B        CURRENT_OP_SIZE        ; to avoid any junk data
+                       MOVE.W       CURRENT_WORD,D4        ; copy CURRENT_WORD into D4
+                       ANDI.W       #FILT_SRC_REG,D4       ; turn D4 into 0000 0000 XX00 0000
+                       LSR.W        #6,D4                  ; turn D4 into 0000 0000 0000 00XX
+                       MOVE.B       D4, CURRENT_OP_SIZE    ; copy filtered and 
+                       RTS
                        
 *----------------------Read additional source data associated with the current word (if necessary).----------------- 
 *This needs to postincrement A5 as necessary for each case.
@@ -2011,6 +2064,9 @@ FILT_DEST_MD            EQU         $000001C0   ;destination mode:              
 FILT_SRC_MD             EQU         $00000038   ;source mode:                           0000 0000 00XX X000
 FILT_SRC_REG            EQU         $00000007   ;source register:                       0000 0000 0000 0XXX
 
+    * OP size filters
+FILT_OP_SIZE            EQU         $000000C0   ; operation size:                       0000 0000 XX00 0000   // Shahin 
+
     * move filters
 FILT_MOVE_SIZE          EQU         $00003000   ;Size of a move operation:              00XX 0000 0000 0000
 FILT_MOVEM              EQU         $0000FB80   ; check for a MOVEM instruction:        XXXX X0XX X000 0000
@@ -2112,7 +2168,6 @@ CONST_ADDR_DECR_MD      EQU         $04      ; Address predecr. mode:  -(An)    
 CONST_ADDR_DISPLC_MD    EQU         $05      ; Address w/ displacement:(d16,An)      XXXX X101
 CONST_ADDR_INDEX_MD     EQU         $06      ; Address w/ index:       (d8,PC,Xn)    XXXX X110
 CONST_ADDR_MISC_MD      EQU         $07      ; Various other addressing modes        XXXX X111
-
     * Constant register values (should not be necessary for register numbers like D5 or A4)
 CONST_COUNTR_DISPLC_REG EQU         $02      ; Counter w/ displacement:(d16,PC)      XXXX X010
 CONST_COUNTR_INDEX_REG  EQU         $03      ; Counter w/ index:       (d16,PC,Xn)   XXXX X011
