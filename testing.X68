@@ -114,6 +114,8 @@ START       ORG    $7000                ; first instruction of program
             MOVEM.L $10000000, D1
             MOVEM.L D1, $1000
             MOVEM.L $1000, D1
+            MOVEM.L D1-D7,-(A1)
+            MOVEM.L A2-A4/D1-D7,-(A1)
             ADD.B D1, D1
             ADD.B (A1), D1
             ADD.B #1, D1
@@ -129,7 +131,7 @@ START       ORG    $7000                ; first instruction of program
             ADD.W -(A1), D1
             ADD.W $10000000, D1
             ADD.W $1000, D1
-            ADD.L D1, D1
+            ADD.L D1, $1000
             ADD.L A1, D1
             ADD.L (A1), D1
             ADD.L #1, D1
