@@ -706,6 +706,7 @@ CHECK_NIB1_1000         CLR         D3
                         ANDI.W      #FILT_NIB_1,D3      ; filter out the first 4 bits of the word
                         CMP         #CONST_NIB1_1000,D3 ; see if they are 1000
                         BEQ         CONFIRM_NIB1_1000
+                        RTS
         
 CHECK_NIB1_1001         CLR         D3 
                         MOVE.W      CURRENT_WORD,D3
@@ -751,7 +752,7 @@ CONFIRM_NIB1_0000       CLR         D3
                         LSR.W       #8,D3           ; turn word into 0000 0000 0000 000X
                         CMP         #CONST_ALL_0,D3 ; see if the word is still 0.
                         BEQ         CONFIRM_0000_XXX0
-                        ; if we get to here, then the word must be BCHG, BCLR, BSET, or MOVEP.
+                        ; if we get to here, then the word must be BCHG, BTST, BCLR, BSET, or MOVEP.
                         ; BCHG is required
                         ; if our disassembler doesn't consider any of those valid, there should be an error message here.
                         RTS 
@@ -771,7 +772,7 @@ CONFIRM_0000_XXX0       CLR         D3
                         
                         CMP         #CONST_SUBI_DEST_REG,D3 ; SUBI
                         BEQ         SUBI_FOUND
-                        ;
+                        
                         CMP         #CONST_ADDI_DEST_REG,D3 ; ADDI
                         BEQ         ADDI_FOUND
                         
@@ -783,7 +784,7 @@ CONFIRM_0000_XXX0       CLR         D3
                         
                         ;TODO: remaining: BTST, BCHG, BCLR, or BSET. 
                         ;      if none of them, an error case should occur here.
-                        ;     (note that BCHG is required, though we don't know which version.)
+                        ;      (note that BCHG is required, though we don't know which version.)
                         
                         RTS     ;change RTS to whatever branch instruction is appropriate here.
                         
@@ -833,6 +834,7 @@ CONFIRM_0100_1XXX       CLR         D3
 
                         CMP         #CONST_NIB2_1110,D3
                         BEQ         CONFIRM_0100_1110 
+                        
                         ; TODO: remaining possibilities are LEA or CHK. (LEA is required.)
 
                         JMP         STOP                      
@@ -1407,7 +1409,7 @@ DISP_MM_END_D           LEA         MINUS,A1          ; '-'
                         
                         BRA         MOVEM_LIST_DISPLAY_DONE
                         
-MOVEM_LIST_DISPLAY_DONE RTS ;not sure if this is right, but can't test it at the moment.
+MOVEM_LIST_DISPLAY_DONE RTS                 ; could just use RTS instead of branching here, but we have this SR for clarity.
   
 *-----------------------ORI-related Subroutines------------------------------------
 ORI_FOUND               JMP         STOP ;TODO: case for ORI found
@@ -1448,23 +1450,85 @@ ADD_FOUND               ; TODO: case for ADD (next goal). Note that the program 
                         BSR         DISPLAY_CURRENT_ADDRESS
                         CLR         D4
                         MOVE.W      CURRENT_WORD,D4
-                        ;TODO: use the correct filter, LSR, and comparison constant.
-                        ;ANDI.W      #FILT_MOVEM_SIZE,D4 ; 0000 0000 0X00 0000 filter out size and set CURRENT_OP_SIZE accordingly
-                        ;LSR.W       #6,D4               ; 0000 0000 0000 000X
-                        ;CMP         #WORD_SIZE_MOVEM,D4
-                        ;BEQ         ADD_W_FOUND
-                        ;BRA         MOVEM_L_FOUND
                         
-                        JMP         STOP
+                            ; NOTE: Source and destination change based on direction, but we use unidirectional source/destination methods here.
+                            ;       This is okay because we will set the left/right temp variables to whichever values are appropriate based on CURRENT_DIRECTION.
                         
-ADD_B_FOUND             ;TODO 
-                        JMP         STOP 
+                        BSR         READ_OP_SIZE                          ; set CURRENT_OP_SIZE to the size of the ADD.
+                        BSR         READ_OP_DIRECTION                     ; set CURRENT_DIRECTION to the direction of the ADD.
                         
-ADD_W_FOUND             ;TODO 
-                        JMP         STOP   
+                        BSR         READ_DEST_REG                         ; set CURRENT_DEST_REG to the number of the ADD's Dn. 
+                        MOVE.B      #CONST_DATA_REG_MD,CURRENT_DEST_MD    ; set CURRENT_DEST_MD to data register: Dn mode
+                        
+                        BSR         READ_SOURCE_MODE                      ; set CURRENT_SRC_MD to the EA's mode.
+                        BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the EA's register.
+                        
+                        ; TODO: Error checking goes here. (can't add with An as destination, etc.)
+                        
+                        BSR         READ_SOURCE_DATA                      ; set CURRENT_SRC_DATA to the EA's additional data.
+                        
+                        BSR         DISPLAY_ADD_START
+                        
+                        LEA         SPACE,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        CMP.B       #0,CURRENT_DIRECTION
+                        BEQ         DISPLAY_ADD_DATA_DIR_0                  
+                        BRA         DISPLAY_ADD_DATA_DIR_1
+                        
+DISPLAY_ADD_START       CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_ADD_B_START     ; 'ADD.B'
+                           
+                        CMP.B       #WORD_SIZE,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_ADD_W_START     ; 'ADD.W'
+                        
+                        CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_ADD_L_START     ; 'ADD.L'
+                        ;TODO: error case?
+                        
+DISPLAY_ADD_B_START     LEA         ADD_B_MSG,A1            ;'ADD.B'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
 
-ADD_L_FOUND             ;TODO 
-                        JMP         STOP                       
+DISPLAY_ADD_W_START     LEA         ADD_W_MSG,A1           ;'ADD.W'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+
+DISPLAY_ADD_L_START     LEA         ADD_L_MSG,A1           ;'ADD.L'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+                       
+    ; ADD.(S) <ea>,Dn
+DISPLAY_ADD_DATA_DIR_0  BSR         DISPLAY_SOURCE          ; display the EA
+                
+                        LEA         COMMA,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_DEST
+                     
+                        BRA         ADD_DISPLAY_DONE
+
+    ; ADD.(S) Dn,<ea> 
+DISPLAY_ADD_DATA_DIR_1  BSR         DISPLAY_DEST            ; display the data register
+                
+                        LEA         COMMA,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_DEST            ; display the EA
+                        
+                        BRA         ADD_DISPLAY_DONE
+                        
+ADD_DISPLAY_DONE        LEA         RETURN,A1          ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         GO_TO_NEXT_OP
 
 *-----------------------ADDX-related Subroutines------------------------------------
 ADDX_FOUND              JMP         STOP ;TODO: case for ADDX
@@ -1512,11 +1576,9 @@ ADDA_FOUND              JMP         STOP ;TODO: case for ADDA
                         ;       Size = word or long, byte is not possible
                         ;       Dn, An, #<data> is not allowed
                         ;       for register to memory,( MOVEM list,<ea> ) (An)+ is not possible
-                        ;       for momory to register (MOVEM <ea>, list) -(An) is not allowed
-;     
+                        ;       for momory to register (MOVEM <ea>, list) -(An) is not allowed    
 ; TODO: 
-    *   -MOVEM  (W,L)
-    *   -ADD    (B,W,L) (will need shahin's size filter for this and below)
+    *   -ADD    (B,W,L) 
     *   -ADDA   (W,L)
     *   -ADDI   (B,W,L)
     *   -SUB    (B,W,L)
@@ -1560,15 +1622,25 @@ READ_SOURCE_REG         CLR         D4
                         ANDI.W      #FILT_SRC_REG,D4        ; turn D4 into 0000 0000 0000 0XXX. (no need for LSR in this case.)
                         MOVE.B      D4,CURRENT_SRC_REG
                         RTS
-*-----------------------Read the opearion size----------------------------------------// Shahin
+                        
+*-----------------------Read the operation size----------------------------------------// Shahin
 READ_OP_SIZE           CLR          D4
                        CLR.B        CURRENT_OP_SIZE        ; to avoid any junk data
                        MOVE.W       CURRENT_WORD,D4        ; copy CURRENT_WORD into D4
-                       ANDI.W       #FILT_SRC_REG,D4       ; turn D4 into 0000 0000 XX00 0000
+                       ANDI.W       #FILT_OP_SIZE,D4       ; turn D4 into 0000 0000 XX00 0000
                        LSR.W        #6,D4                  ; turn D4 into 0000 0000 0000 00XX
-                       MOVE.B       D4, CURRENT_OP_SIZE    ; copy filtered and 
+                       MOVE.B       D4,CURRENT_OP_SIZE     ; save current OP size
                        RTS
-                       
+
+*-----------------------Read the operation size----------------------------------------                       
+READ_OP_DIRECTION      CLR          D4
+                       CLR.B        CURRENT_DIRECTION       ; to avoid any junk data
+                       MOVE.W       CURRENT_WORD,D4         ; copy CURRENT_WORD into D4
+                       ANDI.W       #FILT_OP_DIRECTION,D4   ; turn D4 into 0000 000X 0000 0000
+                       LSR.W        #8,D4                   ; turn D4 into 0000 0000 0000 000X
+                       MOVE.B       D4,CURRENT_DIRECTION    ; save current direction
+                       RTS     
+
 *----------------------Read additional source data associated with the current word (if necessary).----------------- 
 *This needs to postincrement A5 as necessary for each case.
 READ_SOURCE_DATA        CLR         CURRENT_SRC_DATA
@@ -1962,6 +2034,7 @@ LONG_SIZE_MSG           DC.B        '.L',0
 RESET_MSG               DC.B        'RESET',0
 NOP_MSG                 DC.B        'NOP',0
 STOP_MSG                DC.B        'STOP',0
+
     ;moves
 MOVE_MSG                DC.B        'MOVE',0
 MOVE_B_MSG              DC.B        'MOVE.B',0
@@ -1972,6 +2045,11 @@ MOVEQ_MSG               DC.B        'MOVEQ',0
 
 MOVEM_W_MSG             DC.B        'MOVEM.W',0
 MOVEM_L_MSG             DC.B        'MOVEM.L',0
+
+    ;adds
+ADD_B_MSG               DC.B        'ADD.B',0
+ADD_W_MSG               DC.B        'ADD.W',0
+ADD_L_MSG               DC.B        'ADD.L',0
 
 *other output instruction message constants
 MSG_D                   DC.B        'D',0
@@ -1992,13 +2070,14 @@ NEWLINE                 DC.B        CR,LF,0
 *EA/OPcode parsed instruction variables/constants
 
 CURRENT_WORD            DS.W        1 ; current first 16 bits of an instruction.
-CURRENT_OP_SIZE         DS.B        1 ; current operation size. Byte = 01, Word = 11, Long = 10
 
     *Direction-oriented variables
+    
         *left
 CURRENT_L_MD            DS.B        1 ; current left mode (printing-wise) we are concerned with.
 CURRENT_L_REG           DS.B        1 ; current left register (printing-wise) we are concerned with.
 CURRENT_L_DATA          DS.L        1
+
         *right
 CURRENT_R_MD            DS.B        1 ; current right mode (printing-wise) we are concerned with.
 CURRENT_R_REG           DS.B        1 ; current right register (printing-wise) we are concerned with.
@@ -2010,6 +2089,7 @@ CURRENT_EA_MD           DS.B        1 ; current EA mode we are concerned with.
 CURRENT_EA_REG          DS.B        1 ; current EA register we are concerned with.
 
 CURRENT_DIRECTION       DS.B        1 ; current direction of an operation.
+CURRENT_OP_SIZE         DS.B        1 ; current operation size. Byte = 01, Word = 11, Long = 10
 
 CURRENT_MD              DS.B        1 ; current mode we are concerened with (ex: 000 for data register mode.)
 CURRENT_REG             DS.B        1 ; current register number we are concerned with(address, data, etc) that we are looking at. Ex: D0,A5,etc
@@ -2052,20 +2132,23 @@ END_ADDR                SET         $00009000
 *note: I'm not sure if it matters much whether you have the 4 leading 0s in these filters, but I don't want to
 *risk changing it. Therefore, some filters have leading 0s and some do not.
     * general filters
-FILT_2BIT_1             EQU         $0000C000   ;first 2 bits:                          XX00 0000 0000 0000
-FILT_NIB_1              EQU         $0000F000   ;first nibble:                          XXXX 0000 0000 0000
-FILT_NIB_2              EQU         $00000F00   ;second nibble:                         0000 XXXX 0000 0000
-FILT_BIT_5              EQU         $00000800   ;5th bit:                               0000 X000 0000 0000
-FILT_BIT_8              EQU         $00000100   ;8th bit:                               0000 000X 0000 0000
+FILT_2BIT_1             EQU         $0000C000   ; first 2 bits:                         XX00 0000 0000 0000
+FILT_NIB_1              EQU         $0000F000   ; first nibble:                         XXXX 0000 0000 0000
+FILT_NIB_2              EQU         $00000F00   ; second nibble:                        0000 XXXX 0000 0000
+FILT_BIT_5              EQU         $00000800   ; 5th bit:                              0000 X000 0000 0000
+FILT_BIT_8              EQU         $00000100   ; 8th bit:                              0000 000X 0000 0000
 
     * source/destination filters (not applicable for bidirectional operations)
-FILT_DEST_REG           EQU         $00000E00   ;destination register:                  0000 XXX0 0000 0000
-FILT_DEST_MD            EQU         $000001C0   ;destination mode:                      0000 000X XX00 0000
-FILT_SRC_MD             EQU         $00000038   ;source mode:                           0000 0000 00XX X000
-FILT_SRC_REG            EQU         $00000007   ;source register:                       0000 0000 0000 0XXX
+FILT_DEST_REG           EQU         $00000E00   ; destination register:                 0000 XXX0 0000 0000
+FILT_DEST_MD            EQU         $000001C0   ; destination mode:                     0000 000X XX00 0000
+FILT_SRC_MD             EQU         $00000038   ; source mode:                          0000 0000 00XX X000
+FILT_SRC_REG            EQU         $00000007   ; source register:                      0000 0000 0000 0XXX
 
     * OP size filters
 FILT_OP_SIZE            EQU         $000000C0   ; operation size:                       0000 0000 XX00 0000   // Shahin 
+
+    * OP direction filter
+FILT_OP_DIRECTION       EQU         $00000100   ; operation direction                   0000 000X 0000 0000
 
     * move filters
 FILT_MOVE_SIZE          EQU         $00003000   ;Size of a move operation:              00XX 0000 0000 0000
@@ -2184,6 +2267,7 @@ STOP_CODE               EQU         $4E72   ; STOP                              
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+
 
 *~Font name~Courier New~
 *~Font size~10~
