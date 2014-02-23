@@ -1,0 +1,19 @@
+{
+    "color_scheme": "Packages/User/Monokai (SL).tmTheme",
+    "font_size": 14,
+    "ignored_packages":
+    [
+        "Vintage"
+    ],
+    "vintage_start_in_command_mode": true,
+
+    // Set to true to insert spaces when tab is pressed
+    "translate_tabs_to_spaces": true,
+
+    // The number of spaces a tab is considered equal to
+    "tab_size": 4,
+
+    // Set to false to disable detection of tabs vs. spaces on load
+    "detect_indentation": false,
+
+}
