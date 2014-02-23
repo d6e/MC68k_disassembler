@@ -769,13 +769,12 @@ CONFIRM_0100_1XXX       CLR         D3
 
                         CMP         #CONST_NIB2_1110,D3
                         BEQ         CONFIRM_0100_1110 
-                        ; TODO: make MOVEM a special case since it has an unusual OPcode.
-                        ; TODO: remaining possibilities are MOVEM, LEA, or CHK. (the first two are required.)
+                        ; TODO: remaining possibilities are LEA or CHK. (LEA is required.)
 
                         JMP         STOP                      
                    
 CONFIRM_0100_1000       JMP         STOP                       
-; TODO: check for EXT, NBCD, SWAP, or PEA.               
+; TODO: check for NBCD, SWAP, or PEA. (EXT is already ruled out.)              
  
 CONFIRM_0100_1010       JMP         STOP  
 ; TODO: check for TAS or TST. (ILLEGAL is already ruled out.)         
@@ -1051,7 +1050,7 @@ MOVEM_FOUND             BSR         DISPLAY_CURRENT_ADDRESS
     
 MOVEM_W_FOUND           MOVE.B      #WORD_SIZE,CURRENT_OP_SIZE
                         BSR         PARSE_MOVEM_DATA
-                        ; TODO: parse data before displaying.
+
                         LEA         MOVEM_W_MSG,A1      ; 'MOVEM.W'
                         MOVE.B      #14,D0
                         TRAP        #15
@@ -1064,8 +1063,8 @@ MOVEM_W_FOUND           MOVE.B      #WORD_SIZE,CURRENT_OP_SIZE
                         BRA         GO_TO_NEXT_OP                               
 
 MOVEM_L_FOUND           MOVE.B      #LONG_SIZE,CURRENT_OP_SIZE
-                        BSR         PARSE_MOVEM_DATA   ; parse movem data for direction, EA, etc
-                        ; TODO: parse all data before displaying.
+                        BSR         PARSE_MOVEM_DATA   ; parse MOVEM data for direction, EA, etc
+
                         LEA         MOVEM_L_MSG,A1      ; 'MOVEM.L'
                         MOVE.B      #14,D0
                         TRAP        #15
@@ -1077,9 +1076,9 @@ MOVEM_L_FOUND           MOVE.B      #LONG_SIZE,CURRENT_OP_SIZE
                         BSR         DISPLAY_MOVEM_DATA
                         BRA         GO_TO_NEXT_OP 
                         
-PARSE_MOVEM_DATA        BSR         READ_SOURCE_REG             ; EA will set CURRENT_SRC_REG.
-                        BSR         READ_SOURCE_MODE            ; EA will set CURRENT_SRC_MD.
-                        BSR         READ_MOVEM_DIR              ; read and store the direction of the current operation.
+PARSE_MOVEM_DATA        BSR         READ_SOURCE_REG                 ; EA will set CURRENT_SRC_REG.
+                        BSR         READ_SOURCE_MODE                ; EA will set CURRENT_SRC_MD.
+                        BSR         READ_MOVEM_DIR                  ; read and store the direction of the current operation.
                         MOVE.B      CURRENT_SRC_REG,CURRENT_EA_REG  ; our current EA reg comes from  0000 0000 0000 0XXX.
                         MOVE.B      CURRENT_SRC_MD,CURRENT_EA_MD    ; our current EA mode comes from 0000 0000 00XX X000.
                         
@@ -1120,13 +1119,8 @@ PARSE_MOVEM_DIR_1       ;TODO : error case for  (-An): CURRENT_EA_MD = CONST_ADD
                         BSR         PARSE_MOVEM_MASK_FIELD
                         BSR         READ_LEFT_DATA
                         
-                        ; ...
                         RTS
-                        ; TODO: for all EA modes except predecrement, the next additional data (always read) should be read A7...A0,D7...D0
-                        ;   for predecrement, the order is reversed.
-                        ; TODO: finish parsing data.
-
-                        
+                      
     *Parse the mask field, which will tell us which address/data registers we are moving to/from.
 PARSE_MOVEM_MASK_FIELD  CLR.W       CURRENT_MASK_FIELD
                         MOVE.W      (A5)+,CURRENT_MASK_FIELD
@@ -1203,24 +1197,24 @@ REVERSE_MASK_FIELD_LOOP LSL         #1,D2                       ; Shift MSB of D
                         RTS
  
      * after finding start A, see if we only had one address register in the list.
-CHECK_SINGLE_A          CLR         D6                  ; we use D6 as a temporary register (only in this method) to examine the value 1 higher than D5.
+CHECK_SINGLE_A          CLR         D6                       ; we use D6 as a temporary register (only in this method) to examine the value 1 higher than D5.
                         MOVE.B      D5,D6                
                         ADD.B       #1,D6
-                        CMP         #15,D6              ; first, check if D5 is 15 or greater. (meaning D6 is 16 or greater.) If it is, there is no room for an end A.
-                        BGT         FIND_MM_START_D   ; This means we move on and look for start D.
-                        BTST        D6,D4               ; otherwise, we have to compare the 1-greater value to our mask field.
-                        BEQ         FIND_MM_START_D   ; If the next value is 0, there is no end An.
-                        BRA         FIND_MM_END_A     ; final possibility: there are more address registers and we must find the end An.
+                        CMP         #15,D6                   ; first, check if D5 is 15 or greater. (meaning D6 is 16 or greater.) If it is, there is no room for an end A.
+                        BGT         FIND_MM_START_D          ; This means we move on and look for start D.
+                        BTST        D6,D4                    ; otherwise, we have to compare the 1-greater value to our mask field.
+                        BEQ         FIND_MM_START_D          ; If the next value is 0, there is no end An.
+                        BRA         FIND_MM_END_A            ; final possibility: there are more address registers and we must find the end An.
                         
      * After finding start D, see if we only had one data register in the list.
-CHECK_SINGLE_D          CLR         D6                  ; we use D6 as a temporary register (only in this method) to examine the value 1 higher than D5.
+CHECK_SINGLE_D          CLR         D6                       ; we use D6 as a temporary register (only in this method) to examine the value 1 higher than D5.
                         MOVE.B      D5,D6                
                         ADD.B       #1,D6
                         CMP         #7,D6                    ; first, check if D5 is 7 or greater. (meaning D6 is 8 or greater.) If it is, there is no room for an end D.
                         BGT         MOVEM_LIST_DISPLAY_DONE  ; This means we are done displaying the list.
                         BTST        D6,D4                    ; otherwise, we have to compare the 1-greater value to our mask field.
                         BEQ         MOVEM_LIST_DISPLAY_DONE  ; If the next value is 0, there is no end An.
-                        BRA         FIND_MM_END_D          ; final possibility: there are more data registers and we must find the end Dn.
+                        BRA         FIND_MM_END_D            ; final possibility: there are more data registers and we must find the end Dn.
                         
      * after finding startD, check to see if we should print a '/' before displaying it.
 CHECK_ADDR_IN_LIST_FLAG CMP         #1,D3
@@ -1332,7 +1326,7 @@ DISP_MM_START_D         LEA         MSG_D,A1          ; 'D'
                         BRA         CHECK_SINGLE_D    ; see if we only had one Dn.
                         
    * display the ending data register in the list.
-DISP_MM_END_D           LEA         MINUS,A1        ; '-'
+DISP_MM_END_D           LEA         MINUS,A1          ; '-'
                         MOVE.B      #14,D0      
                         TRAP        #15
 
@@ -1382,10 +1376,31 @@ NEG_FOUND               JMP         STOP ;TODO: case for NEG found
 NOT_FOUND               JMP         STOP ;TODO: case for NOT found 
 
 *-----------------------ADD-related Subroutines------------------------------------
-ADD_FOUND               ; TODO: case for ADD (next goal). Note that the program can definitely parse ADD instructions and read up to this point.
+ADD_FOUND               ; TODO: case for ADD (next goal). Note that the program can definitely parse ADD instructions and get to this point.
                         ; start by reading the size and direction.
-                        ; note ADD always uses a data register as one of its operands, and the register number is always stored in destination register part of the word.
+                        ; then, read destination register part of word and store it in left or right depending on direction.
+                        ; note ADD always uses a data register as one of its operands, 
+                        ; and the register number is always stored in destination register part of the word.
+                        BSR         DISPLAY_CURRENT_ADDRESS
+                        CLR         D4
+                        MOVE.W      CURRENT_WORD,D4
+                        ;TODO: use the correct filter, LSR, and comparison constant.
+                        ;ANDI.W      #FILT_MOVEM_SIZE,D4 ; 0000 0000 0X00 0000 filter out size and set CURRENT_OP_SIZE accordingly
+                        ;LSR.W       #6,D4               ; 0000 0000 0000 000X
+                        ;CMP         #WORD_SIZE_MOVEM,D4
+                        ;BEQ         ADD_W_FOUND
+                        ;BRA         MOVEM_L_FOUND
+                        
+                        JMP         STOP
+                        
+ADD_B_FOUND             ;TODO 
                         JMP         STOP 
+                        
+ADD_W_FOUND             ;TODO 
+                        JMP         STOP   
+
+ADD_L_FOUND             ;TODO 
+                        JMP         STOP                       
 
 *-----------------------ADDX-related Subroutines------------------------------------
 ADDX_FOUND              JMP         STOP ;TODO: case for ADDX
@@ -2031,7 +2046,7 @@ CONST_ADDR_DISPLC_MD    EQU         $05      ; Address w/ displacement:(d16,An) 
 CONST_ADDR_INDEX_MD     EQU         $06      ; Address w/ index:       (d8,PC,Xn)    XXXX X110
 CONST_ADDR_MISC_MD      EQU         $07      ; Various other addressing modes        XXXX X111
 
-    * Constant register values (should not be necessary for register numbers like D5)
+    * Constant register values (should not be necessary for register numbers like D5 or A4)
 CONST_COUNTR_DISPLC_REG EQU         $02      ; Counter w/ displacement:(d16,PC)      XXXX X010
 CONST_COUNTR_INDEX_REG  EQU         $03      ; Counter w/ index:       (d16,PC,Xn)   XXXX X011
 CONST_ABS_SHORT_REG     EQU         $00      ; Absolute word:          (xxx).W       XXXX X000
@@ -2047,9 +2062,6 @@ STOP_CODE               EQU         $4E72    ; STOP                             
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
-
-
-
 
 *~Font name~Courier New~
 *~Font size~10~
