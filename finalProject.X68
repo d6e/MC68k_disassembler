@@ -897,7 +897,7 @@ CONFIRM_NIB1_1110        JMP         STOP
  
 *-----------------------Special OPcode (but not constants) have checks here------------
 * includes MOVE, MOVEQ, etc
-                                
+                        
 *-----------------------Check current word for MOVE------------------------------------
 *MOVE can be B,W, or L.
 CHECK_MOVE              CLR         D3
@@ -943,7 +943,7 @@ CHECK_MOVEM             CLR         D3
 *---------------------- END OPWORD CHECKS -----------------------------------------
 
 *---------------------- BEGIN CASES FOR FOUND OPCODES------------------------------
-
+ 
 *-----------------------MOVE-related Subroutines------------------------------------
 
 *-----------------------Cases for finding different MOVE OPcodes------------------------------------
@@ -1097,7 +1097,7 @@ READ_MOVEQ_DATA         CLR         D4
     *   -SUB    (B,W,L)
   ; see comment block at the top of the program for the full list of codes.
   ; see huge comment block at the top of OPcode section for tentative OPcode parsing implementation plan.
- 
+
 *-----------------------EXT-related Subroutines------------------------------------
 EXT_FOUND               JMP         STOP ;TODO: case for EXT found
 
@@ -2144,7 +2144,7 @@ CONST_MOVE_W            EQU         $3000    ; MOVE.W (use first nib)           
 CONST_MOVE_L            EQU         $2000    ; MOVE.L (use first nib)                0010 XXXX XXXX XXXX
 
     * MOVEQ
-CONST_MOVEQ             EQU         $7000    ; MOVEQ.L (use first nib)               0111 XXXX XXXX XXXX    
+CONST_MOVEQ             EQU         $7000    ; MOVEQ.L (use first nib)               0111 XXXX XXXX XXXX             
          
     * MOVEM                      
 CONST_MOVEM             EQU         $4880    ; confirm MOVEM (use FILT_MOVEM)        0100 1X00 1XXX XXXX        
