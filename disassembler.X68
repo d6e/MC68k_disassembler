@@ -1451,10 +1451,10 @@ START_ADDR_IN           DS.B        20
 INPUTTING_START         SET         1 ;if 1, we are inputting start address. If 0, we are inputting end address.
 OPCODE_BUFFER           DS.L        1 ; can hold at most 4 characters
 SIZE_BUFFER             DS.W        1 ;cand hold at most 2 characters
-DISPLAY_BUFFER          DS.W        5
+DISPLAY_BUFFER          DS.B        80  ; the max size of an instruction is 80chars
 RESTART_PROMPT_MSG      DC.B        'Restart? (y/n)',0
-RESTART_ERROR_STR       DC.B 		'That is not a valid response.',CR,LF,0
-NEWLINE 				DC.B 		CR,LF,0
+RESTART_ERROR_STR       DC.B        'That is not a valid response.',CR,LF,0
+NEWLINE                 DC.B        CR,LF,0
 
 *EA/OPcode parsed instruction variables/constants
 CURRENT_WORD            DS.W        1 ; current first 16 bits of an instruction.

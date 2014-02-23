@@ -6,33 +6,52 @@
 *-----------------------------------------------------------
     ORG    $1000
 START:                  ; first instruction of program
+ 
+*---------------------------- Add string to display buffer ---------------------------------------  
+                        MOVEA.L    #DISPLAY_BUFFER, A0  ; Set address register A0 to refer to DISPLAY_BUFFER space
+                        MOVEA.L    #MOVE_MESG,A2        ; Point the A2 register at the MOVE_MESG
+                      
+DISP_BUFF_ADD           MOVE.B     (A2)+,(A0)+          ; move a char from MOVE_MESG and incrememnt addr registers so they point to the next char
+                        CMPI.B     #0,(A2)              ; if reached the end of the string
+                        BEQ        PRINT_DISP           ; jump to print
+                        BRA        DISP_BUFF_ADD        ; else loop back to the beginning
 
-* Put program code here
+PRINT_DISP              LEA         DISPLAY_BUFFER,A1    ; Print a bunch of newlines to blank the screen
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                    
+CLR_DISP_BUFF           MOVE.W      #$0000,(A1)+  ; There's only five words worth of data in the display buffer
+                        MOVE.W      #$0000,(A1)+  ; It's easier just to paste this five times than make a loop
+                        MOVE.W      #$0000,(A1)+
+                        MOVE.W      #$0000,(A1)+
+                        MOVE.W      #$0000,(A1)+    
+                        MOVE.W      #$0000,(A1)+     
+                        
+                        ; TODO: WHAT HAPPENS WHEN THE INSTRUCTION IS TOO LARGE FOR THE DISPLAY BUFFER?
 
-        CLR  DISPLAY_BUFFER
-        LEA DISPLAY_BUFFER, A3
-        MOVEA.W  MOVE_MESG, A3     
-        MOVEA.W    (A3)+, A1        ;DISPLAY_BUFFER
-        
-        ; MOVEA.L DISPLAY_BUFFER, A1
-        MOVE.B #14,D0
-        TRAP #15
-
-
-
-
-SIMHALT             ; halt simulator
-
-* Put variables and constants here
+;                        LEA         MOVE_MESG,A1    ; Print a bunch of newlines to blank the screen
+;                        MOVE.B      #14,D0
+;                        TRAP        #15
 
 
 STOP
     
-DISPLAY_BUFFER      DS.W        10           ; We need 10 words or 180 bits since each ascii character == 2 hex characters
+    
+    
+* Put variables and constants here
+DISPLAY_BUFFER      DCB.W        6,0              ; initialize block to 6 words to give extra room because strings will be null terminated
 MOVE_MESG           DC          'MOVE.B',0
-
+CR                      EQU         $0D
+LF                      EQU         $0A
 
     END    START        ; last line of source
+
+
+
+
+
+
+
 
 *~Font name~Courier New~
 *~Font size~10~
