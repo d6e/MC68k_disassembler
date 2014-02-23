@@ -3,3 +3,5 @@ disassembler.S68
 
 disassembler.L68
 disassembler.S68
+*.L68
+*.S68
