@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.14.00
-Created On: 2/23/2014 1:34:00 AM
+Created On: 2/23/2014 11:43:05 AM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :
@@ -12,43 +12,45 @@ Created On: 2/23/2014 1:34:00 AM
 00001000                             8  START:                  ; first instruction of program
 00001000                             9   
 00001000                            10  *---------------------------- Add string to display buffer ---------------------------------------  
-00001000  207C 00001048             11                          MOVEA.L    #DISPLAY_BUFFER, A0  ; Set address register A0 to refer to DISPLAY_BUFFER space
-00001006  247C 00001054             12                          MOVEA.L    #MOVE_MESG,A2        ; Point the A2 register at the MOVE_MESG
+00001000  207C 0000103C             11                          MOVEA.L    #DISPLAY_BUFFER, A0  ; Set address register A0 to refer to DISPLAY_BUFFER space
+00001006  247C 00001048             12                          MOVEA.L    #MOVE_MESG,A2        ; Point the A2 register at the MOVE_MESG
 0000100C                            13                        
 0000100C  10DA                      14  DISP_BUFF_ADD           MOVE.B     (A2)+,(A0)+          ; move a char from MOVE_MESG and incrememnt addr registers so they point to the next char
 0000100E  0C12 0000                 15                          CMPI.B     #0,(A2)              ; if reached the end of the string
 00001012  6700 0004                 16                          BEQ        PRINT_DISP           ; jump to print
 00001016  60F4                      17                          BRA        DISP_BUFF_ADD        ; else loop back to the beginning
 00001018                            18  
-00001018  43F9 00001048             19  PRINT_DISP              LEA         DISPLAY_BUFFER,A1    ; Print a bunch of newlines to blank the screen
+00001018  43F9 0000103C             19  PRINT_DISP              LEA         DISPLAY_BUFFER,A1    ; Print a bunch of newlines to blank the screen
 0000101E  103C 000E                 20                          MOVE.B      #14,D0
 00001022  4E4F                      21                          TRAP        #15
 00001024                            22                      
-00001024  32FC 0000                 23  CLR_DISP_BUFF           MOVE.W      #$0000,(A1)+  ; There's only five words worth of data in the display buffer
-00001028  32FC 0000                 24                          MOVE.W      #$0000,(A1)+  ; It's easier just to paste this five times than make a loop
-0000102C  32FC 0000                 25                          MOVE.W      #$0000,(A1)+
-00001030  32FC 0000                 26                          MOVE.W      #$0000,(A1)+
-00001034  32FC 0000                 27                          MOVE.W      #$0000,(A1)+    
-00001038  32FC 0000                 28                          MOVE.W      #$0000,(A1)+     
+00001024  32FC 0000                 23  CLR_DISP_BUFF           MOVE.W      #0,(A1)+  ; There's only five words worth of data in the display buffer
+00001028  32FC 0000                 24                          MOVE.W      #0,(A1)+  ; It's easier just to paste this five times than make a loop
+0000102C  32FC 0000                 25                          MOVE.W      #0,(A1)+
+00001030  32FC 0000                 26                          MOVE.W      #0,(A1)+
+00001034  32FC 0000                 27                          MOVE.W      #0,(A1)+ 
+00001038  32FC 0000                 28                          MOVE.W      #0,(A1)+   
 0000103C                            29                          
 0000103C                            30                          ; TODO: WHAT HAPPENS WHEN THE INSTRUCTION IS TOO LARGE FOR THE DISPLAY BUFFER?
 0000103C                            31  
-0000103C  43F9 00001054             32                          LEA         MOVE_MESG,A1    ; Print a bunch of newlines to blank the screen
-00001042  103C 000E                 33                          MOVE.B      #14,D0
-00001046  4E4F                      34                          TRAP        #15
-00001048                            35  
-00001048                            36  
-00001048                            37  STOP
-00001048                            38      
-00001048                            39      
-00001048                            40      
-00001048                            41  * Put variables and constants here
-00001048= 0000 0000 0000 0...       42  DISPLAY_BUFFER      DCB.W        6,0              ; initialize block to 6 words to give extra room because strings will be null terminated
-00001054= 3132 3334 3536 3...       43  MOVE_MESG           DC          '12345678910111213141',LF,CR,0
-0000106E  =0000000D                 44  CR                      EQU         $0D
-0000106E  =0000000A                 45  LF                      EQU         $0A
-0000106E                            46  
-0000106E                            47      END    START        ; last line of source
+0000103C                            32  ;                        LEA         MOVE_MESG,A1    ; Print a bunch of newlines to blank the screen
+0000103C                            33  ;                        MOVE.B      #14,D0
+0000103C                            34  ;                        TRAP        #15
+0000103C                            35  
+0000103C                            36  
+0000103C                            37  STOP
+0000103C                            38      
+0000103C                            39      
+0000103C                            40      
+0000103C                            41  * Put variables and constants here
+0000103C= 0000 0000 0000 0...       42  DISPLAY_BUFFER      DCB.W        6,0              ; initialize block to 6 words to give extra room because strings will be null terminated
+00001048= 31 32 33 34 35 36 ...     43  MOVE_MESG           DC.B          '123456789AB',0 ; max size for display buffer is currently 11 chars
+00001054                            44  ;MOVE_MESG           DC.B          'MOVE.B',0
+00001054                            45  
+00001054  =0000000D                 46  CR                      EQU         $0D
+00001054  =0000000A                 47  LF                      EQU         $0A
+00001054                            48  
+00001054                            49      END    START        ; last line of source
 
 No errors detected
 No warnings generated
@@ -59,10 +61,10 @@ Symbol-name         Value
 -------------------------
 CLR_DISP_BUFF       1024
 CR                  D
-DISPLAY_BUFFER      1048
+DISPLAY_BUFFER      103C
 DISP_BUFF_ADD       100C
 LF                  A
-MOVE_MESG           1054
+MOVE_MESG           1048
 PRINT_DISP          1018
 START               1000
-STOP                1048
+STOP                103C
