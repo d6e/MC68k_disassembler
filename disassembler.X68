@@ -1423,30 +1423,39 @@ ADDI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                        
                         BSR         READ_OP_SIZE                          ; set CURRENT_OP_SIZE to the size of the ADDI.
                         
-                        BSR         READ_DEST_REG                         ; set CURRENT_DEST_REG to the number of the ADDI's register. 
-                        BSR         READ_DEST_MODE                        ; set CURRENT_DEST_MD to the number of the ADDI's mode. 
+                            ;Note that we are saying source when we mean destination because of the way ADDI is parsed.
+                        BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the number of the ADDI's register. 
+                        BSR         READ_SOURCE_MODE                      ; set CURRENT_SRC_MD to the number of the ADDI's mode. 
                         
-                        MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_SRC_MD    ; set source mode/register to immediate.
-                        MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_SRC_REG
+                        MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_DEST_MD    ; set source mode/register to immediate.
+                        MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_DEST_REG
                         
-                        ; TODO: Error checking goes here. (can't add with An as destination, etc.)
+                        ; TODO: Error checking goes here. 
                         
-                        BSR         READ_SOURCE_DATA                      ; set CURRENT_SRC_DATA to the immediate data.
-                        BSR         READ_DEST_DATA                        ; read additional data for the destintation if necessary.
+                        BSR         READ_DEST_DATA                        ; set CURRENT_DEST_DATA to the immediate data.
+                        BSR         READ_SOURCE_DATA                      ; read additional data for destination if necessary.
                         
+                        MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_L_MD      ; set left mode/register to immediate.
+                        MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_L_REG
+                        MOVE.L      CURRENT_DEST_DATA,CURRENT_L_DATA      ; put the immediate data in our left data.
+                        
+                        MOVE.B      CURRENT_SRC_REG,CURRENT_R_REG
+                        MOVE.B      CURRENT_SRC_MD,CURRENT_R_MD
+                        MOVE.L      CURRENT_SRC_DATA,CURRENT_R_DATA        ; if we have additional data for the right operand, it need to be stored here.
+           
                         BSR         DISPLAY_ADDI_START
                         
                         LEA         SPACE,A1
                         MOVE.B      #14,D0
                         TRAP        #15
                         
-                        BSR         DISPLAY_SOURCE
+                        BSR         DISPLAY_LEFT
 
                         LEA         COMMA,A1            ; ','
                         MOVE.B      #14,D0
                         TRAP        #15
                         
-                        BSR         DISPLAY_DEST
+                        BSR         DISPLAY_RIGHT
                       
                         LEA         RETURN,A1          ; (return)
                         MOVE.B      #14,D0
@@ -1461,7 +1470,7 @@ DISPLAY_ADDI_START      CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
                         BEQ         DISPLAY_ADDI_W_START     ; 'ADDI.W'
                         
                         CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_ADDI_L_START     ; 'ADD.L'
+                        BEQ         DISPLAY_ADDI_L_START     ; 'ADDI.L'
                         ;TODO: error case?
                         
 DISPLAY_ADDI_B_START    LEA         ADDI_B_MSG,A1            ;'ADDI.B'
@@ -1755,8 +1764,8 @@ READ_OP_DIRECTION      CLR          D4
 
 *----------------------Read additional source data associated with the current word (if necessary).----------------- 
 *This needs to postincrement A5 as necessary for each case.
-READ_SOURCE_DATA        CLR         CURRENT_SRC_DATA
-                        CLR         CURRENT_DATA
+READ_SOURCE_DATA        CLR.L       CURRENT_SRC_DATA
+                        CLR.L       CURRENT_DATA
                         CMP.B       #CONST_ADDR_MISC_MD,CURRENT_SRC_MD ; check the source mode
                         BEQ         CONFIRM_READ_SRC_DATA              ; see if we have a source mode that requires additional data.               
                         RTS
@@ -1769,8 +1778,8 @@ CONFIRM_READ_SRC_DATA   CLR.B       CURRENT_REG
  
 *----------------------Read additional destination data associated with the current word (if necessary).----------------- 
 *This needs to postincrement A5 as necessary.                       
-READ_DEST_DATA          CLR         CURRENT_DEST_DATA
-                        CLR         CURRENT_DATA
+READ_DEST_DATA          CLR.L       CURRENT_DEST_DATA
+                        CLR.L       CURRENT_DATA
                         CMP.B       #CONST_ADDR_MISC_MD,CURRENT_DEST_MD  ; check the destination mode.
                         BEQ         CONFIRM_READ_DEST_DATA               ; see if we have a destination mode that requires additional data.                  
                         RTS
@@ -1784,8 +1793,8 @@ CONFIRM_READ_DEST_DATA  CLR.B       CURRENT_REG
 *-----------------------Read additional data in ways that are direction-oriented.--------------------------------------
 
     *Left
-READ_LEFT_DATA          CLR         CURRENT_L_DATA
-                        CLR         CURRENT_DATA
+READ_LEFT_DATA          CLR.L       CURRENT_L_DATA
+                        CLR.L       CURRENT_DATA
                         CMP.B       #CONST_ADDR_MISC_MD,CURRENT_L_MD     ; check the left mode.
                         BEQ         CONFIRM_READ_LEFT_DATA               ; see if we have a mode that requires additional data.                  
                         RTS
@@ -1797,8 +1806,8 @@ CONFIRM_READ_LEFT_DATA  CLR.B       CURRENT_REG
                         RTS
                         
     *Right
-READ_RIGHT_DATA         CLR         CURRENT_R_DATA
-                        CLR         CURRENT_DATA
+READ_RIGHT_DATA         CLR.L       CURRENT_R_DATA
+                        CLR.L       CURRENT_DATA
                         CMP.B       #CONST_ADDR_MISC_MD,CURRENT_R_MD ; check the right mode.
                         BEQ         CONFIRM_READ_RIGHT_DATA              ; see if we have a mode that requires additional data.                  
                         RTS
@@ -1858,7 +1867,7 @@ READ_IMMEDIATE_DATA_W   CLR         CURRENT_DATA
                         MOVE.W      (A5)+,CURRENT_DATA
                         RTS
                         
-READ_IMMEDIATE_DATA_L   CLR         CURRENT_DATA
+READ_IMMEDIATE_DATA_L   CLR.L       CURRENT_DATA
                         MOVE.L      (A5)+,CURRENT_DATA
                         RTS
                         
@@ -2091,7 +2100,25 @@ DISPLAY_IMMEDIATE       LEA         HASH,A1               ; print out '#'. (NOTE
                         MOVE.B      #14,D0
                         TRAP        #15
                         
-                        MOVE.W      (CURRENT_DATA),D1     ; print out the immediate data we are concerned with in hex. 
+                        CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE   ; see if we are reading immediate byte data
+                        BEQ         DISPLAY_IMM_DATA_W
+                        
+                        CMP.B       #WORD_SIZE,CURRENT_OP_SIZE   ; see if we are reading immediate word data
+                        BEQ         DISPLAY_IMM_DATA_W
+                        
+                        CMP.B       #LONG_SIZE,CURRENT_OP_SIZE   ; see if we are reading immediate long data
+                        BEQ         DISPLAY_IMM_DATA_L
+                        
+                        RTS
+
+DISPLAY_IMM_DATA_W      MOVE.W      (CURRENT_DATA),D1     ; print out the immediate data we are concerned with in hex. 
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
+                        TRAP        #15
+                        
+                        RTS
+                        
+DISPLAY_IMM_DATA_L      MOVE.L      (CURRENT_DATA),D1     ; print out the immediate data we are concerned with in hex. 
                         MOVE.B      #16,D2
                         MOVE.B      #15,D0
                         TRAP        #15
@@ -2166,7 +2193,7 @@ ADD_L_MSG               DC.B        'ADD.L',0
 ADDA_W_MSG              DC.B        'ADDA.W',0
 ADDA_L_MSG              DC.B        'ADDA.L',0
 
-ADDI_B_MSG              DC.B        'ADDI.W',0
+ADDI_B_MSG              DC.B        'ADDI.B',0
 ADDI_W_MSG              DC.B        'ADDI.W',0
 ADDI_L_MSG              DC.B        'ADDI.L',0
 
