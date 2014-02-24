@@ -38,8 +38,6 @@
 * Continue decoding OPcodes in the following order: (with sizes)
 *   NOTE: I will delete OPcodes from this list as I implement them.
 
-*   -ADD    (B,W,L) (will need shahin's size filter for this and below)
-*   -ADDA   (W,L)
 *   -ADDI   (B,W,L)
 *   -SUB    (B,W,L)
 *   -SUBA   (W,L)
@@ -662,8 +660,6 @@ CHECK_NON_CONSTANTS     BSR         CHECK_MOVE        ; MOVE is a special case b
                         ;NOTE: we do not check for most specific instructions here.
 
                         ; TODO: go into the subroutines below and *fully* implement the followings:
-                        *   -ADD    (B,W,L) (will need shahin's size filter for this and below)
-                        *   -ADDA   (W,L)
                         *   -ADDI   (B,W,L)
                         *   -SUB    (B,W,L)
                         ;etc
@@ -1421,8 +1417,68 @@ ANDI_FOUND              JMP         STOP ;TODO: case for ANDI found
 SUBI_FOUND              JMP         STOP ;TODO: case for SUBI found
 
  *----------------------ADDI-related Subroutines------------------------------------
-ADDI_FOUND              JMP         STOP ;TODO: case for ADDI found
- 
+ADDI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
+                        CLR         D4
+                        MOVE.W      CURRENT_WORD,D4
+                       
+                        BSR         READ_OP_SIZE                          ; set CURRENT_OP_SIZE to the size of the ADDI.
+                        
+                        BSR         READ_DEST_REG                         ; set CURRENT_DEST_REG to the number of the ADDI's register. 
+                        BSR         READ_DEST_MODE                        ; set CURRENT_DEST_MD to the number of the ADDI's mode. 
+                        
+                        MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_SRC_MD    ; set source mode/register to immediate.
+                        MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_SRC_REG
+                        
+                        ; TODO: Error checking goes here. (can't add with An as destination, etc.)
+                        
+                        BSR         READ_SOURCE_DATA                      ; set CURRENT_SRC_DATA to the immediate data.
+                        BSR         READ_DEST_DATA                        ; read additional data for the destintation if necessary.
+                        
+                        BSR         DISPLAY_ADDI_START
+                        
+                        LEA         SPACE,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_SOURCE
+
+                        LEA         COMMA,A1            ; ','
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_DEST
+                      
+                        LEA         RETURN,A1          ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         GO_TO_NEXT_OP
+
+DISPLAY_ADDI_START      CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_ADDI_B_START     ; 'ADDI.B'
+                           
+                        CMP.B       #WORD_SIZE,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_ADDI_W_START     ; 'ADDI.W'
+                        
+                        CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_ADDI_L_START     ; 'ADD.L'
+                        ;TODO: error case?
+                        
+DISPLAY_ADDI_B_START    LEA         ADDI_B_MSG,A1            ;'ADDI.B'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+
+DISPLAY_ADDI_W_START    LEA         ADDI_W_MSG,A1           ;'ADDI.W'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+
+DISPLAY_ADDI_L_START    LEA         ADDI_L_MSG,A1           ;'ADDI.L'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+
 *-----------------------EORI-related Subroutines------------------------------------
 EORI_FOUND              JMP         STOP ;TODO: case for EORI found
  
@@ -1442,11 +1498,8 @@ NEG_FOUND               JMP         STOP ;TODO: case for NEG found
 NOT_FOUND               JMP         STOP ;TODO: case for NOT found 
 
 *-----------------------ADD-related Subroutines------------------------------------
-ADD_FOUND               ; TODO: case for ADD (next goal). Note that the program can definitely parse ADD instructions and get to this point.
-                        ; start by reading the size and direction.
-                        ; then, read destination register part of word and store it in left or right depending on direction.
-                        ; note ADD always uses a data register as one of its operands, 
-                        ; and the register number is always stored in destination register part of the word.
+ADD_FOUND              ; NOTE: easy68k parses instructions like ADD.B #1,D1 as ADDQ operations. This seems to be a bug.
+                        
                         BSR         DISPLAY_CURRENT_ADDRESS
                         CLR         D4
                         MOVE.W      CURRENT_WORD,D4
@@ -1502,7 +1555,7 @@ DISPLAY_ADD_L_START     LEA         ADD_L_MSG,A1           ;'ADD.L'
                         TRAP        #15
                         RTS
                        
-    ; ADD.(S) <ea>,Dn
+    * ADD.(S) <ea>,Dn
 DISPLAY_ADD_DATA_DIR_0  BSR         DISPLAY_SOURCE          ; display the EA
                 
                         LEA         COMMA,A1
@@ -1513,7 +1566,7 @@ DISPLAY_ADD_DATA_DIR_0  BSR         DISPLAY_SOURCE          ; display the EA
                      
                         BRA         ADD_DISPLAY_DONE
 
-    ; ADD.(S) Dn,<ea> 
+    * ADD.(S) Dn,<ea> 
 DISPLAY_ADD_DATA_DIR_1  BSR         DISPLAY_DEST            ; display the data register
                 
                         LEA         COMMA,A1
@@ -1534,7 +1587,57 @@ ADD_DISPLAY_DONE        LEA         RETURN,A1          ; (return)
 ADDX_FOUND              JMP         STOP ;TODO: case for ADDX
 
 *-----------------------ADDA-related Subroutines------------------------------------
-ADDA_FOUND              JMP         STOP ;TODO: case for ADDA
+ADDA_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
+                        CLR         D4
+                        MOVE.W      CURRENT_WORD,D4
+                        
+                        BSR         READ_OP_SIZE_SMALL                    ; set CURRENT_OP_SIZE to the size of the ADDA.
+                     
+                        BSR         READ_DEST_REG                         ; set CURRENT_DEST_REG to the number of the ADDA's An. 
+                        MOVE.B      #CONST_ADDR_REG_MD,CURRENT_DEST_MD    ; set CURRENT_DEST_MD to address register: An mode
+                        
+                        BSR         READ_SOURCE_MODE                      ; set CURRENT_SRC_MD to the EA's mode.
+                        BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the EA's register.
+                        
+                        ; TODO: Error checking goes here.
+                        
+                        BSR         READ_SOURCE_DATA                      ; set CURRENT_SRC_DATA to the EA's additional data.
+                        
+                        BSR         DISPLAY_ADDA_START
+                        
+                        LEA         SPACE,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_SOURCE
+                        
+                        LEA         COMMA,A1            ; ','
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_DEST
+                      
+                        LEA         RETURN,A1          ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         GO_TO_NEXT_OP
+                        
+DISPLAY_ADDA_START      CMP.B       #WORD_SIZE_SMALL,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_ADDA_W_START     ; 'ADDA.W'
+                        
+                        CMP.B       #LONG_SIZE_SMALL,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_ADDA_L_START     ; 'ADDA.L'
+                        
+DISPLAY_ADDA_W_START    LEA         ADDA_W_MSG,A1            ; 'ADDA.W'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+                        
+DISPLAY_ADDA_L_START    LEA         ADDA_L_MSG,A1            ; 'ADDA.L'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
                     
 *###################### END OPCODE ##################################
 *###################### BEGIN EA ##################################
@@ -1632,7 +1735,16 @@ READ_OP_SIZE           CLR          D4
                        MOVE.B       D4,CURRENT_OP_SIZE     ; save current OP size
                        RTS
 
-*-----------------------Read the operation size----------------------------------------                       
+*-----------------------Read the operation size (small)---------------------------------------
+READ_OP_SIZE_SMALL     CLR          D4
+                       CLR.B        CURRENT_OP_SIZE        ; to avoid any junk data
+                       MOVE.W       CURRENT_WORD,D4        ; copy CURRENT_WORD into D4
+                       ANDI.W       #FILT_SMALL_SIZE,D4    ; turn D4 into 0000 000X 0000 0000
+                       LSR.W        #8,D4                  ; turn D4 into 0000 0000 0000 000X
+                       MOVE.B       D4,CURRENT_OP_SIZE     ; save current OP size
+                       RTS
+
+*-----------------------Read the operation direction----------------------------------------                       
 READ_OP_DIRECTION      CLR          D4
                        CLR.B        CURRENT_DIRECTION       ; to avoid any junk data
                        MOVE.W       CURRENT_WORD,D4         ; copy CURRENT_WORD into D4
@@ -2051,6 +2163,13 @@ ADD_B_MSG               DC.B        'ADD.B',0
 ADD_W_MSG               DC.B        'ADD.W',0
 ADD_L_MSG               DC.B        'ADD.L',0
 
+ADDA_W_MSG              DC.B        'ADDA.W',0
+ADDA_L_MSG              DC.B        'ADDA.L',0
+
+ADDI_B_MSG              DC.B        'ADDI.W',0
+ADDI_W_MSG              DC.B        'ADDI.W',0
+ADDI_L_MSG              DC.B        'ADDI.L',0
+
 *other output instruction message constants
 MSG_D                   DC.B        'D',0
 MSG_A                   DC.B        'A',0
@@ -2107,13 +2226,16 @@ CURRENT_DEST_DATA       DS.L        1 ; current additional data for destination 
 CURRENT_MASK_FIELD      DS.W        1 ; right now, this is only used for MOVEM.
 
 *size constants
-BYTE_SIZE                EQU         $00 ; 0000 0000
-WORD_SIZE                EQU         $01 ; 0000 0001
-LONG_SIZE                EQU         $02 ; 0000 0010
+BYTE_SIZE               EQU         $00 ; 0000 0000
+WORD_SIZE               EQU         $01 ; 0000 0001
+LONG_SIZE               EQU         $02 ; 0000 0010
 
-BYTE_SIZE_M              EQU         $01 ; 0000 0001
-WORD_SIZE_M              EQU         $03 ; 0000 0011
-LONG_SIZE_M              EQU         $02 ; 0000 0010
+WORD_SIZE_SMALL         EQU         $00 ; 0000 0000
+LONG_SIZE_SMALL         EQU         $01 ; 0000 0001
+
+BYTE_SIZE_M             EQU         $01 ; 0000 0001
+WORD_SIZE_M             EQU         $03 ; 0000 0011
+LONG_SIZE_M             EQU         $02 ; 0000 0010
 
 WORD_SIZE_MOVEM         EQU         $00 ; 0000 0000
 LONG_SIZE_MOVEM         EQU         $01 ; 0000 0001
@@ -2146,6 +2268,7 @@ FILT_SRC_REG            EQU         $00000007   ; source register:              
 
     * OP size filters
 FILT_OP_SIZE            EQU         $000000C0   ; operation size:                       0000 0000 XX00 0000   // Shahin 
+FILT_SMALL_SIZE         EQU         $00000100   ; small operation size:                 0000 000X 0000 0000
 
     * OP direction filter
 FILT_OP_DIRECTION       EQU         $00000100   ; operation direction                   0000 000X 0000 0000

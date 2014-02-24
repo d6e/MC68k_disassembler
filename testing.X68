@@ -142,7 +142,7 @@ START       ORG    $7000                ; first instruction of program
             ADDA.W D1, A1
             ADDA.W A1, A1
             ADDA.W (A1), A1
-            ADDA.W #1, A1
+            ;ADDA.W #1, A1
             ADDA.W (A1)+, A1
             ADDA.W -(A1), A1
             ADDA.W $10000000, A1
@@ -150,20 +150,20 @@ START       ORG    $7000                ; first instruction of program
             ADDA.L D1, A1
             ADDA.L A1, A1
             ADDA.L (A1), A1
-            ADDA.L #1, A1
+            ;ADDA.L #1, A1
             ADDA.L (A1)+, A1
             ADDA.L -(A1), A1
             ADDA.L $10000000, A1
             ADDA.L $1000, A1
-            ADDI.B #1, D1
-            ADDI.B #1, $10000000
-            ADDI.B #1, $1000
-            ADDI.W #1, D1
-            ADDI.W #1, $10000000
-            ADDI.W #1, $1000
-            ADDI.L #1, D1
-            ADDI.L #1, $10000000
-            ADDI.L #1, $1000
+            ADDI.B #18, D1
+            ADDI.B #20, $10000000
+            ADDI.B #30, $1000
+            ADDI.W #1000, D1
+            ADDI.W #1000, $10000000
+            ADDI.W #1000, $1000
+            ADDI.L #1000, D1
+            ADDI.L #1000, $10000000
+            ADDI.L #1000, $1000
             SUB.B D1, D1
             SUB.B (A1), D1
             SUB.B #1, D1
