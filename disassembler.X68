@@ -81,6 +81,7 @@
 *################ BEGIN MAIN ###############################
 *** All subroutine calls are made here ***
 START                   ORG        $1000       ; first instruction of program
+                        CLR.B      LINE_COUNTER
                         BRA        PROMPT_INPUT            ; prompt the user for input
                  
 STOP                    STOP       #$2700          ; halt simulator, end of main
@@ -439,8 +440,11 @@ CLR_DISP_BUFF 			LEA         DISPLAY_BUFFER,A1  ; reload the display buffer into
 
 *------------------- Press 'Enter' to continue -------------------
 ENTER_TO_CONT_PROMPT	LEA 		ENTER_TO_CONT_MSG,A1 ; Tell user to press enter to continue
-						MOVE.B 		#1,D0
+						MOVE.B 		#14,D0
 						TRAP 		#15
+						
+						CLR.B       LINE_COUNTER   ; reset the line counter
+						MOVEA.L     #$00000000,A1  ; Clear A1 to prevent bugginess
 
 						MOVE.B  	#2,D0  ; receive "enter" key from user
 						TRAP 		#15
@@ -448,9 +452,9 @@ ENTER_TO_CONT_PROMPT	LEA 		ENTER_TO_CONT_MSG,A1 ; Tell user to press enter to co
 
 *------------------- Next line -------------------
 ; This method is specifically for reading the next OPword.
-GO_TO_NEXT_OP           ADDI.B 		#1,(LINE_COUNTER)   ; incrememnt LINE_COUNTER
-						CMPI 		#15,(LINE_COUNTER) ; see if 15 lines have been printed
-						BEQ 		ENTER_TO_CONT_MSG   ; Prompt the user to hit enter to continue
+GO_TO_NEXT_OP           ADDI.B 		#1,LINE_COUNTER   ; incrememnt LINE_COUNTER
+						CMPI.B 		#28,LINE_COUNTER ; see if 15 lines have been printed
+						BGT 		ENTER_TO_CONT_PROMPT  ; Prompt the user to hit enter to continue
 						BRA         CHECK_DONE_READING
 
 CONFIRMED_NEXT_OP       CLR         CURRENT_WORD
@@ -2224,6 +2228,7 @@ STOP_CODE               EQU         $4E72   ; STOP                              
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+
 
 
 
