@@ -175,7 +175,7 @@ START       ORG    $7000                ; first instruction of program
             ADDI.L #9, $1000
             SUB.B D1, D1
             SUB.B (A1), D1
-            SUB.B #1, D1
+            ;SUB.B #1, D1
             SUB.B (A1)+, D1
             SUB.B -(A1), D1
             SUB.B $10000000, D1
@@ -183,7 +183,7 @@ START       ORG    $7000                ; first instruction of program
             SUB.W D1, D1
             SUB.W A1, D1
             SUB.W (A1), D1
-            SUB.W #1, D1
+            ;SUB.W #1, D1
             SUB.W (A1)+, D1
             SUB.W -(A1), D1
             SUB.W $10000000, D1
@@ -191,7 +191,7 @@ START       ORG    $7000                ; first instruction of program
             SUB.L D1, D1
             SUB.L A1, D1
             SUB.L (A1), D1
-            SUB.L #1, D1
+            ;SUB.L #1, D1
             SUB.L (A1)+, D1
             SUB.L -(A1), D1
             SUB.L $10000000, D1
@@ -199,7 +199,7 @@ START       ORG    $7000                ; first instruction of program
             SUBA.W D1, A1
             SUBA.W A1, A1
             SUBA.W (A1), A1
-            SUBA.W #1, A1
+            ;SUBA.W #1, A1
             SUBA.W (A1)+, A1
             SUBA.W -(A1), A1
             SUBA.W $10000000, A1
@@ -207,7 +207,7 @@ START       ORG    $7000                ; first instruction of program
             SUBA.L D1, A1
             SUBA.L A1, A1
             SUBA.L (A1), A1
-            SUBA.L #1, A1
+            ;SUBA.L #1, A1
             SUBA.L (A1)+, A1
             SUBA.L -(A1), A1
             SUBA.L $10000000, A1

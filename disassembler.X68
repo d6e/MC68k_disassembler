@@ -38,13 +38,11 @@
 * Continue decoding OPcodes in the following order: (with sizes)
 *   NOTE: I will delete OPcodes from this list as I implement them.
 
-*   -ADDI   (B,W,L)
-*   -SUB    (B,W,L)
-*   -SUBA   (W,L)
-
 *   -SUBQ   (B,W,L)
+
 *   -MULS   (W)     (not MULU?)
 *   -DIVU   (W      (not DIVU?)
+
 *   -LEA    (?)
 *   -CLR    (B,W,L)
 
@@ -52,16 +50,18 @@
 *   -ANDI   (B,W,L)
 *   -EOR    (B,W,L)
 *   -EORI   (B,W,L)
-*   -ASR    (B,W,L) (no ASL?)
 
+*   -ASR    (B,W,L) (no ASL?)
 *   -LSL    (B,W,L) (no LSR?)
 *   -ROL    (B,W,L)
 *   -ROR    (B,W,L)
-*   -BCHG   (?)
-*   -CMP    (B,W,L)
 
+*   -BCHG   (?)
+
+*   -CMP    (B,W,L)
 *   -CMPA   (W,L)
 *   -CMPI   (B,W,L)
+
 *   -JSR    (N/A)
 
 *   (add others if we have time)
@@ -859,7 +859,19 @@ CONFIRM_NIB1_1000        JMP         STOP
     ;TODO: DIVU, DIVS, SBCD, OR (some of these are required)   
     
 *-----------------------Cases where the current word starts with 1001-----------------
-CONFIRM_NIB1_1001        JMP         STOP
+CONFIRM_NIB1_1001        CLR         D3                 ; XXXX XXXX 11XX XXXX means SUBA
+                         MOVE.W      CURRENT_WORD,D3
+                         ANDI.W      #FILT_SUBA,D3
+                         CMP         #CONST_SUBA,D3
+                         BEQ         SUBA_FOUND
+                         
+                         CLR         D3                 ; XXXX XXX1 XX00 XXXX means SUBX 
+                         MOVE.W      CURRENT_WORD,D3
+                         ANDI.W      #FILT_SUBX,D3
+                         CMP         #CONST_SUBX,D3
+                         BEQ         SUBX_FOUND
+                         
+                         BRA         SUB_FOUND          ; everything else means SUB
     ;TODO: SUB, SUBX, SUBA (some of these are required) 
  
 *-----------------------Cases where the current word starts with 1011-----------------
@@ -1647,7 +1659,147 @@ DISPLAY_ADDA_L_START    LEA         ADDA_L_MSG,A1            ; 'ADDA.L'
                         MOVE.B      #14,D0
                         TRAP        #15
                         RTS
-                    
+                        
+*-----------------------SUB-related Subroutines------------------------------------
+SUB_FOUND               BSR         DISPLAY_CURRENT_ADDRESS ; TODO: check for the same immediate data bugs found in ADD.
+                        CLR         D4
+                        MOVE.W      CURRENT_WORD,D4
+                        
+                            ; NOTE: Source and destination change based on direction, but we use unidirectional source/destination methods here.
+                            ;       This is okay because we will set the left/right temp variables to whichever values are appropriate based on CURRENT_DIRECTION.
+                        
+                        BSR         READ_OP_SIZE                          ; set CURRENT_OP_SIZE to the size of the SUB.
+                        BSR         READ_OP_DIRECTION                     ; set CURRENT_DIRECTION to the direction of the SUB.
+                        
+                        BSR         READ_DEST_REG                         ; set CURRENT_DEST_REG to the number of the SUB's Dn. 
+                        MOVE.B      #CONST_DATA_REG_MD,CURRENT_DEST_MD    ; set CURRENT_DEST_MD to data register: Dn mode
+                        
+                        BSR         READ_SOURCE_MODE                      ; set CURRENT_SRC_MD to the EA's mode.
+                        BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the EA's register.
+                        
+                        ; TODO: Error checking goes here. (can't add with An as destination, etc.)
+                        
+                        BSR         READ_SOURCE_DATA                      ; set CURRENT_SRC_DATA to the EA's additional data.
+                        
+                        BSR         DISPLAY_SUB_START
+                        
+                        LEA         SPACE,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        CMP.B       #0,CURRENT_DIRECTION
+                        BEQ         DISPLAY_SUB_DATA_DIR_0                  
+                        BRA         DISPLAY_SUB_DATA_DIR_1
+                        
+DISPLAY_SUB_START       CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_SUB_B_START     ; 'SUB.B'
+                           
+                        CMP.B       #WORD_SIZE,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_SUB_W_START     ; 'SUB.W'
+                        
+                        CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_SUB_L_START     ; 'SUB.L'
+                        ;TODO: error case?
+                        
+DISPLAY_SUB_B_START     LEA         SUB_B_MSG,A1            ;'SUB.B'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+
+DISPLAY_SUB_W_START     LEA         SUB_W_MSG,A1            ;'SUB.W'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+
+DISPLAY_SUB_L_START     LEA         SUB_L_MSG,A1            ;'SUB.L'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+                       
+    * SUB.(S) <ea>,Dn
+DISPLAY_SUB_DATA_DIR_0  BSR         DISPLAY_SOURCE          ; display the EA
+                
+                        LEA         COMMA,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_DEST
+                     
+                        BRA         SUB_DISPLAY_DONE
+
+    * SUB.(S) Dn,<ea> 
+DISPLAY_SUB_DATA_DIR_1  BSR         DISPLAY_DEST            ; display the data register
+                
+                        LEA         COMMA,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_DEST            ; display the EA
+                        
+                        BRA         SUB_DISPLAY_DONE
+                        
+SUB_DISPLAY_DONE        LEA         RETURN,A1          ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         GO_TO_NEXT_OP
+
+
+*-----------------------SUBX-related Subroutines------------------------------------
+SUBX_FOUND              JMP         START   ; TODO: SUBX
+*-----------------------SUBA-related Subroutines------------------------------------   
+SUBA_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
+                        CLR         D4
+                        MOVE.W      CURRENT_WORD,D4
+                        
+                        BSR         READ_OP_SIZE_SMALL                    ; set CURRENT_OP_SIZE to the size of the SUBA.
+                     
+                        BSR         READ_DEST_REG                         ; set CURRENT_DEST_REG to the number of the SUBA's An. 
+                        MOVE.B      #CONST_ADDR_REG_MD,CURRENT_DEST_MD    ; set CURRENT_DEST_MD to address register: An mode
+                        
+                        BSR         READ_SOURCE_MODE                      ; set CURRENT_SRC_MD to the EA's mode.
+                        BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the EA's register.
+                        
+                        ; TODO: Error checking goes here.
+                        
+                        BSR         READ_SOURCE_DATA                      ; set CURRENT_SRC_DATA to the EA's additional data.
+                        
+                        BSR         DISPLAY_SUBA_START
+                        
+                        LEA         SPACE,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_SOURCE
+                        
+                        LEA         COMMA,A1            ; ','
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_DEST
+                      
+                        LEA         RETURN,A1          ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         GO_TO_NEXT_OP
+                        
+DISPLAY_SUBA_START      CMP.B       #WORD_SIZE_SMALL,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_SUBA_W_START     ; 'SUBA.W'
+                        
+                        CMP.B       #LONG_SIZE_SMALL,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_SUBA_L_START     ; 'SUBA.L'
+                        
+DISPLAY_SUBA_W_START    LEA         SUBA_W_MSG,A1            ; 'SUBA.W'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+                        
+DISPLAY_SUBA_L_START    LEA         SUBA_L_MSG,A1            ; 'SUBA.L'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+
 *###################### END OPCODE ##################################
 *###################### BEGIN EA ##################################
 *** EA Subroutines are kept here ***
@@ -1689,11 +1841,7 @@ DISPLAY_ADDA_L_START    LEA         ADDA_L_MSG,A1            ; 'ADDA.L'
                         ;       Dn, An, #<data> is not allowed
                         ;       for register to memory,( MOVEM list,<ea> ) (An)+ is not possible
                         ;       for momory to register (MOVEM <ea>, list) -(An) is not allowed    
-; TODO: 
-    *   -ADD    (B,W,L) 
-    *   -ADDA   (W,L)
-    *   -ADDI   (B,W,L)
-    *   -SUB    (B,W,L)
+
 
 *----------------------Check the destination register of the current word.-------------
 READ_DEST_REG           CLR         D4
@@ -2197,6 +2345,18 @@ ADDI_B_MSG              DC.B        'ADDI.B',0
 ADDI_W_MSG              DC.B        'ADDI.W',0
 ADDI_L_MSG              DC.B        'ADDI.L',0
 
+    ;subs
+SUB_B_MSG               DC.B        'SUB.B',0
+SUB_W_MSG               DC.B        'SUB.W',0
+SUB_L_MSG               DC.B        'SUB.L',0
+
+SUBA_W_MSG              DC.B        'SUBA.W',0
+SUBA_L_MSG              DC.B        'SUBA.L',0
+
+SUBI_B_MSG              DC.B        'SUBI.B',0
+SUBI_W_MSG              DC.B        'SUBI.W',0
+SUBI_L_MSG              DC.B        'SUBI.L',0
+
 *other output instruction message constants
 MSG_D                   DC.B        'D',0
 MSG_A                   DC.B        'A',0
@@ -2314,6 +2474,10 @@ FILT_MOVEQ_DATA         EQU         $00FF       ;Data of MOVEQ instruction:     
 FILT_ADDX               EQU         $0130       ; filter what is normally dest. and md. 0000 000X 00XX 0000   
 FILT_ADDA               EQU         $00C0       ; filter what is normally the size.     0000 0000 XX00 0000
 
+    * SUB-type method filters
+FILT_SUBX               EQU         $0130       ; filter what is normally dest. and md. 0000 000X 00XX 0000   
+FILT_SUBA               EQU         $00C0       ; filter what is normally the size.     0000 0000 XX00 0000
+
     * EXT filter
 FILT_EXT                EQU         $FFB8       ; check for an EXT instruction:         XXXX XXXX X0XX X000
 
@@ -2389,6 +2553,12 @@ CONST_ADDX              EQU         $0100    ; confirm ADDX                     
         
     * ADDA
 CONST_ADDA              EQU         $00C0    ; confirm ADDA                          XXXX XXXX 11XX XXXX
+
+    * SUBX
+CONST_SUBX              EQU         $0100    ; confirm SUBX                          XXXX XXX1 XX00 XXXX        
+    
+    * SUBA
+CONST_SUBA              EQU         $00C0    ; confirm SUBA                          XXXX XXXX 11XX XXXX
          
 * Mode/register constants
 
