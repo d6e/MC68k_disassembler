@@ -45,8 +45,8 @@ def initInstructionList():
 		Instruction('MOVE', src, dest, size, False, '', False), # Only for src: No 'An' if size is '.B' 
 		Instruction('MOVEQ', ['#1'], ['D1'], ['.L'], False), 
 		Instruction('MOVEM', ['A1-A6','D1-D7', 'D1'], ['(A1)','$10000000', '$1000'], ['.W','.L']), 
-		Instruction('ADD', ['D1', 'A1', '(A1)', '#9', '(A1)+', '-(A1)','$10000000', '$1000'], ['D1'], size, False, '', False), # Only for src: No 'An' if size is '.B' 
-		Instruction('ADDA', ['D1', 'A1', '(A1)', '#9', '(A1)+', '-(A1)','$10000000', '$1000'], ['A1'], ['.W','.L'], False),
+		Instruction('ADD', ['D1', 'A1', '(A1)', '(A1)+', '-(A1)','$10000000', '$1000'], ['D1'], size, False, '', False), # Only for src: No 'An' if size is '.B' 
+		Instruction('ADDA', ['D1', 'A1', '(A1)', '(A1)+', '-(A1)','$10000000', '$1000'], ['A1'], ['.W','.L'], False),
 		Instruction('ADDI', ['#9'], dest, size, False),
 		Instruction('SUB', src, ['D1'],size,False,'',False), # Only for src: No 'An' if size is '.B'
 		Instruction('SUBA', src, ['A1'], ['.W','.L'], False),
