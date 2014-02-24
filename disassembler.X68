@@ -455,9 +455,8 @@ CHECK_DONE_READING      CMPA        A6,A5       ; TODO: this comparison is not s
 *------------------- Confirm end of data -------------------
 *** Confirm with user whether to end the program or restart
 CONFIRM_DONE            LEA         RESTART_PROMPT_MSG,A1  ; Prompt user for restart
-						BSR 		DISP_BUFF_ADD
-                        ;MOVE.B      #14,D0 ; TODO: DELETE
-                        ;TRAP        #15 ; TODO: DELETE
+						BSR 		DISP_BUFF_ADD   ; Add to display buffer
+						BSR 		PRINT_DISP 		; Print display buffer
         
                         MOVE.B      #2,D0          			 ; Take user input for next address.
                         MOVEA.W     #$2200,A1       ; Store the ascii input in A1,(note that we might not want to use 2200 here)
