@@ -27,9 +27,8 @@ CLR_DISP_BUFF           MOVE.W      #0,(A1)+  ; There's only five words worth of
                         MOVE.W      #0,(A1)+ 
                         MOVE.W      #0,(A1)+   
                         
-                        ; TODO: WHAT HAPPENS WHEN THE INSTRUCTION IS TOO LARGE FOR THE DISPLAY BUFFER?
 
-;                        LEA         MOVE_MESG,A1    ; Print a bunch of newlines to blank the screen
+;                        LEA         MOVE_MESG,A1    
 ;                        MOVE.B      #14,D0
 ;                        TRAP        #15
 
@@ -39,9 +38,10 @@ STOP
     
     
 * Put variables and constants here
-DISPLAY_BUFFER      DCB.W        6,0              ; initialize block to 6 words to give extra room because strings will be null terminated
-MOVE_MESG           DC.B          '123456789AB',0 ; 6 words == 12 chars including the 0 at the end
-;MOVE_MESG           DC.B          'MOVE.B',0
+DISPLAY_BUFFER      DCB.W        6,0              ; 6 words == 12 chars including the '0' at the end
+MOVE_MESG           DC.B          'MOVE.B',0
+;MOVE_MESG           DC.B          '123456789AB',0 ; 
+
 
 CR                      EQU         $0D
 LF                      EQU         $0A

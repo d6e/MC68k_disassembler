@@ -402,13 +402,41 @@ SET_END_ADDR            CMP.L       A5,D7    ;if end address is lower than start
                         
 BEGIN_READ              MOVEA.L      A5,A4 ; keep track of address to print with A4. TODO: could also add this value to the display buffer.
                         MOVE.W      (A5)+,CURRENT_WORD ;look at the first instruction word at the starting address.
-                        BRA         PREPARE_DISPLAY
+                        BSR  		PREPARE_DISPLAY    ; prepare the display, it will return
+                        BRA         READ_CURRENT_OP
+
+*------------------- Prepare display buffer -------------------
+PREPARE_DISPLAY         MOVE.L 		#DISPLAY_BUFFER, DISP_BUFF_INDEX  ; move address for display buffer to display buffer index
+						RTS
 
 *------------------- Add to display buffer -------------------
-;At this point A5 is a valid start address and A6 is a valid end address.
-;TODO: prepare the display buffer
-PREPARE_DISPLAY         BRA         READ_CURRENT_OP    ;TEMP (though we might still call this after the display buffer is prepared)                       
-               
+; ***Note: The DISP_BUFF_ADD adds whatever string A1 is pointing to
+
+						;TODO: make sure you save the current index of the display buffer
+DISP_BUFF_ADD			MOVEA.L    #DISPLAY_BUFFER, A0  ; Set address register A0 to refer to DISPLAY_BUFFER space
+           				MOVE.B     (A1)+,(DISP_BUFF_INDEX)+          ; move a char from what's stored at A1 and incrememnt addr registers so they point to the next char
+                        CMPI.B     #0,(A1)              ; if reached the end of the string
+                        BNE        DISP_BUFF_ADD        ; loop back to the beginning
+                        RTS 				            ; else, return
+                        
+*------------------- Print display buffer -------------------
+PRINT_DISP              LEA         DISPLAY_BUFFER,A1  ; print the display buffer
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        BSR 		CLR_DISP_BUFF   ; clear the display buffer
+                        RTS
+
+*------------------- Clear display buffer -------------------
+CLR_DISP_BUFF 			LEA         DISPLAY_BUFFER,A1  ; reload the display buffer into A1 just to be sure
+           				MOVE.W      #0,(A1)+  ; There's only five words worth of data in the display buffer
+                        MOVE.W      #0,(A1)+  ; It's easier just to paste this five times than make a loop
+                        MOVE.W      #0,(A1)+
+                        MOVE.W      #0,(A1)+
+                        MOVE.W      #0,(A1)+ 
+                        MOVE.W      #0,(A1)+ 
+                        BSR 		PREPARE_DISPLAY   ; Reinitialize
+                        RTS
+
 *------------------- Move address pointer for data reading -------------------
 ; This method is specifically for reading the next OPword.
 GO_TO_NEXT_OP           BRA         CHECK_DONE_READING
@@ -417,10 +445,6 @@ CONFIRMED_NEXT_OP       CLR         CURRENT_WORD
                         MOVEA.L      A5,A4 ; keep track of address to print with A4. 
                         MOVE.W      (A5)+,CURRENT_WORD
                         BRA         READ_CURRENT_OP
-                        
-*------------------- Print display buffer -------------------
-
-;TODO
 
 *------------------- Check if end of data -------------------
 CHECK_DONE_READING      CMPA        A6,A5       ; TODO: this comparison is not sufficient, because it will say that $8000 is less than $7000 (since $8000 is negative.)
@@ -1937,17 +1961,17 @@ SLASH                   DC.B        '/',0
 START_ADDR_MSG          DC.B        'Please enter a starting hex address to read from.',CR,LF,0
 END_ADDR_MSG            DC.B        'Please enter an ending hex address to read from.',CR,LF,0
 
-INVALID_LEN_MSG         DC.B        'Not a valid length for input address.',CR,LF
+INVALID_LEN_MSG         DC.B        'Not a valid length for input address.',CR,LF,0
                         DC.B        'Please enter a valid-length address.',CR,LF,0
-INVALID_ADDR_MSG        DC.B        'Not a valid address.',CR,LF
+INVALID_ADDR_MSG        DC.B        'Not a valid address.',CR,LF,0
                         DC.B        'Please enter a valid address.',CR,LF,0
-INVALID_END_ADDR_MSG    DC.B        'Not a valid end address.',CR,LF
+INVALID_END_ADDR_MSG    DC.B        'Not a valid end address.',CR,LF,0
                         DC.B        'Please enter an end address after the start address.',CR,LF,0
                       
-INVALID_ADDR_L_MSG      DC.B        'Not a valid address (too low).',CR,LF
+INVALID_ADDR_L_MSG      DC.B        'Not a valid address (too low).',CR,LF,0
                         DC.B        'Please enter a valid address.',CR,LF,0
                         
-INVALID_ADDR_H_MSG      DC.B        'Not a valid address (too high).',CR,LF
+INVALID_ADDR_H_MSG      DC.B        'Not a valid address (too high).',CR,LF,0
                         DC.B        'Please enter a valid address.',CR,LF,0
                         
 DONE_READING_MSG        DC.B        'Done reading the program.',CR,LF,0
@@ -1984,10 +2008,12 @@ START_ADDR_IN           DS.B        20
 INPUTTING_START         SET         1 ;if 1, we are inputting start address. If 0, we are inputting end address.
 OPCODE_BUFFER           DS.L        1 ; can hold at most 4 characters
 SIZE_BUFFER             DS.W        1 ;cand hold at most 2 characters
-DISPLAY_BUFFER          DS.B        80  ; the max size of an instruction is 80chars
+DISPLAY_BUFFER      	DCB.B       81,0              ; 81 bytes == 80 chars (the '0' at the end counts)
+DISP_BUFF_INDEX			DCB.L 		1,0 	; This is the index for the display buffer. It points to the current index
 RESTART_PROMPT_MSG      DC.B        'Restart? (y/n)',0
 RESTART_ERROR_STR       DC.B        'That is not a valid response.',CR,LF,0
 NEWLINE                 DC.B        CR,LF,0
+
 
 *EA/OPcode parsed instruction variables/constants
 
