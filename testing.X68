@@ -8,27 +8,29 @@
 START       ORG    $7000                ; first instruction of program
             NOP
             MOVE.B #10,D0
-            MOVE.B D1,D2
-            MOVE.B D1,$10000000
-            MOVE.B D1,$1000
-            MOVE.B (A1),D1
-            MOVE.B (A1),$10000000
-            MOVE.B (A1),$1000
+
+* TODO: use all required opcodes in all possible combinations here
+            MOVE.B D1, D1
+            MOVE.B D1, $10000000
+            MOVE.B D1, $1000
+            MOVE.B (A1), D1
+            MOVE.B (A1), $10000000
+            MOVE.B (A1), $1000
             MOVE.B #1, D1
-            MOVE.B #1,$10000000
-            MOVE.B #1,$1000
-            MOVE.B (A1)+,D1
-            MOVE.B (A1)+,$10000000
-            MOVE.B (A1)+,$1000
-            MOVE.B -(A1),D1
-            MOVE.B -(A1),$10000000
-            MOVE.B -(A1),$1000
-            MOVE.B $10000000,D1
-            MOVE.B $10000000,$10000000
-            MOVE.B $10000000,$1000
-            MOVE.B $1000,D1
-            MOVE.B $1000,$10000000
-            MOVE.B $1000,$1000
+            MOVE.B #1, $10000000
+            MOVE.B #1, $1000
+            MOVE.B (A1)+, D1
+            MOVE.B (A1)+, $10000000
+            MOVE.B (A1)+, $1000
+            MOVE.B -(A1), D1
+            MOVE.B -(A1), $10000000
+            MOVE.B -(A1), $1000
+            MOVE.B $10000000, D1
+            MOVE.B $10000000, $10000000
+            MOVE.B $10000000, $1000
+            MOVE.B $1000, D1
+            MOVE.B $1000, $10000000
+            MOVE.B $1000, $1000
             MOVE.W D1, D1
             MOVE.W D1, $10000000
             MOVE.W D1, $1000
@@ -114,11 +116,9 @@ START       ORG    $7000                ; first instruction of program
             MOVEM.L $10000000, D1
             MOVEM.L D1, $1000
             MOVEM.L $1000, D1
-            MOVEM.L D1-D7,-(A1)
-            MOVEM.L A2-A4/D1-D7,-(A1)
             ADD.B D1, D1
             ADD.B (A1), D1
-            ADD.B #1, D1
+            ADD.B #9, D1
             ADD.B (A1)+, D1
             ADD.B -(A1), D1
             ADD.B $10000000, D1
@@ -126,15 +126,15 @@ START       ORG    $7000                ; first instruction of program
             ADD.W D1, D1
             ADD.W A1, D1
             ADD.W (A1), D1
-            ADD.W #1, D1
+            ADD.W #9, D1
             ADD.W (A1)+, D1
             ADD.W -(A1), D1
             ADD.W $10000000, D1
             ADD.W $1000, D1
-            ADD.L D1, $1000
+            ADD.L D1, D1
             ADD.L A1, D1
             ADD.L (A1), D1
-            ADD.L #1, D1
+            ADD.L #9, D1
             ADD.L (A1)+, D1
             ADD.L -(A1), D1
             ADD.L $10000000, D1
@@ -142,7 +142,7 @@ START       ORG    $7000                ; first instruction of program
             ADDA.W D1, A1
             ADDA.W A1, A1
             ADDA.W (A1), A1
-            ADDA.W #1, A1
+            ADDA.W #9, A1
             ADDA.W (A1)+, A1
             ADDA.W -(A1), A1
             ADDA.W $10000000, A1
@@ -150,20 +150,20 @@ START       ORG    $7000                ; first instruction of program
             ADDA.L D1, A1
             ADDA.L A1, A1
             ADDA.L (A1), A1
-            ADDA.L #1, A1
+            ADDA.L #9, A1
             ADDA.L (A1)+, A1
             ADDA.L -(A1), A1
             ADDA.L $10000000, A1
             ADDA.L $1000, A1
-            ADDI.B #1, D1
-            ADDI.B #1, $10000000
-            ADDI.B #1, $1000
-            ADDI.W #1, D1
-            ADDI.W #1, $10000000
-            ADDI.W #1, $1000
-            ADDI.L #1, D1
-            ADDI.L #1, $10000000
-            ADDI.L #1, $1000
+            ADDI.B #9, D1
+            ADDI.B #9, $10000000
+            ADDI.B #9, $1000
+            ADDI.W #9, D1
+            ADDI.W #9, $10000000
+            ADDI.W #9, $1000
+            ADDI.L #9, D1
+            ADDI.L #9, $10000000
+            ADDI.L #9, $1000
             SUB.B D1, D1
             SUB.B (A1), D1
             SUB.B #1, D1
@@ -397,10 +397,6 @@ START       ORG    $7000                ; first instruction of program
 * Put variables and constants here
 
             END    START        ; last line of source
-
-
-
-
 
 
 *~Font name~Courier New~
