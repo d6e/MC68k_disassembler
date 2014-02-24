@@ -413,10 +413,10 @@ PREPARE_DISPLAY         MOVE.L 		#DISPLAY_BUFFER, DISP_BUFF_INDEX  ; move addres
 ; ***Note: The DISP_BUFF_ADD adds whatever string A1 is pointing to
 
 						;TODO: make sure you save the current index of the display buffer
-DISP_BUFF_ADD			MOVEA.L    #DISP_BUFF_INDEX, A0  ; Set address register A0 to refer to DISP_BUFF_INDEXs space
-           				MOVE.B     (A1)+,(A0)+           ; move a char from what's stored at A1 and incrememnt addr registers so they point to the next char
+DISP_BUFF_ADD			MOVEA.L    #DISPLAY_BUFFER, A0  ; Set address register A0 to refer to DISP_BUFF_INDEXs space
+DISP_BUFF_LOOP  		MOVE.B     (A1)+,(A0)+           ; move a char from what's stored at A1 and incrememnt addr registers so they point to the next char
                         CMPI.B     #0,(A1)               ; if reached the end of the string
-                        BNE        DISP_BUFF_ADD         ; loop back to the beginning
+                        BNE        DISP_BUFF_LOOP        ; loop back to the beginning
                         MOVE.L 	   A0,DISP_BUFF_INDEX	 ; else, update the display buffer index
                         RTS 				             ; and return
                         
@@ -2211,6 +2211,8 @@ STOP_CODE               EQU         $4E72   ; STOP                              
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+
+
 
 *~Font name~Courier New~
 *~Font size~10~
