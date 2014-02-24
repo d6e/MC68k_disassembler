@@ -412,7 +412,6 @@ PREPARE_DISPLAY         MOVE.L 		#DISPLAY_BUFFER, DISP_BUFF_INDEX  ; move addres
 *------------------- Add to display buffer -------------------
 ; ***Note: The DISP_BUFF_ADD adds whatever string A1 is pointing to
 
-						;TODO: make sure you save the current index of the display buffer
 DISP_BUFF_ADD			MOVEA.L    #DISPLAY_BUFFER, A0  ; Set address register A0 to refer to DISP_BUFF_INDEXs space
 DISP_BUFF_LOOP  		MOVE.B     (A1)+,(A0)+           ; move a char from what's stored at A1 and incrememnt addr registers so they point to the next char
                         CMPI.B     #0,(A1)               ; if reached the end of the string
@@ -455,8 +454,8 @@ CHECK_DONE_READING      CMPA        A6,A5       ; TODO: this comparison is not s
 *------------------- Confirm end of data -------------------
 *** Confirm with user whether to end the program or restart
 CONFIRM_DONE            LEA         RESTART_PROMPT_MSG,A1  ; Prompt user for restart
-						BSR 		DISP_BUFF_ADD   ; Add to display buffer
-						BSR 		PRINT_DISP 		; Print display buffer
+						MOVE.B 		#14,D0
+						TRAP 		#15
         
                         MOVE.B      #2,D0          			 ; Take user input for next address.
                         MOVEA.W     #$2200,A1       ; Store the ascii input in A1,(note that we might not want to use 2200 here)
