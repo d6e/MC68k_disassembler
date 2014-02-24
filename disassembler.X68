@@ -437,10 +437,22 @@ CLR_DISP_BUFF 			LEA         DISPLAY_BUFFER,A1  ; reload the display buffer into
                         BSR 		PREPARE_DISPLAY   ; Reinitialize
                         RTS
 
-*------------------- Move address pointer for data reading -------------------
+*------------------- Press 'Enter' to continue -------------------
+ENTER_TO_CONT_PROMPT	LEA 		ENTER_TO_CONT_MSG,A1 ; Tell user to press enter to continue
+						MOVE.B 		#1,D0
+						TRAP 		#15
+
+						MOVE.B  	#2,D0  ; receive "enter" key from user
+						TRAP 		#15
+						BRA         CHECK_DONE_READING
+
+*------------------- Next line -------------------
 ; This method is specifically for reading the next OPword.
-GO_TO_NEXT_OP           BRA         CHECK_DONE_READING
-                         
+GO_TO_NEXT_OP           ADDI.B 		#1,(LINE_COUNTER)   ; incrememnt LINE_COUNTER
+						CMPI 		#15,(LINE_COUNTER) ; see if 15 lines have been printed
+						BEQ 		ENTER_TO_CONT_MSG   ; Prompt the user to hit enter to continue
+						BRA         CHECK_DONE_READING
+
 CONFIRMED_NEXT_OP       CLR         CURRENT_WORD
                         MOVEA.L      A5,A4 ; keep track of address to print with A4. 
                         MOVE.W      (A5)+,CURRENT_WORD
@@ -2013,6 +2025,8 @@ DISP_BUFF_INDEX			DCB.L 		1,0 	; This is the index for the display buffer. It po
 RESTART_PROMPT_MSG      DC.B        'Restart? (y/n)',0
 RESTART_ERROR_STR       DC.B        'That is not a valid response.',CR,LF,0
 NEWLINE                 DC.B        CR,LF,0
+ENTER_TO_CONT_MSG		DC.B 		'Press Enter to continue',CR,LF,0
+LINE_COUNTER			DCB.B 		1,0 	; Counts number of lines printed to determine when prompt user to hit enter to continue
 
 
 *EA/OPcode parsed instruction variables/constants
