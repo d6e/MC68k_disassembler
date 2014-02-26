@@ -325,6 +325,7 @@ START       ORG    $7000                ; first instruction of program
             ASR.B #1, D2
             ASR.W #1, D2
             ASR.L #1, D2
+            ASR $1000
             LSL.B D1, D2
             LSL.W D1, D2
             LSL.L D1, D2
@@ -406,17 +407,6 @@ START       ORG    $7000                ; first instruction of program
 * Put variables and constants here
 
             END    START        ; last line of source
-
-
-<<<<<<< HEAD
-
-
-
-
-
-=======
->>>>>>> danielle
-
 
 *~Font name~Courier New~
 *~Font size~10~
