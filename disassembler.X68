@@ -751,7 +751,7 @@ CONFIRM_NIB1_0000       CLR         D3
                         LSR.W       #8,D3           ; turn word into 0000 0000 0000 000X
                         CMP         #CONST_ALL_0,D3 ; see if the word is still 0.
                         BEQ         CONFIRM_0000_XXX0
-                        ; if we get to here, then the word must be BCHG, BCLR, BSET, or MOVEP.
+                        ; if we get to here, then the word must be BCHG, BCLR, BSET, or .
                         ; BCHG is required
                         ; if our disassembler doesn't consider any of those valid, there should be an error message here.
                         RTS 
@@ -1515,7 +1515,62 @@ ADDA_FOUND              JMP         STOP ;TODO: case for ADDA
                         ;       for momory to register (MOVEM <ea>, list) -(An) is not allowed
 ;     
 ; TODO: 
-    *   -MOVEM  (W,L)
+    *   -MOVEM    (W,L)
+             ; make the direction filter
+             ; make the size filter
+    *   -MOVEP    (W,L)
+             ; make the direction filter
+             ; make the size filter
+    *   -EXT      (W,L)
+             ; make the size filter
+    *   -MOVE USP (L)
+             ; make the direction filter
+    *   -SUBA    (W,L)
+             ; make the size filter
+    *   -CMPA    (W,L)
+             ; make the size filter
+    *   -OR    (B,W,L)
+             ; make the direction filter
+    *   -SUB    (B,W,L)
+             ; make the direction filter
+    *   -SBCD    (B)
+             ; make the small mode filter
+    *   -SBCX    (B,W,L)
+             ; make the small mode filter
+    *   -ABCD    (B)
+             ; make the small mode filter
+    *   -EXG    (L)
+             ; make the small mode filter
+    *   -AND    (B,W,L)
+             ; make the direction mode filter
+    *   -ADD    (B,W,L)
+             ; make the direction mode filter
+    *   -ADDX    (B,W,L)
+             ; make the small mode filter
+    *   -ADDA    (W,L)
+             ; make the size mode filter
+    *   -ASd    (B,W,L)
+             ; make the direction mode filter
+    *   -LSd    (B,W,L)
+             ; make the direction mode filter
+    *   -ROXd    (B,W,L)
+             ; make the direction mode filter
+    *   -ROd    (B,W,L)
+             ; make the direction mode filter
+    *   -ASd    (B,W,L)
+             ; make the rotation mode filter
+             ; make the small mode filter
+    *   -LSd    (B,W,L)
+             ; make the rotation mode filter
+             ; make the small mode filter
+    *   -ROXd    (B,W,L)
+             ; make the rotation mode filter
+             ; make the small mode filter
+    *   -ROd    (B,W,L)
+             ; make the rotation mode filter
+             ; make the small mode filter
+
+
     *   -ADD    (B,W,L) (will need shahin's size filter for this and below)
     *   -ADDA   (W,L)
     *   -ADDI   (B,W,L)
@@ -1564,10 +1619,90 @@ READ_SOURCE_REG         CLR         D4
 READ_OP_SIZE           CLR          D4
                        CLR.B        CURRENT_OP_SIZE        ; to avoid any junk data
                        MOVE.W       CURRENT_WORD,D4        ; copy CURRENT_WORD into D4
-                       ANDI.W       #FILT_SRC_REG,D4       ; turn D4 into 0000 0000 XX00 0000
+                       ANDI.W       #FILT_OP_SIZE,D4       ; turn D4 into 0000 0000 XX00 0000
                        LSR.W        #6,D4                  ; turn D4 into 0000 0000 0000 00XX
                        MOVE.B       D4, CURRENT_OP_SIZE    ; copy filtered and 
                        RTS
+                       
+                       
+*---------------------Read small operation size for MOVEM,MOVEP, EXT, ------------------------------------------------//Shahin
+READ_SMALL_OP_SIZE    CLR         D4
+                      CLR.B       CURRENT_OP_SIZE_SMALL       ; to avoid any junk data
+                      MOVE.W      Current_WORD, D4            ; copy CURRENT_WORD into D4
+                      ANDI.W      #FILT_MOVEM_SIZE,D4         ; turn D4 into 0000 0000 0X00 0000
+                      LSR.W       #6,D4                       ; turn D4 into 0000 0000 0000 00XX
+                      MOVE.B      D4, CURRENT_OP_SIZE_SMALL   ; copy filtered and 
+                      RTS
+                      
+*---------------------Read direction for MOVEP--------------------------------------------//Shahin 
+                      
+READ_MOVEP_DIR          CLR         D4
+                        CLR.B       CURRENT_DIRECTION        ; to avoid any junk data
+                        MOVE.W      CURRENT_WORD,D4    
+                        ANDI.W      #FILT_MOVEP_DIR,D4       ; 0000 0000 X000 0000     filter out direction 
+                        LSR.W       #7,D4                    ; 0000 0000 0000 000X
+                        MOVE.B      D4,CURRENT_DIRECTION
+                        RTS
+
+*---------------------Read size for MOVEP--------------------------------------------//Shahin // can be deleted
+                      
+READ_MOVEP_SIZE         CLR         D4 
+                        CLR.B       CURRENT_OP_SIZE_SMALL       ; to avoid any junk data
+                        MOVE.W      CURRENT_WORD,D4    
+                        ANDI.W      #FILT_MOVEP_SIZE,D4         ; 0000 0000 0X00 0000     filter out size 
+                        LSR.W       #6,D4                       ; 0000 0000 0000 000X
+                        MOVE.B      D4,CURRENT_OP_SIZE_SMALL
+                        RTS
+                        
+*---------------------Read size for EXT--------------------------------------------//Shahin  // can be deleted
+; #FILT_MOVEP_SIZE works for EXP size also                      
+READ_EXT_SIZE           CLR         D4 
+                        CLR.B       CURRENT_OP_SIZE_SMALL       ; to avoid any junk data
+                        MOVE.W      CURRENT_WORD,D4    
+                        ANDI.W      #FILT_MOVEP_SIZE,D4         ; 0000 0000 0X00 0000     filter out size 
+                        LSR.W       #6,D4                       ; 0000 0000 0000 000X
+                        MOVE.B      D4,CURRENT_OP_SIZE_SMALL
+                        RTS
+
+*---------------------Read direction for MOVE USP--------------------------------------------//Shahin
+                      
+READ_MOVE_USP_DIR       CLR         D4
+                        CLR.B       CURRENT_DIRECTION        ; to avoid any junk data
+                        MOVE.W      CURRENT_WORD,D4    
+                        ANDI.W      #FILT_MOVE_USP_DIR,D4    ; 0000 0000 0000 X000     filter out direction 
+                        LSR.W       #3,D4                    ; 0000 0000 0000 000X
+                        MOVE.B      D4,CURRENT_DIRECTION
+                        RTS
+
+*---------------------Read small mode for SBCD, SUBX, ABCD, EXG, ADDX-----------------------------------//Shahin
+                      
+READ_SMALL_MODE         CLR         D4
+                        CLR.B       CURRENT_SMALL_MODE        ; to avoid any junk data
+                        MOVE.W      CURRENT_WORD,D4    
+                        ANDI.W      #FILT_SMALL_MODE,D4      ; 0000 0000 0000 X000     filter out direction 
+                        LSR.W       #3,D4                    ; 0000 0000 0000 000X
+                        MOVE.B      D4,CURRENT_SMALL_MODE
+                        RTS
+                        
+*--------------------Read Current Direction ----------------------------------------------------------//Shahin  //has Robert made one already?
+; can be deleted if ROBERT already made one
+READ_CURRENT_DIRECTION   CLR         D4
+                         CLR.B       CURRENT_DIRECTION        ; to avoid any junk data
+                         MOVE.W      CURRENT_WORD,D4    
+                         ANDI.W      #FILT_DIRECTION,D4       ; 0000 000X 0000 0000     filter out direction 
+                         LSR.W       #8,D4                    ; 0000 0000 0000 000X
+                         MOVE.B      D4,CURRENT_DIRECTION
+                         RTS
+                         
+*---------------------Read rotation mode for ASd, LSd, ROXd, ROd -----------------------------------//Shahin
+                      
+READ_ROTATION_MODE         CLR         D4
+                        CLR.B       CURRENT_ROTATION_MODE      ; to avoid any junk data
+                        MOVE.W      CURRENT_WORD,D4    
+                        ANDI.W      #FILT_ROTATION_MODE,D4     ; 0000 0000 00X0 0000     filter out direction 
+                        LSR.W       #5,D4                      ; 0000 0000 0000 000X
+                        MOVE.B      D4,CURRENT_SMALL_MODE
+                        RTS
                        
 *----------------------Read additional source data associated with the current word (if necessary).----------------- 
 *This needs to postincrement A5 as necessary for each case.
@@ -1993,6 +2128,7 @@ NEWLINE                 DC.B        CR,LF,0
 
 CURRENT_WORD            DS.W        1 ; current first 16 bits of an instruction.
 CURRENT_OP_SIZE         DS.B        1 ; current operation size. Byte = 01, Word = 11, Long = 10
+CURRENT_OP_SIZE_SMALL   DS.B        1 ; current operation size with onlt one bit.  Word = 0, Long = 1
 
     *Direction-oriented variables
         *left
@@ -2010,6 +2146,10 @@ CURRENT_EA_MD           DS.B        1 ; current EA mode we are concerned with.
 CURRENT_EA_REG          DS.B        1 ; current EA register we are concerned with.
 
 CURRENT_DIRECTION       DS.B        1 ; current direction of an operation.
+
+CURRENT_ROTATION_MODE   DS.B        1 ; current rotation mode of an operation (ASd, LSd, ROXd,ROd)   //Shahin
+
+CURRENT_SMALL_MODE      DS.B        1 ; current small mode of an operation  ( SBCD, SUBX, ABCD, EXG, ADDX)  //Shahin
 
 CURRENT_MD              DS.B        1 ; current mode we are concerened with (ex: 000 for data register mode.)
 CURRENT_REG             DS.B        1 ; current register number we are concerned with(address, data, etc) that we are looking at. Ex: D0,A5,etc
@@ -2066,12 +2206,34 @@ FILT_SRC_REG            EQU         $00000007   ;source register:               
 
     * OP size filters
 FILT_OP_SIZE            EQU         $000000C0   ; operation size:                       0000 0000 XX00 0000   // Shahin 
+    
+    * direction filter
+FILT_DIRECTION          EQU         $00000100   ; direction of an operation             0000 000X 0000 0000  // shahin
+
+   * small Mode filter for SBCD, SUBX, ABCD, EXG, ADDX
+FILT_SMALL_MODE         EQU         $00000004   ; small mode:                           0000 0000 0000 X000  // shahin
+    
+    *small size filter for SUBA, CMPA, ADDA
+FILT_SMALL_SIZE         EQU         $00000100   ; small size:                           0000 000X 0000 0000  //shahin
+
+    * rotation mode filter
+FILT_ROTATION_MODE      EQU         $00000020   ; rotation mode of an operation         0000 0000 00X0 0000  //shahin
+
+    
 
     * move filters
 FILT_MOVE_SIZE          EQU         $00003000   ;Size of a move operation:              00XX 0000 0000 0000
 FILT_MOVEM              EQU         $0000FB80   ; check for a MOVEM instruction:        XXXX X0XX X000 0000
 FILT_MOVEM_SIZE         EQU         $00000040   ; Size of a MOVEM operation             0000 0000 0X00 0000
-FILT_MOVEM_DIR          EQU         $00000400   ; direction of a MOVEM operation:       0000 0X00 0000 0000
+FILT_MOVEM_DIR          EQU         $00000400   ; direction of a MOVEM operation:       0000 0X00 0000 0000  // shahin
+FILT_MOVEP_DIR          EQU         $00000080   ; direction of a MOVEP operation:       0000 0000 X000 0000  // shahin
+FILT_MOVEP_SIZE         EQU         $00000040   ; Size of a MOVEM operation             0000 0000 0X00 0000  // shahin
+FILT_MOVE_USP_DIR       EQU         $00000008   ; direction of a MOVEP operation:       0000 0000 000X 0000  // shahin
+
+
+
+
+
 
     * filters for BRA, BSR, BCC, and MOVEQ (the same filter, but named differently for clarity.)
 FILT_DISPLACEMENT       EQU         $00FF       ;Displacment of branch instruction:     0000 0000 XXXX XXXX
@@ -2083,6 +2245,7 @@ FILT_ADDA               EQU         $00C0       ; filter what is normally the si
 
     * EXT filter
 FILT_EXT                EQU         $FFB8       ; check for an EXT instruction:         XXXX XXXX X0XX X000
+FILT_EXT_SIZE           EQU         $00000040   ; Size of a MOVEM operation             0000 0000 0X00 0000 //Shahin
 
 * constants for comparing with filtered instructions. X means 'don't care' (and will be set to 0 by previous filter)
 *(These do not represent the complete insturctions.)
@@ -2184,6 +2347,7 @@ STOP_CODE               EQU         $4E72   ; STOP                              
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+
 
 *~Font name~Courier New~
 *~Font size~10~
