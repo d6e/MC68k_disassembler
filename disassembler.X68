@@ -38,8 +38,6 @@
 * Continue decoding OPcodes in the following order: (with sizes)
 *   NOTE: I will delete OPcodes from this list as I implement them.
 
-*   -AND    (B,W,L)
-*   -ANDI   (B,W,L)
 *   -EOR    (B,W,L)
 *   -EORI   (B,W,L)
 
@@ -650,8 +648,6 @@ CHECK_NON_CONSTANTS     BSR         CHECK_MOVE        ; MOVE is a special case b
 
                         ; TODO: go into the subroutines below and *fully* implement the followings:
 
-
-*   -AND    (B,W,L)
 *   -ANDI   (B,W,L)
 *   -EOR    (B,W,L)
 *   -EORI   (B,W,L)
@@ -927,7 +923,8 @@ CONFIRM_NIB1_1001        CLR         D3                 ; XXXX XXXX 11XX XXXX me
     ;TODO: SUB, SUBX, SUBA (some of these are required) 
  
 *-----------------------Cases where the current word starts with 1011-----------------
-CONFIRM_NIB1_1011        JMP         STOP
+CONFIRM_NIB1_1011       ;Check in order: CMPA, CMP,  
+                        JMP         STOP
     ;TODO: EOR, CMPM, CMP, CMPA (some of these are required)  
     
 *-----------------------Cases where the current word starts with 1100-----------------
@@ -1490,7 +1487,74 @@ MOVEM_LIST_DISPLAY_DONE RTS                 ; could just use RTS instead of bran
 ORI_FOUND               JMP         STOP ;TODO: case for ORI found
 
  *----------------------ANDI-related Subroutines------------------------------------
-ANDI_FOUND              JMP         STOP ;TODO: case for ANDI found
+ANDI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
+                        
+                        BSR         READ_OP_SIZE                          ; set CURRENT_OP_SIZE to the size of the ANDI.
+                        
+                            ;Note that we are saying source when we mean destination because of the way ANDI is parsed.
+                        BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the number of the ANDI's register. 
+                        BSR         READ_SOURCE_MODE                      ; set CURRENT_SRC_MD to the number of the ANDI's mode. 
+                        
+                        MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_DEST_MD    ; set source mode/register to immediate.
+                        MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_DEST_REG
+                        
+                        ; TODO: Error checking goes here. 
+                        
+                        BSR         READ_DEST_DATA                        ; set CURRENT_DEST_DATA to the immediate data.
+                        BSR         READ_SOURCE_DATA                      ; read additional data for destination if necessary.
+                        
+                        MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_L_MD      ; set left mode/register to immediate.
+                        MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_L_REG
+                        MOVE.L      CURRENT_DEST_DATA,CURRENT_L_DATA      ; put the immediate data in our left data.
+                        
+                        MOVE.B      CURRENT_SRC_REG,CURRENT_R_REG
+                        MOVE.B      CURRENT_SRC_MD,CURRENT_R_MD
+                        MOVE.L      CURRENT_SRC_DATA,CURRENT_R_DATA        ; if we have additional data for the right operand, it need to be stored here.
+           
+                        BSR         DISPLAY_ANDI_START
+                        
+                        LEA         SPACE,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_LEFT
+
+                        LEA         COMMA,A1            ; ','
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_RIGHT
+                      
+                        LEA         RETURN,A1          ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         GO_TO_NEXT_OP
+                        
+DISPLAY_ANDI_START      CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_ANDI_B_START     ; 'ANDI.B'
+                           
+                        CMP.B       #WORD_SIZE,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_ANDI_W_START     ; 'ANDI.W'
+                        
+                        CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_ANDI_L_START     ; 'ANDI.L'
+                        ;TODO: error case?
+                        
+DISPLAY_ANDI_B_START    LEA         ANDI_B_MSG,A1            ; 'ANDI.B'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+
+DISPLAY_ANDI_W_START    LEA         ANDI_W_MSG,A1            ; 'ANDI.W'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+
+DISPLAY_ANDI_L_START    LEA         ANDI_L_MSG,A1            ; 'ANDI.L'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
 
  *----------------------SUBI-related Subroutines------------------------------------
 SUBI_FOUND              JMP         STOP ;TODO: case for SUBI found
@@ -1708,7 +1772,7 @@ DISPLAY_ADD_DATA_DIR_1  BSR         DISPLAY_DEST            ; display the data r
                         MOVE.B      #14,D0
                         TRAP        #15
                         
-                        BSR         DISPLAY_DEST            ; display the EA
+                        BSR         DISPLAY_SOURCE           ; display the EA
                         
                         BRA         ADD_DISPLAY_DONE
                         
@@ -2145,10 +2209,94 @@ DISPLAY_DIVS_START      LEA         DIVS_W_MSG,A1       ; 'DIVS.W'
                         RTS
 
 *-----------------------AND-related Subroutines------------------------------------
-AND_FOUND               JMP         STOP    ; TODO: AND
+AND_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
+                        ;CLR         D4
+                        ;MOVE.W      CURRENT_WORD,D4
+                        
+                            ; NOTE: Source and destination change based on direction, but we use unidirectional source/destination methods here.
+                            ;       This is okay because we will set the left/right temp variables to whichever values are appropriate based on CURRENT_DIRECTION.
+                        
+                        BSR         READ_OP_SIZE                          ; set CURRENT_OP_SIZE to the size of the AND.
+                        BSR         READ_OP_DIRECTION                     ; set CURRENT_DIRECTION to the direction of the AND.
+                        
+                        BSR         READ_DEST_REG                         ; set CURRENT_DEST_REG to the number of the AND's Dn. 
+                        MOVE.B      #CONST_DATA_REG_MD,CURRENT_DEST_MD    ; set CURRENT_DEST_MD to data register: Dn mode
+                        
+                        BSR         READ_SOURCE_MODE                      ; set CURRENT_SRC_MD to the EA's mode.
+                        BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the EA's register.
+                        
+                        ; TODO: Error checking goes here. 
+                        
+                        BSR         READ_SOURCE_DATA                      ; set CURRENT_SRC_DATA to the EA's additional data.
+                        
+                        BSR         DISPLAY_AND_START
+                        
+                        LEA         SPACE,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        CMP.B       #0,CURRENT_DIRECTION
+                        BEQ         DISPLAY_AND_DATA_DIR_0                  
+                        BRA         DISPLAY_AND_DATA_DIR_1
+                        
+DISPLAY_AND_START       CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_AND_B_START     ; 'AND.B'
+                           
+                        CMP.B       #WORD_SIZE,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_AND_W_START     ; 'AND.W'
+                        
+                        CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_AND_L_START     ; 'AND.L'
+                        ;TODO: error case?
+                        
+DISPLAY_AND_B_START     LEA         AND_B_MSG,A1            ; 'AND.B'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+
+DISPLAY_AND_W_START     LEA         AND_W_MSG,A1            ; 'AND.W'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+
+DISPLAY_AND_L_START     LEA         AND_L_MSG,A1            ; 'AND.L'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+                        
+    * AND.(S) <ea>,Dn
+DISPLAY_AND_DATA_DIR_0  BSR         DISPLAY_SOURCE          ; display the EA
+                
+                        LEA         COMMA,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_DEST
+                     
+                        BRA         AND_DISPLAY_DONE
+
+    * AND.(S) Dn,<ea> 
+DISPLAY_AND_DATA_DIR_1  BSR         DISPLAY_DEST            ; display the data register
+                
+                        LEA         COMMA,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_SOURCE            ; display the EA
+                        
+                        BRA         AND_DISPLAY_DONE
+                        
+AND_DISPLAY_DONE        LEA         RETURN,A1          ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         GO_TO_NEXT_OP
 
 *-----------------------OR-related Subroutines------------------------------------
 OR_FOUND                JMP         STOP    ; TODO: OR
+
+*-----------------------EOR-related Subroutines------------------------------------
+EOR_FOUND               JMP         STOP    ; TODO: EOR (next goal)
 
 *-----------------------LEA-related Subroutines------------------------------------
 LEA_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
@@ -2502,7 +2650,7 @@ DISPLAY_DATA_REG        LEA         MSG_D,A1               ; print out 'D' (late
                         MOVE.B      #14,D0
                         TRAP        #15
                         
-                        CLR         D1
+                        CLR.L       D1
                         MOVE.B      (CURRENT_REG),D1       ; print out the number of the data register.
                         MOVE.B      #16,D2
                         MOVE.B      #15,D0
@@ -2515,7 +2663,7 @@ DISPLAY_ADDR_REG        LEA         MSG_A,A1               ; print out 'A'
                         MOVE.B      #14,D0
                         TRAP        #15
                         
-                        CLR         D1
+                        CLR.L       D1
                         MOVE.B      (CURRENT_REG),D1       ; print out the number of the data register.
                         MOVE.B      #16,D2
                         MOVE.B      #15,D0
@@ -2631,7 +2779,7 @@ DISPLAY_ABS_SHORT       LEA         DOLLAR,A1             ; print out '$'.
                         MOVE.B      #14,D0
                         TRAP        #15
 
-                        CLR         D1
+                        CLR.L       D1
                         MOVE.W      (CURRENT_DATA),D1     ; print out the absolute short address we are concerned with in hex. 
                         MOVE.B      #16,D2
                         MOVE.B      #15,D0
@@ -2643,7 +2791,7 @@ DISPLAY_ABS_LONG        LEA         DOLLAR,A1             ; print out '$'.
                         MOVE.B      #14,D0
                         TRAP        #15
 
-                        CLR         D1
+                        CLR.L       D1
                         MOVE.L      (CURRENT_DATA),D1     ; print out the absolute long address we are concerned with in hex. 
                         MOVE.B      #16,D2
                         MOVE.B      #15,D0
@@ -2779,6 +2927,15 @@ MULS_W_MSG              DC.B        'MULS.W',0
     ;division
 DIVU_W_MSG              DC.B        'DIVU.W',0
 DIVS_W_MSG              DC.B        'DIVS.W',0
+
+    ;ANDs
+AND_B_MSG               DC.B        'AND.B',0
+AND_W_MSG               DC.B        'AND.W',0
+AND_L_MSG               DC.B        'AND.L',0
+
+ANDI_B_MSG              DC.B        'ANDI.B',0
+ANDI_W_MSG              DC.B        'ANDI.W',0
+ANDI_L_MSG              DC.B        'ANDI.L',0
 
     ;LEA
 LEA_L_MSG               DC.B        'LEA.L',0
