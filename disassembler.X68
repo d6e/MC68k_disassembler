@@ -1790,7 +1790,7 @@ DISPLAY_DATA_REG        LEA         MSG_D,A1               ; print out 'D' (late
                         MOVE.B      #14,D0
                         TRAP        #15
                         
-                        CLR         D1
+                        CLR.L         D1
                         MOVE.B      (CURRENT_REG),D1      ; print out the number of the data register.
                         MOVE.B      #16,D2
                         MOVE.B      #15,D0
@@ -1803,7 +1803,7 @@ DISPLAY_ADDR_REG        LEA         MSG_A,A1               ; print out 'A'
                         MOVE.B      #14,D0
                         TRAP        #15
                         
-                        CLR         D1
+                        CLR.L         D1
                         MOVE.B      (CURRENT_REG),D1       ; print out the number of the data register.
                         MOVE.B      #16,D2
                         MOVE.B      #15,D0
@@ -1919,7 +1919,7 @@ DISPLAY_ABS_SHORT       LEA         DOLLAR,A1             ; print out '$'.
                         MOVE.B      #14,D0
                         TRAP        #15
 
-                        CLR         D1
+                        CLR.L         D1
                         MOVE.W      (CURRENT_DATA),D1     ; print out the absolute short address we are concerned with in hex. 
                         MOVE.B      #16,D2
                         MOVE.B      #15,D0
@@ -1931,7 +1931,7 @@ DISPLAY_ABS_LONG        LEA         DOLLAR,A1             ; print out '$'.
                         MOVE.B      #14,D0
                         TRAP        #15
 
-                        CLR         D1
+                        CLR.L         D1
                         MOVE.L      (CURRENT_DATA),D1     ; print out the absolute long address we are concerned with in hex. 
                         MOVE.B      #16,D2
                         MOVE.B      #15,D0
@@ -2228,6 +2228,7 @@ STOP_CODE               EQU         $4E72   ; STOP                              
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+
 
 
 
