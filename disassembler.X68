@@ -81,6 +81,8 @@
 *################ BEGIN MAIN ###############################
 *** All subroutine calls are made here ***
 START                   ORG        $1000       ; first instruction of program
+                        BSR        PRINT_ASCII_BANNER  ; Prints the ascii banner/logo
+                        CLR.B      LINE_COUNTER
                         BRA        PROMPT_INPUT            ; prompt the user for input
                  
 STOP                    STOP       #$2700          ; halt simulator, end of main
@@ -402,25 +404,64 @@ SET_END_ADDR            CMP.L       A5,D7    ;if end address is lower than start
                         
 BEGIN_READ              MOVEA.L      A5,A4 ; keep track of address to print with A4. TODO: could also add this value to the display buffer.
                         MOVE.W      (A5)+,CURRENT_WORD ;look at the first instruction word at the starting address.
-                        BRA         PREPARE_DISPLAY
+                        BSR  		PREPARE_DISPLAY    ; prepare the display, it will return
+                        BRA         READ_CURRENT_OP
+
+*------------------- Prepare display buffer -------------------
+PREPARE_DISPLAY         MOVE.L 		#DISPLAY_BUFFER, DISP_BUFF_INDEX  ; move address for display buffer to display buffer index
+						RTS
 
 *------------------- Add to display buffer -------------------
-;At this point A5 is a valid start address and A6 is a valid end address.
-;TODO: prepare the display buffer
-PREPARE_DISPLAY         BRA         READ_CURRENT_OP    ;TEMP (though we might still call this after the display buffer is prepared)                       
+; ***Note: The DISP_BUFF_ADD adds whatever string A1 is pointing to
                
-*------------------- Move address pointer for data reading -------------------
+DISP_BUFF_ADD			MOVEA.L    #DISPLAY_BUFFER, A0  ; Set address register A0 to refer to DISP_BUFF_INDEXs space
+DISP_BUFF_LOOP  		MOVE.B     (A1)+,(A0)+           ; move a char from what's stored at A1 and incrememnt addr registers so they point to the next char
+                        CMPI.B     #0,(A1)               ; if reached the end of the string
+                        BNE        DISP_BUFF_LOOP        ; loop back to the beginning
+                        MOVE.L 	   A0,DISP_BUFF_INDEX	 ; else, update the display buffer index
+                        RTS 				             ; and return
+                        
+*------------------- Print display buffer -------------------
+PRINT_DISP              LEA         DISPLAY_BUFFER,A1  ; print the display buffer
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        BSR 		CLR_DISP_BUFF   ; clear the display buffer
+                        RTS
+
+*------------------- Clear display buffer -------------------
+CLR_DISP_BUFF 			LEA         DISPLAY_BUFFER,A1  ; reload the display buffer into A1 just to be sure
+           				MOVE.W      #0,(A1)+  ; There's only five words worth of data in the display buffer
+                        MOVE.W      #0,(A1)+  ; It's easier just to paste this five times than make a loop
+                        MOVE.W      #0,(A1)+
+                        MOVE.W      #0,(A1)+
+                        MOVE.W      #0,(A1)+ 
+                        MOVE.W      #0,(A1)+ 
+                        BSR 		PREPARE_DISPLAY   ; Reinitialize
+                        RTS
+
+*------------------- Press 'Enter' to continue -------------------
+ENTER_TO_CONT_PROMPT	LEA 		ENTER_TO_CONT_MSG,A1 ; Tell user to press enter to continue
+						MOVE.B 		#14,D0
+						TRAP 		#15
+						
+						CLR.B       LINE_COUNTER   ; reset the line counter
+						MOVEA.L     #$00000000,A1  ; Clear A1 to prevent bugginess
+
+						MOVE.B  	#2,D0  ; receive "enter" key from user
+						TRAP 		#15
+						BRA         CHECK_DONE_READING
+
+*------------------- Next line -------------------
 ; This method is specifically for reading the next OPword.
-GO_TO_NEXT_OP           BRA         CHECK_DONE_READING
+GO_TO_NEXT_OP           ADDI.B 		#1,LINE_COUNTER   ; incrememnt LINE_COUNTER
+						CMPI.B 		#28,LINE_COUNTER ; see if 15 lines have been printed
+						BGT 		ENTER_TO_CONT_PROMPT  ; Prompt the user to hit enter to continue
+						BRA         CHECK_DONE_READING
                          
 CONFIRMED_NEXT_OP       CLR         CURRENT_WORD
                         MOVEA.L      A5,A4 ; keep track of address to print with A4. 
                         MOVE.W      (A5)+,CURRENT_WORD
                         BRA         READ_CURRENT_OP
-                        
-*------------------- Print display buffer -------------------
-
-;TODO
 
 *------------------- Check if end of data -------------------
 CHECK_DONE_READING      CMPA        A6,A5       ; TODO: this comparison is not sufficient, because it will say that $8000 is less than $7000 (since $8000 is negative.)
@@ -457,6 +498,63 @@ DONE_READING            LEA         DONE_READING_MSG,A1 ; when we reach the end 
                         MOVE.B      #14,D0
                         TRAP        #15
                         JMP         STOP
+                        
+*------------------- Print ASCII Banner -------------------                       
+*** Prints each line of the ascii image at a time
+PRINT_ASCII_BANNER      LEA         ASCII_BANNER01,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER02,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER03,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER04,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15                                                
+                        LEA         ASCII_BANNER05,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER06,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER07,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER08,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER09,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER10,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER11,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER12,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER13,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER14,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER15,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER16,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER17,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        RTS                 ;return
+
                         
 *################## END IO  #####################################
 *################## BEGIN OPCODE ##########################
@@ -1516,6 +1614,61 @@ ADDA_FOUND              JMP         STOP ;TODO: case for ADDA
 ;     
 ; TODO: 
     *   -MOVEM  (W,L)
+             ; make the direction filter
+             ; make the size filter
+    *   -MOVEP    (W,L)
+             ; make the direction filter
+             ; make the size filter
+    *   -EXT      (W,L)
+             ; make the size filter
+    *   -MOVE USP (L)
+             ; make the direction filter
+    *   -SUBA    (W,L)
+             ; make the size filter
+    *   -CMPA    (W,L)
+             ; make the size filter
+    *   -OR    (B,W,L)
+             ; make the direction filter
+    *   -SUB    (B,W,L)
+             ; make the direction filter
+    *   -SBCD    (B)
+             ; make the small mode filter
+    *   -SBCX    (B,W,L)
+             ; make the small mode filter
+    *   -ABCD    (B)
+             ; make the small mode filter
+    *   -EXG    (L)
+             ; make the small mode filter
+    *   -AND    (B,W,L)
+             ; make the direction mode filter
+    *   -ADD    (B,W,L)
+             ; make the direction mode filter
+    *   -ADDX    (B,W,L)
+             ; make the small mode filter
+    *   -ADDA    (W,L)
+             ; make the size mode filter
+    *   -ASd    (B,W,L)
+             ; make the direction mode filter
+    *   -LSd    (B,W,L)
+             ; make the direction mode filter
+    *   -ROXd    (B,W,L)
+             ; make the direction mode filter
+    *   -ROd    (B,W,L)
+             ; make the direction mode filter
+    *   -ASd    (B,W,L)
+             ; make the rotation mode filter
+             ; make the small mode filter
+    *   -LSd    (B,W,L)
+             ; make the rotation mode filter
+             ; make the small mode filter
+    *   -ROXd    (B,W,L)
+             ; make the rotation mode filter
+             ; make the small mode filter
+    *   -ROd    (B,W,L)
+             ; make the rotation mode filter
+             ; make the small mode filter
+
+
     *   -ADD    (B,W,L) (will need shahin's size filter for this and below)
     *   -ADDA   (W,L)
     *   -ADDI   (B,W,L)
@@ -1564,9 +1717,89 @@ READ_SOURCE_REG         CLR         D4
 READ_OP_SIZE           CLR          D4
                        CLR.B        CURRENT_OP_SIZE        ; to avoid any junk data
                        MOVE.W       CURRENT_WORD,D4        ; copy CURRENT_WORD into D4
-                       ANDI.W       #FILT_SRC_REG,D4       ; turn D4 into 0000 0000 XX00 0000
+                       ANDI.W       #FILT_OP_SIZE,D4       ; turn D4 into 0000 0000 XX00 0000
                        LSR.W        #6,D4                  ; turn D4 into 0000 0000 0000 00XX
                        MOVE.B       D4, CURRENT_OP_SIZE    ; copy filtered and 
+                       RTS
+                       
+                       
+*---------------------Read small operation size for MOVEM,MOVEP, EXT, ------------------------------------------------//Shahin
+READ_SMALL_OP_SIZE    CLR         D4
+                      CLR.B       CURRENT_OP_SIZE_SMALL       ; to avoid any junk data
+                      MOVE.W      Current_WORD, D4            ; copy CURRENT_WORD into D4
+                      ANDI.W      #FILT_MOVEM_SIZE,D4         ; turn D4 into 0000 0000 0X00 0000
+                      LSR.W       #6,D4                       ; turn D4 into 0000 0000 0000 00XX
+                      MOVE.B      D4, CURRENT_OP_SIZE_SMALL   ; copy filtered and 
+                      RTS
+                      
+*---------------------Read direction for MOVEP--------------------------------------------//Shahin 
+                      
+READ_MOVEP_DIR          CLR         D4
+                        CLR.B       CURRENT_DIRECTION        ; to avoid any junk data
+                        MOVE.W      CURRENT_WORD,D4    
+                        ANDI.W      #FILT_MOVEP_DIR,D4       ; 0000 0000 X000 0000     filter out direction 
+                        LSR.W       #7,D4                    ; 0000 0000 0000 000X
+                        MOVE.B      D4,CURRENT_DIRECTION
+                        RTS
+
+*---------------------Read size for MOVEP--------------------------------------------//Shahin // can be deleted
+                      
+READ_MOVEP_SIZE         CLR         D4 
+                        CLR.B       CURRENT_OP_SIZE_SMALL       ; to avoid any junk data
+                        MOVE.W      CURRENT_WORD,D4    
+                        ANDI.W      #FILT_MOVEP_SIZE,D4         ; 0000 0000 0X00 0000     filter out size 
+                        LSR.W       #6,D4                       ; 0000 0000 0000 000X
+                        MOVE.B      D4,CURRENT_OP_SIZE_SMALL
+                        RTS
+                        
+*---------------------Read size for EXT--------------------------------------------//Shahin  // can be deleted
+; #FILT_MOVEP_SIZE works for EXP size also                      
+READ_EXT_SIZE           CLR         D4 
+                        CLR.B       CURRENT_OP_SIZE_SMALL       ; to avoid any junk data
+                        MOVE.W      CURRENT_WORD,D4    
+                        ANDI.W      #FILT_MOVEP_SIZE,D4         ; 0000 0000 0X00 0000     filter out size 
+                        LSR.W       #6,D4                       ; 0000 0000 0000 000X
+                        MOVE.B      D4,CURRENT_OP_SIZE_SMALL
+                        RTS
+
+*---------------------Read direction for MOVE USP--------------------------------------------//Shahin
+                      
+READ_MOVE_USP_DIR       CLR         D4
+                        CLR.B       CURRENT_DIRECTION        ; to avoid any junk data
+                        MOVE.W      CURRENT_WORD,D4    
+                        ANDI.W      #FILT_MOVE_USP_DIR,D4    ; 0000 0000 0000 X000     filter out direction 
+                        LSR.W       #3,D4                    ; 0000 0000 0000 000X
+                        MOVE.B      D4,CURRENT_DIRECTION
+                        RTS
+
+*---------------------Read small mode for SBCD, SUBX, ABCD, EXG, ADDX-----------------------------------//Shahin
+                      
+READ_SMALL_MODE         CLR         D4
+                        CLR.B       CURRENT_SMALL_MODE        ; to avoid any junk data
+                        MOVE.W      CURRENT_WORD,D4    
+                        ANDI.W      #FILT_SMALL_MODE,D4      ; 0000 0000 0000 X000     filter out direction 
+                        LSR.W       #3,D4                    ; 0000 0000 0000 000X
+                        MOVE.B      D4,CURRENT_SMALL_MODE
+                        RTS
+                        
+*--------------------Read Current Direction ----------------------------------------------------------//Shahin  //has Robert made one already?
+; can be deleted if ROBERT already made one
+READ_CURRENT_DIRECTION   CLR         D4
+                         CLR.B       CURRENT_DIRECTION        ; to avoid any junk data
+                         MOVE.W      CURRENT_WORD,D4    
+                         ANDI.W      #FILT_DIRECTION,D4       ; 0000 000X 0000 0000     filter out direction 
+                         LSR.W       #8,D4                    ; 0000 0000 0000 000X
+                         MOVE.B      D4,CURRENT_DIRECTION
+                         RTS
+                         
+*---------------------Read rotation mode for ASd, LSd, ROXd, ROd -----------------------------------//Shahin
+                      
+READ_ROTATION_MODE         CLR         D4
+                        CLR.B       CURRENT_ROTATION_MODE      ; to avoid any junk data
+                        MOVE.W      CURRENT_WORD,D4    
+                        ANDI.W      #FILT_ROTATION_MODE,D4     ; 0000 0000 00X0 0000     filter out direction 
+                        LSR.W       #5,D4                      ; 0000 0000 0000 000X
+                        MOVE.B      D4,CURRENT_SMALL_MODE
                        RTS
                        
 *----------------------Read additional source data associated with the current word (if necessary).----------------- 
@@ -1750,7 +1983,7 @@ DISPLAY_DATA_REG        LEA         MSG_D,A1               ; print out 'D' (late
                         MOVE.B      #14,D0
                         TRAP        #15
                         
-                        CLR         D1
+                        CLR.L         D1
                         MOVE.B      (CURRENT_REG),D1      ; print out the number of the data register.
                         MOVE.B      #16,D2
                         MOVE.B      #15,D0
@@ -1763,7 +1996,7 @@ DISPLAY_ADDR_REG        LEA         MSG_A,A1               ; print out 'A'
                         MOVE.B      #14,D0
                         TRAP        #15
                         
-                        CLR         D1
+                        CLR.L         D1
                         MOVE.B      (CURRENT_REG),D1       ; print out the number of the data register.
                         MOVE.B      #16,D2
                         MOVE.B      #15,D0
@@ -1879,7 +2112,7 @@ DISPLAY_ABS_SHORT       LEA         DOLLAR,A1             ; print out '$'.
                         MOVE.B      #14,D0
                         TRAP        #15
 
-                        CLR         D1
+                        CLR.L         D1
                         MOVE.W      (CURRENT_DATA),D1     ; print out the absolute short address we are concerned with in hex. 
                         MOVE.B      #16,D2
                         MOVE.B      #15,D0
@@ -1891,7 +2124,7 @@ DISPLAY_ABS_LONG        LEA         DOLLAR,A1             ; print out '$'.
                         MOVE.B      #14,D0
                         TRAP        #15
 
-                        CLR         D1
+                        CLR.L         D1
                         MOVE.L      (CURRENT_DATA),D1     ; print out the absolute long address we are concerned with in hex. 
                         MOVE.B      #16,D2
                         MOVE.B      #15,D0
@@ -1937,14 +2170,14 @@ SLASH                   DC.B        '/',0
 START_ADDR_MSG          DC.B        'Please enter a starting hex address to read from.',CR,LF,0
 END_ADDR_MSG            DC.B        'Please enter an ending hex address to read from.',CR,LF,0
 
-INVALID_LEN_MSG         DC.B        'Not a valid length for input address.',CR,LF
+INVALID_LEN_MSG         DC.B        'Not a valid length for input address.',CR,LF,0
                         DC.B        'Please enter a valid-length address.',CR,LF,0
-INVALID_ADDR_MSG        DC.B        'Not a valid address.',CR,LF
+INVALID_ADDR_MSG        DC.B        'Not a valid address.',CR,LF,0
                         DC.B        'Please enter a valid address.',CR,LF,0
-INVALID_END_ADDR_MSG    DC.B        'Not a valid end address.',CR,LF
+INVALID_END_ADDR_MSG    DC.B        'Not a valid end address.',CR,LF,0
                         DC.B        'Please enter an end address after the start address.',CR,LF,0
                       
-INVALID_ADDR_L_MSG      DC.B        'Not a valid address (too low).',CR,LF
+INVALID_ADDR_L_MSG      DC.B        'Not a valid address (too low).',CR,LF,0
                         DC.B        'Please enter a valid address.',CR,LF,0
                         
 INVALID_ADDR_H_MSG      DC.B        'Not a valid address (too high).',CR,LF
@@ -1984,15 +2217,36 @@ START_ADDR_IN           DS.B        20
 INPUTTING_START         SET         1 ;if 1, we are inputting start address. If 0, we are inputting end address.
 OPCODE_BUFFER           DS.L        1 ; can hold at most 4 characters
 SIZE_BUFFER             DS.W        1 ;cand hold at most 2 characters
-DISPLAY_BUFFER          DS.B        80  ; the max size of an instruction is 80chars
+DISPLAY_BUFFER      	DCB.B       81,0              ; 81 bytes == 80 chars (the '0' at the end counts)
+DISP_BUFF_INDEX			DCB.L 		1,0 	; This is the index for the display buffer. It points to the current index
 RESTART_PROMPT_MSG      DC.B        'Restart? (y/n)',0
 RESTART_ERROR_STR       DC.B        'That is not a valid response.',CR,LF,0
 NEWLINE                 DC.B        CR,LF,0
+ENTER_TO_CONT_MSG	DC.B 		'Press Enter to continue',CR,LF,0
+LINE_COUNTER		DCB.B 		1,0 	; Counts number of lines printed to determine when prompt user to hit enter to continue
+ASCII_BANNER01            DC.B        '#######################################################',CR,LF,0
+ASCII_BANNER02            DC.B        '##                                                   ##',CR,LF,0
+ASCII_BANNER03            DC.B        '##     MMM     MMM       6666       888    KK   KK   ##',CR,LF,0
+ASCII_BANNER04            DC.B        '##    MM MM   MM MM     66   6    88   88  KK  KK    ##',CR,LF,0
+ASCII_BANNER05            DC.B        '##    MM  M   M   M     66         88 88   KK KK     ##',CR,LF,0
+ASCII_BANNER06            DC.B        '##   MM   M   M   MM    66666        8     KKK       ##',CR,LF,0
+ASCII_BANNER07            DC.B        '##   MM    M M    MM   66    66    88 88   KK KK     ##',CR,LF,0
+ASCII_BANNER08            DC.B        '##   MM     M     MM   66    66   88   88  KK  KK    ##',CR,LF,0
+ASCII_BANNER09            DC.B        '##   MM           MM     6666       888    KK   KK   ##',CR,LF,0
+ASCII_BANNER10            DC.B        '##                                                   ##',CR,LF,0
+ASCII_BANNER11            DC.B        '##                   Disassembler                    ##',CR,LF,0
+ASCII_BANNER12            DC.B        '##                                                   ##',CR,LF,0
+ASCII_BANNER13            DC.B        '#######################################################',CR,LF,0
+ASCII_BANNER14            DC.B        '**        By: Robert Brandenburg, Danielle Jenkins,  **',CR,LF,0
+ASCII_BANNER15            DC.B        '**                &  Shahin Nahar                    **',CR,LF,0
+ASCII_BANNER16            DC.B        '*******************************************************',CR,LF,0
+ASCII_BANNER17            DC.B        CR,LF,0
 
 *EA/OPcode parsed instruction variables/constants
 
 CURRENT_WORD            DS.W        1 ; current first 16 bits of an instruction.
 CURRENT_OP_SIZE         DS.B        1 ; current operation size. Byte = 01, Word = 11, Long = 10
+CURRENT_OP_SIZE_SMALL   DS.B        1 ; current operation size with onlt one bit.  Word = 0, Long = 1
 
     *Direction-oriented variables
         *left
@@ -2010,6 +2264,10 @@ CURRENT_EA_MD           DS.B        1 ; current EA mode we are concerned with.
 CURRENT_EA_REG          DS.B        1 ; current EA register we are concerned with.
 
 CURRENT_DIRECTION       DS.B        1 ; current direction of an operation.
+
+CURRENT_ROTATION_MODE   DS.B        1 ; current rotation mode of an operation (ASd, LSd, ROXd,ROd)   //Shahin
+
+CURRENT_SMALL_MODE      DS.B        1 ; current small mode of an operation  ( SBCD, SUBX, ABCD, EXG, ADDX)  //Shahin
 
 CURRENT_MD              DS.B        1 ; current mode we are concerened with (ex: 000 for data register mode.)
 CURRENT_REG             DS.B        1 ; current register number we are concerned with(address, data, etc) that we are looking at. Ex: D0,A5,etc
@@ -2067,11 +2325,33 @@ FILT_SRC_REG            EQU         $00000007   ;source register:               
     * OP size filters
 FILT_OP_SIZE            EQU         $000000C0   ; operation size:                       0000 0000 XX00 0000   // Shahin 
 
+    * direction filter
+FILT_DIRECTION          EQU         $00000100   ; direction of an operation             0000 000X 0000 0000  // shahin
+
+   * small Mode filter for SBCD, SUBX, ABCD, EXG, ADDX
+FILT_SMALL_MODE         EQU         $00000004   ; small mode:                           0000 0000 0000 X000  // shahin
+    
+    *small size filter for SUBA, CMPA, ADDA
+FILT_SMALL_SIZE         EQU         $00000100   ; small size:                           0000 000X 0000 0000  //shahin
+
+    * rotation mode filter
+FILT_ROTATION_MODE      EQU         $00000020   ; rotation mode of an operation         0000 0000 00X0 0000  //shahin
+
+    
+
     * move filters
 FILT_MOVE_SIZE          EQU         $00003000   ;Size of a move operation:              00XX 0000 0000 0000
 FILT_MOVEM              EQU         $0000FB80   ; check for a MOVEM instruction:        XXXX X0XX X000 0000
 FILT_MOVEM_SIZE         EQU         $00000040   ; Size of a MOVEM operation             0000 0000 0X00 0000
-FILT_MOVEM_DIR          EQU         $00000400   ; direction of a MOVEM operation:       0000 0X00 0000 0000
+FILT_MOVEM_DIR          EQU         $00000400   ; direction of a MOVEM operation:       0000 0X00 0000 0000  // shahin
+FILT_MOVEP_DIR          EQU         $00000080   ; direction of a MOVEP operation:       0000 0000 X000 0000  // shahin
+FILT_MOVEP_SIZE         EQU         $00000040   ; Size of a MOVEM operation             0000 0000 0X00 0000  // shahin
+FILT_MOVE_USP_DIR       EQU         $00000008   ; direction of a MOVEP operation:       0000 0000 000X 0000  // shahin
+
+
+
+
+
 
     * filters for BRA, BSR, BCC, and MOVEQ (the same filter, but named differently for clarity.)
 FILT_DISPLACEMENT       EQU         $00FF       ;Displacment of branch instruction:     0000 0000 XXXX XXXX
@@ -2083,6 +2363,7 @@ FILT_ADDA               EQU         $00C0       ; filter what is normally the si
 
     * EXT filter
 FILT_EXT                EQU         $FFB8       ; check for an EXT instruction:         XXXX XXXX X0XX X000
+FILT_EXT_SIZE           EQU         $00000040   ; Size of a MOVEM operation             0000 0000 0X00 0000 //Shahin
 
 * constants for comparing with filtered instructions. X means 'don't care' (and will be set to 0 by previous filter)
 *(These do not represent the complete insturctions.)
@@ -2184,6 +2465,7 @@ STOP_CODE               EQU         $4E72   ; STOP                              
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+
 
 *~Font name~Courier New~
 *~Font size~10~
