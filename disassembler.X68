@@ -397,7 +397,7 @@ CONFIRMED_NEXT_OP       CLR         CURRENT_WORD
 ;TODO
 
 *------------------- Check if end of data -------------------
-CHECK_DONE_READING      CMPA        A6,A5       ; TODO: this comparison is not sufficient, because it will say that $8000 is less than $7000 (since $8000 is negative.)
+CHECK_DONE_READING      CMPA.L      A6,A5       ; if our current address is less than our ending address, we are not done reading.
                         BLT         CONFIRMED_NEXT_OP
                         BRA         CONFIRM_DONE
                 
@@ -4466,6 +4466,7 @@ STOP_CODE               EQU         $4E72   ; STOP                              
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+
 *~Font name~Courier New~
 *~Font size~10~
 *~Tab type~1~
