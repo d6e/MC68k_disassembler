@@ -38,8 +38,6 @@
 * Continue decoding OPcodes in the following order: (with sizes)
 *   NOTE: I will delete OPcodes from this list as I implement them.
 
-*   -BCHG   (?)
-
 *   -CMP    (B,W,L)
 *   -CMPA   (W,L)
 *   -CMPI   (B,W,L)
@@ -2349,20 +2347,108 @@ DISPLAY_DIVS_START      LEA         DIVS_W_MSG,A1       ; 'DIVS.W'
                         TRAP        #15
                         
                         RTS
+
 *-----------------------CMP-related Subroutines------------------------------------
-CMP_FOUND               JMP         STOP    ; TODO: CMP
+* NOTE: CMP is of the form CMP <ea>, Dn
+CMP_FOUND               BSR         DISPLAY_CURRENT_ADDRESS  
+
+                        BSR         READ_OP_SIZE
+
+                        BSR         READ_SOURCE_REG                      ; read the ea
+                        BSR         READ_SOURCE_MODE
+
+                        BSR         READ_DEST_REG                        ; read the Dn
+                        MOVE.B      #CONST_DATA_REG_MD,CURRENT_DEST_MD
+
+                        ; TODO: error checking goes here
+
+                        BSR         READ_SOURCE_DATA                     ; read additional ea data if necessary
+
+                        BSR         DISPLAY_CMP_START
+                        
+                        LEA         SPACE,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_SOURCE                        ; display the EA
+                        
+                        LEA         COMMA,A1            ; ','
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_DEST                          ; display the data register
+                      
+                        LEA         RETURN,A1          ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         GO_TO_NEXT_OP
+
+DISPLAY_CMP_START       LEA         CMP_MSG,A1         ; 'CMP'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+
+                        BSR         DISPLAY_CURRENT_SIZE
+                        RTS
 
 *-----------------------CMPA-related Subroutines------------------------------------
-CMPA_FOUND              JMP         STOP    ; TODO: CMPA
+CMPA_FOUND              BSR         DISPLAY_CURRENT_ADDRESS  
+
+                        BSR         READ_OP_SIZE_SMALL
+                        BSR         ADJUST_CMPA_OP_SIZE
+
+                        BSR         READ_SOURCE_REG                      ; read the ea
+                        BSR         READ_SOURCE_MODE
+
+                        BSR         READ_DEST_REG                        ; read the An
+                        MOVE.B      #CONST_ADDR_REG_MD,CURRENT_DEST_MD
+
+                        ; TODO: error checking goes here
+
+                        BSR         READ_SOURCE_DATA                     ; read additional ea data if necessary
+
+                        BSR         DISPLAY_CMPA_START
+                        
+                        LEA         SPACE,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_SOURCE                        ; display the EA
+                        
+                        LEA         COMMA,A1            ; ','
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_DEST                          ; display the address register
+                      
+                        LEA         RETURN,A1          ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         GO_TO_NEXT_OP
+
+ADJUST_CMPA_OP_SIZE     CMP.B       #0,CURRENT_OP_SIZE
+                        BEQ         SET_CMPA_W_SIZE
+                        BRA         SET_CMPA_L_SIZE
+
+SET_CMPA_W_SIZE         MOVE.B      #WORD_SIZE,CURRENT_OP_SIZE
+                        RTS
+
+SET_CMPA_L_SIZE         MOVE.B      #LONG_SIZE,CURRENT_OP_SIZE
+                        RTS                                                
+
+DISPLAY_CMPA_START      LEA         CMPA_MSG,A1         ; 'CMPA'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+
+                        BSR         DISPLAY_CURRENT_SIZE
+                        RTS
 
 *-----------------------CMPM-related Subroutines------------------------------------
 CMPM_FOUND              JMP         STOP    ; TODO: CMPM
 
 *-----------------------AND-related Subroutines------------------------------------
-AND_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
-                        ;CLR         D4
-                        ;MOVE.W      CURRENT_WORD,D4
-                        
+AND_FOUND               BSR         DISPLAY_CURRENT_ADDRESS                        
                             ; NOTE: Source and destination change based on direction, but we use unidirectional source/destination methods here.
                             ;       This is okay because we will set the left/right temp variables to whichever values are appropriate based on CURRENT_DIRECTION.
                         
@@ -3881,6 +3967,10 @@ MULS_W_MSG              DC.B        'MULS.W',0
 DIVU_W_MSG              DC.B        'DIVU.W',0
 DIVS_W_MSG              DC.B        'DIVS.W',0
 
+    ;CMPs
+CMP_MSG                 DC.B        'CMP',0
+CMPA_MSG                DC.B        'CMPA',0
+
     ;ANDs
 AND_B_MSG               DC.B        'AND.B',0
 AND_W_MSG               DC.B        'AND.W',0
@@ -4240,3 +4330,7 @@ STOP_CODE               EQU         $4E72   ; STOP                              
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+*~Font name~Courier New~
+*~Font size~10~
+*~Tab type~1~
+*~Tab size~4~
