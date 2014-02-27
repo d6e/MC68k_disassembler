@@ -38,11 +38,6 @@
 * Continue decoding OPcodes in the following order: (with sizes)
 *   NOTE: I will delete OPcodes from this list as I implement them.
 
-*   -ASR    (B,W,L) (no ASL?)
-*   -LSL    (B,W,L) (no LSR?)
-*   -ROL    (B,W,L)
-*   -ROR    (B,W,L)
-
 *   -BCHG   (?)
 
 *   -CMP    (B,W,L)
@@ -645,11 +640,6 @@ CHECK_NON_CONSTANTS     BSR         CHECK_MOVE        ; MOVE is a special case b
 
                         ; TODO: go into the subroutines below and *fully* implement the followings:
 
-*   -ASR    (B,W,L) (no ASL?)
-*   -LSL    (B,W,L) (no LSR?)
-*   -ROL    (B,W,L)
-*   -ROR    (B,W,L)
-
 *   -BCHG   (?)
 
 *   -CMP    (B,W,L)
@@ -743,10 +733,22 @@ CONFIRM_NIB1_0000        CLR         D3
                          LSR.W       #8,D3           ; turn word into 0000 0000 0000 000X
                          CMP         #CONST_ALL_0,D3 ; see if the word is still 0.
                          BEQ         CONFIRM_0000_XXX0
-                         ; if we get to here, then the word must be BCHG, BTST, BCLR, BSET, or MOVEP.
-                         ; BCHG is required
-                         ; if our disassembler doesn't consider any of those valid, there should be an error message here.
-                         RTS 
+
+                         BSR         READ_OP_SIZE            ; read current OP size to check for the remaining possibilites
+                         
+                         CMP.B       #%0000,CURRENT_OP_SIZE  ; BTST
+                         BEQ         BTST_DYNAMIC_FOUND
+
+                         CMP.B       #%0001,CURRENT_OP_SIZE  ; BCHG
+                         BEQ         BCHG_DYNAMIC_FOUND
+
+                         CMP.B       #%0010,CURRENT_OP_SIZE  ; BCLR
+                         BEQ         BCLR_DYNAMIC_FOUND
+
+                         CMP.B       #%0011,CURRENT_OP_SIZE  ; BSET
+                         BEQ         BSET_DYNAMIC_FOUND
+                        
+                         BRA         MOVEP_FOUND
                         
 ; at this point, the word is of the form 0000 XXX0...
 CONFIRM_0000_XXX0        CLR         D3
@@ -772,12 +774,24 @@ CONFIRM_0000_XXX0        CLR         D3
                         
                          CMP         #CONST_CMPI_DEST_REG,D3 ; CMPI
                          BEQ         CMPI_FOUND
+
+                         BSR         READ_OP_SIZE            ; read current OP size to check for the remaining possibilites
+                         
+                         CMP.B       #%0000,CURRENT_OP_SIZE  ; BTST
+                         BEQ         BTST_STATIC_FOUND
+
+                         CMP.B       #%0001,CURRENT_OP_SIZE  ; BCHG
+                         BEQ         BCHG_STATIC_FOUND
+
+                         CMP.B       #%0010,CURRENT_OP_SIZE  ; BCLR
+                         BEQ         BCLR_STATIC_FOUND
+
+                         CMP.B       #%0011,CURRENT_OP_SIZE  ; BSET
+                         BEQ         BSET_STATIC_FOUND
                         
-                         ;TODO: remaining: BTST, BCHG, BCLR, or BSET. 
-                         ;      if none of them, an error case should occur here.
-                         ;      (note that BCHG is required, though we don't know which version.)
+                         ;TODO: Error case?
                         
-                         RTS     ;change RTS to whatever branch instruction is appropriate here.
+                         RTS    
                         
 *------------------------Cases where the current word starts with 0100-----------------
 
@@ -1537,6 +1551,9 @@ DISP_MM_END_D           LEA         MINUS,A1          ; '-'
                         BRA         MOVEM_LIST_DISPLAY_DONE
                         
 MOVEM_LIST_DISPLAY_DONE RTS                 ; could just use RTS instead of branching here, but we have this SR for clarity.
+
+*-----------------------MOVEP-related Subroutines------------------------------------
+MOVEP_FOUND             JMP         STOP ;TODO: case for MOVEP found
   
 *-----------------------ORI-related Subroutines------------------------------------
 ORI_FOUND               JMP         STOP ;TODO: case for ORI found
@@ -2891,6 +2908,321 @@ READ_REG_SHIFT_DN       BSR         READ_SOURCE_REG                  ; determine
                         MOVE.B      #CONST_DATA_REG_MD,CURRENT_R_MD  ; our right operand is a data register.
                         RTS
 
+*-----------------------Static B-operation Subroutines------------------------------------
+
+*-----------------------static BTST-related Subroutines------------------------------------
+
+BTST_STATIC_FOUND       BSR         DISPLAY_CURRENT_ADDRESS                 ; static means we are reading additional immediate data.
+
+                        MOVE.B      #BYTE_SIZE,CURRENT_OP_SIZE              ; it doesn't seem possible to set the byte size via the hexa data, so byte is default.
+                        MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_DEST_REG   ; we use CURRENT DEST for our left operand. (it is actually our source.)
+                        MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_DEST_MD
+
+                        BSR         READ_SOURCE_REG                         ; read our EA (destination)
+                        BSR         READ_SOURCE_MODE 
+
+                        ;TODO: error checking goes here
+
+                        BSR         READ_DEST_DATA                          ; read the additional immediate data.
+                        BSR         READ_SOURCE_DATA                        ; read additional data for the EA if necessary.
+
+                        BSR         DISPLAY_BTST_START
+
+                        LEA         SPACE,A1       ; ' '
+                        MOVE.B      #14,D0
+                        TRAP        #15
+
+                        BSR         DISPLAY_DEST                       ; display the immediate data
+                        
+                        LEA         COMMA,A1            ; ','
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_SOURCE                     ; display the EA
+                      
+                        LEA         RETURN,A1          ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         GO_TO_NEXT_OP
+
+DISPLAY_BTST_START      LEA         BTST_MSG,A1       ; 'BTST'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        RTS
+
+*-----------------------static BCHG-related Subroutines------------------------------------
+
+BCHG_STATIC_FOUND       BSR         DISPLAY_CURRENT_ADDRESS                 ; static means we are reading additional immediate data.
+
+                        MOVE.B      #BYTE_SIZE,CURRENT_OP_SIZE              ; it doesn't seem possible to set the byte size via the hexa data, so byte is default.
+                        MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_DEST_REG   ; we use CURRENT DEST for our left operand. (it is actually our source.)
+                        MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_DEST_MD
+
+                        BSR         READ_SOURCE_REG                         ; read our EA (destination)
+                        BSR         READ_SOURCE_MODE 
+
+                        ;TODO: error checking goes here
+
+                        BSR         READ_DEST_DATA                          ; read the additional immediate data.
+                        BSR         READ_SOURCE_DATA                        ; read additional data for the EA if necessary.
+
+                        BSR         DISPLAY_BCHG_START
+
+                        LEA         SPACE,A1       ; ' '
+                        MOVE.B      #14,D0
+                        TRAP        #15
+
+                        BSR         DISPLAY_DEST                       ; display the immediate data
+                        
+                        LEA         COMMA,A1            ; ','
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_SOURCE                     ; display the EA
+                      
+                        LEA         RETURN,A1          ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         GO_TO_NEXT_OP
+
+DISPLAY_BCHG_START      LEA         BCHG_MSG,A1       ; 'BCHG'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        RTS
+
+*-----------------------static BCLR-related Subroutines------------------------------------
+
+BCLR_STATIC_FOUND       BSR         DISPLAY_CURRENT_ADDRESS                 ; static means we are reading additional immediate data.
+
+                        MOVE.B      #BYTE_SIZE,CURRENT_OP_SIZE              ; it doesn't seem possible to set the byte size via the hexa data, so byte is default.
+                        MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_DEST_REG   ; we use CURRENT DEST for our left operand. (it is actually our source.)
+                        MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_DEST_MD
+
+                        BSR         READ_SOURCE_REG                         ; read our EA (destination)
+                        BSR         READ_SOURCE_MODE 
+
+                        ;TODO: error checking goes here
+
+                        BSR         READ_DEST_DATA                          ; read the additional immediate data.
+                        BSR         READ_SOURCE_DATA                        ; read additional data for the EA if necessary.
+
+                        BSR         DISPLAY_BCLR_START
+
+                        LEA         SPACE,A1       ; ' '
+                        MOVE.B      #14,D0
+                        TRAP        #15
+
+                        BSR         DISPLAY_DEST                       ; display the immediate data
+                        
+                        LEA         COMMA,A1            ; ','
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_SOURCE                     ; display the EA
+                      
+                        LEA         RETURN,A1          ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         GO_TO_NEXT_OP
+
+DISPLAY_BCLR_START      LEA         BCLR_MSG,A1       ; 'BCLR'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        RTS
+
+*-----------------------static BSET-related Subroutines------------------------------------
+
+BSET_STATIC_FOUND       BSR         DISPLAY_CURRENT_ADDRESS                 ; static means we are reading additional immediate data.
+
+                        MOVE.B      #BYTE_SIZE,CURRENT_OP_SIZE              ; it doesn't seem possible to set the byte size via the hexa data, so byte is default.
+                        MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_DEST_REG   ; we use CURRENT DEST for our left operand. (it is actually our source.)
+                        MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_DEST_MD
+
+                        BSR         READ_SOURCE_REG                         ; read our EA (destination)
+                        BSR         READ_SOURCE_MODE 
+
+                        ;TODO: error checking goes here
+
+                        BSR         READ_DEST_DATA                          ; read the additional immediate data.
+                        BSR         READ_SOURCE_DATA                        ; read additional data for the EA if necessary.
+
+                        BSR         DISPLAY_BSET_START
+
+                        LEA         SPACE,A1       ; ' '
+                        MOVE.B      #14,D0
+                        TRAP        #15
+
+                        BSR         DISPLAY_DEST                       ; display the immediate data
+                        
+                        LEA         COMMA,A1            ; ','
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_SOURCE                     ; display the EA
+                      
+                        LEA         RETURN,A1          ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         GO_TO_NEXT_OP
+
+DISPLAY_BSET_START      LEA         BSET_MSG,A1       ; 'BSET'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        RTS
+
+*-----------------------Dynamic B-operation Subroutines------------------------------------
+* NOTE: these call the display methods found in the static B-operation section.
+*-----------------------Dynamic BTST-related Subroutines------------------------------------
+
+BTST_DYNAMIC_FOUND      BSR         DISPLAY_CURRENT_ADDRESS                 ; static means we are reading additional immediate data.
+
+                        MOVE.B      #BYTE_SIZE,CURRENT_OP_SIZE              ; it doesn't seem possible to set the byte size via the hexa data, so byte is default.
+
+                        BSR         READ_DEST_REG                           ; read the Dn that is actually our source.
+                        MOVE.B      #CONST_DATA_REG_MD,CURRENT_DEST_MD      ; set our source mode to Dn mode.
+
+                        BSR         READ_SOURCE_REG                         ; read our EA (destination)
+                        BSR         READ_SOURCE_MODE 
+
+                        ;TODO: error checking goes here
+
+                        BSR         READ_SOURCE_DATA                        ; read additional data for the EA if necessary.
+
+                        BSR         DISPLAY_BTST_START
+
+                        LEA         SPACE,A1            ; ' '
+                        MOVE.B      #14,D0
+                        TRAP        #15
+
+                        BSR         DISPLAY_DEST        ; display the data register
+                        
+                        LEA         COMMA,A1            ; ','
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_SOURCE      ; display the EA
+                      
+                        LEA         RETURN,A1           ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         GO_TO_NEXT_OP
+
+*-----------------------Dynamic BCHG-related Subroutines------------------------------------
+
+BCHG_DYNAMIC_FOUND      BSR         DISPLAY_CURRENT_ADDRESS                 ; static means we are reading additional immediate data.
+
+                        MOVE.B      #BYTE_SIZE,CURRENT_OP_SIZE              ; it doesn't seem possible to set the byte size via the hexa data, so byte is default.
+
+                        BSR         READ_DEST_REG                           ; read the Dn that is actually our source.
+                        MOVE.B      #CONST_DATA_REG_MD,CURRENT_DEST_MD      ; set our source mode to Dn mode.
+
+                        BSR         READ_SOURCE_REG                         ; read our EA (destination)
+                        BSR         READ_SOURCE_MODE 
+
+                        ;TODO: error checking goes here
+
+                        BSR         READ_SOURCE_DATA                        ; read additional data for the EA if necessary.
+
+                        BSR         DISPLAY_BCHG_START
+
+                        LEA         SPACE,A1            ; ' '
+                        MOVE.B      #14,D0
+                        TRAP        #15
+
+                        BSR         DISPLAY_DEST        ; display the data register
+                        
+                        LEA         COMMA,A1            ; ','
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_SOURCE      ; display the EA
+                      
+                        LEA         RETURN,A1           ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         GO_TO_NEXT_OP
+
+*-----------------------Dynamic BCLR-related Subroutines------------------------------------
+
+BCLR_DYNAMIC_FOUND      BSR         DISPLAY_CURRENT_ADDRESS                 ; static means we are reading additional immediate data.
+
+                        MOVE.B      #BYTE_SIZE,CURRENT_OP_SIZE              ; it doesn't seem possible to set the byte size via the hexa data, so byte is default.
+
+                        BSR         READ_DEST_REG                           ; read the Dn that is actually our source.
+                        MOVE.B      #CONST_DATA_REG_MD,CURRENT_DEST_MD      ; set our source mode to Dn mode.
+
+                        BSR         READ_SOURCE_REG                         ; read our EA (destination)
+                        BSR         READ_SOURCE_MODE 
+
+                        ;TODO: error checking goes here
+
+                        BSR         READ_SOURCE_DATA                        ; read additional data for the EA if necessary.
+
+                        BSR         DISPLAY_BCLR_START
+
+                        LEA         SPACE,A1            ; ' '
+                        MOVE.B      #14,D0
+                        TRAP        #15
+
+                        BSR         DISPLAY_DEST        ; display the data register
+                        
+                        LEA         COMMA,A1            ; ','
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_SOURCE      ; display the EA
+                      
+                        LEA         RETURN,A1           ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         GO_TO_NEXT_OP
+
+*-----------------------Dynamic BSET-related Subroutines------------------------------------
+
+BSET_DYNAMIC_FOUND      BSR         DISPLAY_CURRENT_ADDRESS                 ; static means we are reading additional immediate data.
+
+                        MOVE.B      #BYTE_SIZE,CURRENT_OP_SIZE              ; it doesn't seem possible to set the byte size via the hexa data, so byte is default.
+
+                        BSR         READ_DEST_REG                           ; read the Dn that is actually our source.
+                        MOVE.B      #CONST_DATA_REG_MD,CURRENT_DEST_MD      ; set our source mode to Dn mode.
+
+                        BSR         READ_SOURCE_REG                         ; read our EA (destination)
+                        BSR         READ_SOURCE_MODE 
+
+                        ;TODO: error checking goes here
+
+                        BSR         READ_SOURCE_DATA                        ; read additional data for the EA if necessary.
+
+                        BSR         DISPLAY_BSET_START
+
+                        LEA         SPACE,A1            ; ' '
+                        MOVE.B      #14,D0
+                        TRAP        #15
+
+                        BSR         DISPLAY_DEST        ; display the data register
+                        
+                        LEA         COMMA,A1            ; ','
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_SOURCE      ; display the EA
+                      
+                        LEA         RETURN,A1           ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         GO_TO_NEXT_OP
 
 *-----------------------LEA-related Subroutines------------------------------------
 LEA_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
@@ -3582,6 +3914,12 @@ ROXL_MSG                DC.B        'ROXL',0
     ;ROds
 ROR_MSG                 DC.B        'ROR',0
 ROL_MSG                 DC.B        'ROL',0
+
+    ;B-operations
+BTST_MSG                DC.B        'BTST',0
+BCHG_MSG                DC.B        'BCHG',0
+BCLR_MSG                DC.B        'BCLR',0
+BSET_MSG                DC.B        'BSET',0
 
     ;LEA
 LEA_L_MSG               DC.B        'LEA.L',0
