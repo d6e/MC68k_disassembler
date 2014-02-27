@@ -1707,8 +1707,6 @@ EORI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         MOVE.W      CURRENT_WORD,D4
                        
                         BSR         READ_OP_SIZE                          ; set CURRENT_OP_SIZE to the size of the EORI.
-                        
-                        ;TODO: change stuff below here
 
                         BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the number of the EORI's register. 
                         BSR         READ_SOURCE_MODE                      ; set CURRENT_SRC_MD to the number of the EORI's mode. 
@@ -1775,7 +1773,57 @@ DISPLAY_EORI_L_START    LEA         EORI_L_MSG,A1            ; 'EORI.L'
                         RTS
 
 *-----------------------CMPI-related Subroutines------------------------------------
-CMPI_FOUND              JMP         STOP ;TODO: case for CMPI found
+CMPI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
+                        CLR         D4
+                        MOVE.W      CURRENT_WORD,D4
+                       
+                        BSR         READ_OP_SIZE                          ; set CURRENT_OP_SIZE to the size of the EORI.
+
+                        BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the number of the CMPI's register. 
+                        BSR         READ_SOURCE_MODE                      ; set CURRENT_SRC_MD to the number of the CMPI's mode. 
+                        
+                        MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_DEST_MD    ; set source mode/register to immediate.
+                        MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_DEST_REG
+                        
+                        ; TODO: Error checking goes here. 
+                        
+                        BSR         READ_DEST_DATA                        ; set CURRENT_DEST_DATA to the immediate data.
+                        BSR         READ_SOURCE_DATA                      ; read additional data for destination if necessary.
+                        
+                        MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_L_MD      ; set left mode/register to immediate.
+                        MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_L_REG
+                        MOVE.L      CURRENT_DEST_DATA,CURRENT_L_DATA      ; put the immediate data in our left data.
+                        
+                        MOVE.B      CURRENT_SRC_REG,CURRENT_R_REG
+                        MOVE.B      CURRENT_SRC_MD,CURRENT_R_MD
+                        MOVE.L      CURRENT_SRC_DATA,CURRENT_R_DATA     
+           
+                        BSR         DISPLAY_CMPI_START
+                        
+                        LEA         SPACE,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_LEFT
+
+                        LEA         COMMA,A1            ; ','
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_RIGHT
+                      
+                        LEA         RETURN,A1          ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+
+                        BRA         GO_TO_NEXT_OP
+
+DISPLAY_CMPI_START      LEA         CMPI_MSG,A1         ; 'CMPI'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+
+                        BSR         DISPLAY_CURRENT_SIZE
+                        RTS
 
 *-----------------------NEGX-related Subroutines------------------------------------
 NEGX_FOUND              JMP         STOP ;TODO: case for NEGX found 
@@ -3970,6 +4018,7 @@ DIVS_W_MSG              DC.B        'DIVS.W',0
     ;CMPs
 CMP_MSG                 DC.B        'CMP',0
 CMPA_MSG                DC.B        'CMPA',0
+CMPI_MSG                DC.B        'CMPI',0
 
     ;ANDs
 AND_B_MSG               DC.B        'AND.B',0
