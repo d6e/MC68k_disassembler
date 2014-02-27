@@ -81,6 +81,7 @@
 *################ BEGIN MAIN ###############################
 *** All subroutine calls are made here ***
 START                   ORG        $1000       ; first instruction of program
+                        BSR        PRINT_ASCII_BANNER  ; Prints the ascii banner/logo
                         CLR.B      LINE_COUNTER
                         BRA        PROMPT_INPUT            ; prompt the user for input
                  
@@ -497,6 +498,63 @@ DONE_READING            LEA         DONE_READING_MSG,A1 ; when we reach the end 
                         MOVE.B      #14,D0
                         TRAP        #15
                         JMP         STOP
+
+*------------------- Print ASCII Banner -------------------                       
+*** Prints each line of the ascii image at a time
+PRINT_ASCII_BANNER      LEA         ASCII_BANNER01,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER02,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER03,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER04,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15                                                
+                        LEA         ASCII_BANNER05,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER06,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER07,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER08,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER09,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER10,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER11,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER12,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER13,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER14,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER15,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER16,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        LEA         ASCII_BANNER17,A1  ;load ascii banner
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        RTS                 ;return
+
                         
 *################## END IO  #####################################
 *################## BEGIN OPCODE ##########################
@@ -2029,9 +2087,25 @@ DISP_BUFF_INDEX			DCB.L 		1,0 	; This is the index for the display buffer. It po
 RESTART_PROMPT_MSG      DC.B        'Restart? (y/n)',0
 RESTART_ERROR_STR       DC.B        'That is not a valid response.',CR,LF,0
 NEWLINE                 DC.B        CR,LF,0
-ENTER_TO_CONT_MSG		DC.B 		'Press Enter to continue',CR,LF,0
-LINE_COUNTER			DCB.B 		1,0 	; Counts number of lines printed to determine when prompt user to hit enter to continue
-
+ENTER_TO_CONT_MSG	DC.B 		'Press Enter to continue',CR,LF,0
+LINE_COUNTER		DCB.B 		1,0 	; Counts number of lines printed to determine when prompt user to hit enter to continue
+ASCII_BANNER01            DC.B        '#######################################################',CR,LF,0
+ASCII_BANNER02            DC.B        '##                                                   ##',CR,LF,0
+ASCII_BANNER03            DC.B        '##     MMM     MMM       6666       888    KK   KK   ##',CR,LF,0
+ASCII_BANNER04            DC.B        '##    MM MM   MM MM     66   6    88   88  KK  KK    ##',CR,LF,0
+ASCII_BANNER05            DC.B        '##    MM  M   M   M     66         88 88   KK KK     ##',CR,LF,0
+ASCII_BANNER06            DC.B        '##   MM   M   M   MM    66666        8     KKK       ##',CR,LF,0
+ASCII_BANNER07            DC.B        '##   MM    M M    MM   66    66    88 88   KK KK     ##',CR,LF,0
+ASCII_BANNER08            DC.B        '##   MM     M     MM   66    66   88   88  KK  KK    ##',CR,LF,0
+ASCII_BANNER09            DC.B        '##   MM           MM     6666       888    KK   KK   ##',CR,LF,0
+ASCII_BANNER10            DC.B        '##                                                   ##',CR,LF,0
+ASCII_BANNER11            DC.B        '##                   Disassembler                    ##',CR,LF,0
+ASCII_BANNER12            DC.B        '##                                                   ##',CR,LF,0
+ASCII_BANNER13            DC.B        '#######################################################',CR,LF,0
+ASCII_BANNER14            DC.B        '**        By: Robert Brandenburg, Danielle Jenkins,  **',CR,LF,0
+ASCII_BANNER15            DC.B        '**                &  Shahin Nahar                    **',CR,LF,0
+ASCII_BANNER16            DC.B        '*******************************************************',CR,LF,0
+ASCII_BANNER17            DC.B        CR,LF,0
 
 *EA/OPcode parsed instruction variables/constants
 
