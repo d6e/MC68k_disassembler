@@ -38,10 +38,6 @@
 * Continue decoding OPcodes in the following order: (with sizes)
 *   NOTE: I will delete OPcodes from this list as I implement them.
 
-*   -CMP    (B,W,L)
-*   -CMPA   (W,L)
-*   -CMPI   (B,W,L)
-
 *   -JSR    (N/A)
 
 *   (add others if we have time)
@@ -638,12 +634,6 @@ CHECK_NON_CONSTANTS     BSR         CHECK_MOVE        ; MOVE is a special case b
 
                         ; TODO: go into the subroutines below and *fully* implement the followings:
 
-*   -BCHG   (?)
-
-*   -CMP    (B,W,L)
-*   -CMPA   (W,L)
-*   -CMPI   (B,W,L)
-
 *   -JSR    (N/A)
                          ;etc
                          JMP         STOP
@@ -865,8 +855,35 @@ CONFIRM_0100_1000        JMP         STOP
 CONFIRM_0100_1010        JMP         STOP  
 ; TODO: check for TAS or TST. (ILLEGAL is already ruled out.)         
        
-CONFIRM_0100_1110        JMP         STOP       
-; TODO: check for TRAP, LINK, UNLK, MOVE USP, JSR, or JMP. (some of these are required.)
+CONFIRM_0100_1110        CLR         D3              
+                         MOVE.W      CURRENT_WORD,D3
+                         ANDI.W      #FILT_NIB_3,D3     ; turn word into 0000 0000 XXXX 0000
+                         
+                         CMP.W       #CONST_TRAP,D3     ; check for TRAP instruction
+                         BEQ         TRAP_FOUND         ; branch if we find TRAP
+
+                         CMP.W       #CONST_MOVE_USP,D3 ; check for MOVE USP instruction
+                         BEQ         MOVE_USP_FOUND     ; branch if we find MOVE USP
+
+                         CLR         D3              
+                         MOVE.W      CURRENT_WORD,D3
+                         ANDI.W      #FILT_LINK,D3      ; turn word into 0000 0000 XXXX X000
+
+                         CMP.W       #CONST_LINK,D3     ; check for LINK instruction
+                         BEQ         LINK_FOUND         ; branch if we find LINK
+
+                         CMP.W       #CONST_UNLK,D3     ; check for UNLK instruction
+                         BEQ         UNLK_FOUND         ; branch if we find UNLK
+
+                         CLR         D3              
+                         MOVE.W      CURRENT_WORD,D3
+                         ANDI.W      #FILT_BIT_10,D3    ; turn word into 0000 0000 0X00 0000
+                         LSR.W       #6,D3              ; turn word into 0000 0000 0000 000X
+
+                         CMP.W       #1,D3              ; if the 10th bit is 1, we have JMP
+                         BEQ         JMP_FOUND
+
+                         BRA         JSR_FOUND          ; otherwise, we have JSR
 
 *-----------------------Cases where the current word starts with 0101-----------------
 CONFIRM_NIB1_0101        CLR         D3              
@@ -3401,6 +3418,57 @@ DISPLAY_LEA_START       LEA         LEA_L_MSG,A1       ; 'LEA.L'
                         
                         RTS
 
+*-----------------------LINK-related Subroutines------------------------------------
+
+LINK_FOUND              JMP         STOP ;TODO
+
+*-----------------------TRAP-related Subroutines------------------------------------
+
+TRAP_FOUND              JMP         STOP ;TODO
+
+*-----------------------MOVE_USP-related Subroutines------------------------------------
+
+MOVE_USP_FOUND          JMP         STOP ;TODO
+
+*-----------------------UNLK-related Subroutines------------------------------------
+
+UNLK_FOUND              JMP         STOP ;TODO
+
+*-----------------------JSR-related Subroutines------------------------------------
+
+JSR_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
+
+                        BSR         READ_SOURCE_REG     ; read the EA
+                        BSR         READ_SOURCE_MODE
+
+                        ;TODO: error checking here
+
+                        BSR         READ_SOURCE_DATA    ; read EA additional data if necessary
+
+                        BSR         DISPLAY_JSR_START
+
+                        LEA         SPACE,A1          ; ' '
+                        MOVE.B      #14,D0
+                        TRAP        #15
+
+                        BSR         DISPLAY_SOURCE
+
+                        LEA         RETURN,A1          ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         GO_TO_NEXT_OP
+
+DISPLAY_JSR_START       LEA         JSR_MSG,A1       ; 'JSR'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        RTS
+
+*-----------------------JMP-related Subroutines------------------------------------
+
+JMP_FOUND               JMP         STOP ;TODO
+
 *-----------------------CHK-related Subroutines------------------------------------
 CHK_FOUND               JMP         STOP    ; TODO: CHK
 
@@ -4060,6 +4128,9 @@ BCHG_MSG                DC.B        'BCHG',0
 BCLR_MSG                DC.B        'BCLR',0
 BSET_MSG                DC.B        'BSET',0
 
+    ;JSR
+JSR_MSG                 DC.B        'JSR',0
+
     ;LEA
 LEA_L_MSG               DC.B        'LEA.L',0
 
@@ -4156,6 +4227,7 @@ END_ADDR                SET         $00009000
 FILT_2BIT_1             EQU         $0000C000   ; first 2 bits:                         XX00 0000 0000 0000
 FILT_NIB_1              EQU         $0000F000   ; first nibble:                         XXXX 0000 0000 0000
 FILT_NIB_2              EQU         $00000F00   ; second nibble:                        0000 XXXX 0000 0000
+FILT_NIB_3              EQU         $000000F0   ; third nibble:                         0000 0000 XXXX 0000
 FILT_BIT_5              EQU         $00000800   ; 5th bit:                              0000 X000 0000 0000
 FILT_BIT_8              EQU         $00000100   ; 8th bit:                              0000 000X 0000 0000
 FILT_BIT_10             EQU         $00000040   ; 10th bit:                             0000 0000 0X00 0000
@@ -4206,6 +4278,9 @@ FILT_CMPM               EQU         $0138       ; check for a CMPM instruction: 
  
     * Register shift filter
 FILT_REG_SHIFT          EQU         $0018       ; determine which reg. shift:           0000 0000 000X X000
+
+    * LINK filter
+FILT_LINK               EQU         $00F8       ; check or a LINK instruction:          0000 0000 XXXX X000
 
     * EXT filter
 FILT_EXT                EQU         $FFB8       ; check for an EXT instruction:         XXXX XXXX X0XX X000
@@ -4351,6 +4426,18 @@ CONST_ROXD_REG          EQU         $0002    ; confirm register ROXd            
 
     * Register ROd
 CONST_ROD_REG           EQU         $0003    ; confirm register ROd                  XXXX XXXX XXXX XX11
+
+    * LINK
+CONST_LINK              EQU         $0050    ; confirm LINK                          XXXX XXXX 0101 0XXX
+
+    * UNLK
+CONST_UNLK              EQU         $0058    ; confirm UNLK                          XXXX XXXX 0101 1XXX
+
+    * TRAP
+CONST_TRAP              EQU         $0040    ; confirm TRAP                          XXXX XXXX 0100 XXXX
+
+    * MOVE USP
+CONST_MOVE_USP          EQU         $0060    ; confirm MOVE USP                      XXXX XXXX 0110 XXXX
 
 * Mode/register constants
 
