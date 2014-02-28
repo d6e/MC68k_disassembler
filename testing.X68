@@ -400,13 +400,30 @@ START       ORG    $7000                ; first instruction of program
             JSR (A1)
             JSR $10000000
             JSR $1000
-            RTS 
+            BRA $7000
+            BRA $7700
+            BRA $0000972C
+            BCC $7000
+            BCC $7700
+            BCC $0000972C
+            BGT $7000
+            BGT $7700
+            BGT $0000972C
+            BLE $7000
+            BLE $7700
+            BLE $0000972C
+            BVS $7000
+            BVS $7700
+            BVS $0000972C
+            ;RTS 
 
             STOP   #$7700          ; halt simulator
 
 * Put variables and constants here
 
             END    START        ; last line of source
+
+
 
 *~Font name~Courier New~
 *~Font size~10~
