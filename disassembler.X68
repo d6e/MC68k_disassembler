@@ -455,7 +455,7 @@ PROMPT_RESTART          LEA         RESTART_PROMPT_MSG,A1  ; Prompt user for res
                         TRAP        #15
         
                         MOVE.B      #2,D0          			 ; Take user input for next address.
-                        MOVEA.W     #$2200,A1       ; Store the ascii input in A1,(note that we might not want to use 2200 here)
+                        MOVEA.W     #$5100,A1       ; Store the ascii input in A1,(note that we might not want to use 5100 here)
                         TRAP        #15             		 ; and the length in D1.W.  
 
                         CMPI.B 		#$79,(A1) 							; if inputs 'y' 
@@ -5015,6 +5015,7 @@ STOP_CODE               EQU         $4E72   ; STOP                              
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+
 *~Font name~Courier New~
 *~Font size~10~
 *~Tab type~1~
