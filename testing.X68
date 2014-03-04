@@ -6,12 +6,12 @@
 *-----------------------------------------------------------
 
 START       ORG    $7000                ; first instruction of program
+            MOVE.W ($706A,PC,A2.L),D2
             NOP
+            MOVEA.W #$1000,A3
             MOVE.B #10,D0
-
-* TODO: use all required opcodes in all possible combinations here
             MOVEQ.L #2,D1
-            TST.B $8000
+            ;TST.B $8000
             MOVE.B D1, D1
             MOVE.B D1, $10000000
             MOVE.B D1, $1000
@@ -424,6 +424,8 @@ START       ORG    $7000                ; first instruction of program
 * Put variables and constants here
 
             END    START        ; last line of source
+
+
 
 
 

@@ -1203,32 +1203,14 @@ CHECK_MOVEM             CLR         D3
 *MOVE.B
 MOVE_B_FOUND            MOVE.B      #BYTE_SIZE,CURRENT_OP_SIZE
                         BSR         DISPLAY_CURRENT_ADDRESS
-                        BSR         PARSE_MOVE_DATA                           
-                       
-                        LEA         MOVE_B_MSG,A1      ; 'MOVE.B'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        
-                        LEA         SPACE,A1           ; ' '
-                        MOVE.B      #14,D0      
-                        TRAP        #15
-                        
+                        BSR         PARSE_MOVE_DATA                                           
                         BSR         DISPLAY_MOVE_DATA
                         BRA         GO_TO_NEXT_OP
 
 *MOVE.W                        
 MOVE_W_FOUND            MOVE.B      #WORD_SIZE,CURRENT_OP_SIZE
                         BSR         DISPLAY_CURRENT_ADDRESS
-                        BSR         PARSE_MOVE_DATA       
-                        
-                        LEA         MOVE_W_MSG,A1      ; 'MOVE.W'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        
-                        LEA         SPACE,A1           ; ' '
-                        MOVE.B      #14,D0      
-                        TRAP        #15
-                        
+                        BSR         PARSE_MOVE_DATA                                                       
                         BSR         DISPLAY_MOVE_DATA
                         BRA         GO_TO_NEXT_OP  
 
@@ -1236,15 +1218,6 @@ MOVE_W_FOUND            MOVE.B      #WORD_SIZE,CURRENT_OP_SIZE
 MOVE_L_FOUND            MOVE.B      #LONG_SIZE,CURRENT_OP_SIZE
                         BSR         DISPLAY_CURRENT_ADDRESS
                         BSR         PARSE_MOVE_DATA       
-                        
-                        LEA         MOVE_L_MSG,A1      ; 'MOVE.L'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        
-                        LEA         SPACE,A1           ; ' '
-                        MOVE.B      #14,D0      
-                        TRAP        #15
-                        
                         BSR         DISPLAY_MOVE_DATA
                         BRA         GO_TO_NEXT_OP 
                        
@@ -1277,7 +1250,14 @@ PARSE_MOVE_DATA         ; TODO: error checking
                         BSR         READ_DEST_DATA     ; EA will set CURRENT_DEST_DATA if necessary. 
                         RTS         
 
-DISPLAY_MOVE_DATA       BSR         DISPLAY_SOURCE     ; Tell EA to parse and display the source. EX: (A1)   D3    #10   $1000 etc
+DISPLAY_MOVE_DATA       BSR         DISPLAY_MOVE_OP_WORD
+                        BSR         DISPLAY_CURRENT_SIZE
+                        
+                        LEA         SPACE,A1           ; ' '
+                        MOVE.B      #14,D0      
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_SOURCE     ; Tell EA to parse and display the source. EX: (A1)   D3    #10   $1000 etc
                         
                         LEA         COMMA,A1           ; ','
                         MOVE.B      #14,D0      
@@ -1289,8 +1269,23 @@ DISPLAY_MOVE_DATA       BSR         DISPLAY_SOURCE     ; Tell EA to parse and di
                         MOVE.B      #14,D0
                         TRAP        #15
 
-                        RTS        
-                         
+                        RTS       
+ 
+DISPLAY_MOVE_OP_WORD    CMP.B       #CONST_ADDR_REG_MD,CURRENT_DEST_MD
+                        BEQ         DISPLAY_MOVEA
+                        
+                        LEA         MOVE_MSG,A1        ;'MOVE'
+                        MOVE.B      #14,D0      
+                        TRAP        #15  
+                        
+                        RTS
+                        
+DISPLAY_MOVEA           LEA         MOVEA_MSG,A1       ;'MOVEA'
+                        MOVE.B      #14,D0      
+                        TRAP        #15     
+
+                        RTS 
+                 
 *-----------------------MOVEQ-related Subroutines------------------------------------
 
 *-----------------------Case for finding MOVEQ------------------------------------
@@ -2197,7 +2192,7 @@ SUB_DISPLAY_DONE        LEA         RETURN,A1          ; (return)
 
 
 *-----------------------SUBX-related Subroutines------------------------------------
-SUBX_FOUND              JMP         START   ; TODO: SUBX
+SUBX_FOUND              BRA         INVALID_OPCODE_FOUND     ; TODO: SUBX
 *-----------------------SUBA-related Subroutines------------------------------------   
 SUBA_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         CLR         D4
@@ -4451,6 +4446,7 @@ STOP_MSG                DC.B        'STOP',0
 
     ;moves
 MOVE_MSG                DC.B        'MOVE',0
+MOVEA_MSG               DC.B        'MOVEA',0
 MOVE_B_MSG              DC.B        'MOVE.B',0
 MOVE_W_MSG              DC.B        'MOVE.W',0
 MOVE_L_MSG              DC.B        'MOVE.L',0
@@ -4671,7 +4667,7 @@ WORD_SIZE_MOVEM         EQU         $00 ; 0000 0000
 LONG_SIZE_MOVEM         EQU         $01 ; 0000 0001
 
 *address constants
-MIN_ADDRESS             EQU         $00006000
+MIN_ADDRESS             EQU         $00000900 ;TEMP
 MAX_ADDRESS             EQU         $0FFF0000
 
 *address variables
