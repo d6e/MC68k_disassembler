@@ -1,4 +1,4 @@
-F5*-----------------------------------------------------------
+*-----------------------------------------------------------
 * Title      : Disassembler
 * Written by : Robert Brandenburg, Danielle Jenkins, Shahin Nahar
 * Date       : 2/13/14
@@ -59,7 +59,7 @@ START                   ORG        $1000       ; first instruction of program
                         CLR.B      LINE_COUNTER
                         BRA        PROMPT_INPUT            ; prompt the user for input
                  
-STOP                    STOP       #$2700          ; halt simulator, end of main
+END_PROGRAM             STOP       #$2700          ; halt simulator, end of main
 
 *################ END MAIN ###############################
 *################ BEGIN IO ###############################
@@ -477,7 +477,7 @@ USER_RESTART_IN_ERR     LEA 		RESTART_ERROR_STR,A1 ; Print out error message
 DONE_READING            LEA         THANK_YOU_MSG,A1 ; thank the user for playing
                         MOVE.B      #14,D0
                         TRAP        #15
-                        JMP         STOP
+                        BRA         END_PROGRAM
                         
 *------------------- Print ASCII Banner -------------------                       
 *** Prints each line of the ascii image at a time
@@ -565,10 +565,6 @@ DISPLAY_CURRENT_ADDRESS LEA         DOLLAR,A1       ; '$'
 *------------------- Case if we find some invalid OPcode -------------------                       
 INVALID_OPCODE_FOUND    BSR         DISPLAY_CURRENT_ADDRESS
                         
-                        LEA         SPACE,A1
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        
                         LEA         DATA_MSG,A1
                         MOVE.B      #14,D0
                         TRAP        #15
@@ -585,6 +581,10 @@ INVALID_OPCODE_FOUND    BSR         DISPLAY_CURRENT_ADDRESS
                         MOVE.W      CURRENT_WORD,D1
                         MOVE.B      #16,D2
                         MOVE.B      #15,D0
+                        TRAP        #15
+                        
+                        LEA         RETURN,A1
+                        MOVE.B      #14,D0
                         TRAP        #15
                             
                         BRA         GO_TO_NEXT_OP
@@ -627,7 +627,6 @@ RESET_FOUND             BSR         DISPLAY_CURRENT_ADDRESS
                
                         BRA         GO_TO_NEXT_OP   
  
-; NOTE: this SR is temporary. Once we have the display buffer, it will work differently.                 
 NOP_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
 
                         LEA         NOP_MSG,A1    ; 'NOP'
@@ -687,15 +686,7 @@ CHECK_NON_CONSTANTS     BSR         CHECK_MOVE        ; MOVE is a special case b
                         BSR         CHECK_NIB1_1101
                         BSR         CHECK_NIB1_1110
                         
-                        ; TODO: If we get to here, there should be an error.
-                        
-                        ;NOTE: we do not check for most specific instructions here.
-
-                        ; TODO: go into the subroutines below and *fully* implement the followings:
-
-*   -JSR    (N/A)
-                        ;etc
-                        JMP         STOP
+                        BRA         INVALID_OPCODE_FOUND
                         ;TODO: check for other instructions instead of stopping if it's not one of these.
   
 *------------------------First 4bit checks go here-----------------------------------
@@ -1136,9 +1127,7 @@ CONFIRM_MEMORY_SHIFT     CLR         D3
                          CMP         #%011,D3          ; check for ROd
                          BEQ         ROD_MEM_FOUND
 
-                         ;TODO: Error case goes here
-
-                         JMP         STOP
+                         BRA         INVALID_OPCODE_FOUND
 
 CONFIRM_REGISTER_SHIFT   CLR         D3
                          MOVE.W      CURRENT_WORD,D3
@@ -1157,9 +1146,7 @@ CONFIRM_REGISTER_SHIFT   CLR         D3
                          CMP         #CONST_ROD_REG,D3   ; check for ROd
                          BEQ         ROD_REG_FOUND
 
-                         ;TODO: Error case goes here
-
-                         JMP         STOP
+                         BRA         INVALID_OPCODE_FOUND
  
 *-----------------------Special OPcode (but not constants) have checks here------------
 * includes MOVE, MOVEQ, etc
@@ -1354,16 +1341,10 @@ READ_MOVEQ_DATA         CLR         D4
                         ANDI.W      #FILT_MOVEQ_DATA,D4        ; turn D4 into 0000 0000 XXXX XXXX (no shift necessary)
                         MOVE.W      D4,CURRENT_SRC_DATA
                         RTS
-                    
-  ; TODO: 
-
-  ; see comment block at the top of the program for the full list of codes.
-  ; see huge comment block at the top of OPcode section for tentative OPcode parsing implementation plan.
  
 *-----------------------EXT-related Subroutines------------------------------------
-EXT_FOUND               JMP         STOP ;TODO: case for EXT found
+EXT_FOUND               BRA         INVALID_OPCODE_FOUND ;TODO: case for EXT found
 
-;TODO: first thing: read the correct size for MOVEM
 *-----------------------MOVEM-related Subroutines------------------------------------
 MOVEM_FOUND             BSR         DISPLAY_CURRENT_ADDRESS
                         CLR         D4
@@ -1408,13 +1389,6 @@ PARSE_MOVEM_DATA        BSR         READ_SOURCE_REG                 ; EA will se
                         MOVE.B      CURRENT_SRC_REG,CURRENT_EA_REG  ; our current EA reg comes from  0000 0000 0000 0XXX.
                         MOVE.B      CURRENT_SRC_MD,CURRENT_EA_MD    ; our current EA mode comes from 0000 0000 00XX X000.
                         
-                        ; TODO: add any other parsing methods that should be true for both directions (and precede error checking) here.
-                        ; TODO: error cases to add here:
-                        ; TODO: error case for CURRENT_EA_MD = CONST_DATA_REG_MD: Dn
-                        ; TODO: error case for CURRENT_EA_MD = CONST_ADDR_REG_MD: An
-                        ; TODO: error case for CURRENT_EA_MD = CONST_ADDR_MISC_MD *and* CURRENT_EA_REG = CONST_IMMEDIATE REG: #<data>
-                        ; (note that these are not all error cases for MOVEM, but they are the only ones we are able to check in this subroutine.)
-                        
                         CMP.B       #CONST_MOVEM_DIR_0,CURRENT_DIRECTION
                         BEQ         PARSE_MOVEM_DIR_0
                         BRA         PARSE_MOVEM_DIR_1
@@ -1427,18 +1401,15 @@ READ_MOVEM_DIR          CLR         D4
                         MOVE.B      D4,CURRENT_DIRECTION
                         RTS
                         
-PARSE_MOVEM_DIR_0       ;TODO : error case for  (An+): CURRENT_EA_MD = CONST_ADDR_INCR_MD
-                        MOVE.B      CURRENT_EA_MD,CURRENT_R_MD      ; put EA on the right.
+PARSE_MOVEM_DIR_0       MOVE.B      CURRENT_EA_MD,CURRENT_R_MD      ; put EA on the right.
                         MOVE.B      CURRENT_EA_REG,CURRENT_R_REG
                         ; by this point, we have done all necessary error checking, and we are ready to read the
                         ; next word of additional data.
                         BSR         PARSE_MOVEM_MASK_FIELD
                         BSR         READ_RIGHT_DATA
-                        ; ...
                         RTS
 
-PARSE_MOVEM_DIR_1       ;TODO : error case for  (-An): CURRENT_EA_MD = CONST_ADDR_DECR_MD
-                        MOVE.B      CURRENT_EA_MD,CURRENT_L_MD      ; put EA on the left.
+PARSE_MOVEM_DIR_1       MOVE.B      CURRENT_EA_MD,CURRENT_L_MD      ; put EA on the left.
                         MOVE.B      CURRENT_EA_REG,CURRENT_L_REG
                         ; by this point, we have done all necessary error checking, and we are ready to read the
                         ; next word of additional data.
@@ -1450,7 +1421,6 @@ PARSE_MOVEM_DIR_1       ;TODO : error case for  (-An): CURRENT_EA_MD = CONST_ADD
     *Parse the mask field, which will tell us which address/data registers we are moving to/from.
 PARSE_MOVEM_MASK_FIELD  CLR.W       CURRENT_MASK_FIELD
                         MOVE.W      (A5)+,CURRENT_MASK_FIELD
-                        ;TODO: if CURRENT_EA_MD = CONST_ADDR_DECR_MD, reverse the way we read the next word of additional data.
                         RTS
   
 DISPLAY_MOVEM_DATA      CMP.B       #CONST_MOVEM_DIR_0,CURRENT_DIRECTION
@@ -1672,10 +1642,10 @@ DISP_MM_END_D           LEA         MINUS,A1          ; '-'
 MOVEM_LIST_DISPLAY_DONE RTS                 ; could just use RTS instead of branching here, but we have this SR for clarity.
 
 *-----------------------MOVEP-related Subroutines------------------------------------
-MOVEP_FOUND             JMP         STOP ;TODO: case for MOVEP found
+MOVEP_FOUND             BRA         INVALID_OPCODE_FOUND ;TODO: case for MOVEP found
   
 *-----------------------ORI-related Subroutines------------------------------------
-ORI_FOUND               JMP         STOP ;TODO: case for ORI found
+ORI_FOUND               BRA         INVALID_OPCODE_FOUND ;TODO: case for ORI found
 
  *----------------------ANDI-related Subroutines------------------------------------
 ANDI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
@@ -1688,8 +1658,6 @@ ANDI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         
                         MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_DEST_MD    ; set source mode/register to immediate.
                         MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_DEST_REG
-                        
-                        ; TODO: Error checking goes here. 
                         
                         BSR         READ_DEST_DATA                        ; set CURRENT_DEST_DATA to the immediate data.
                         BSR         READ_SOURCE_DATA                      ; read additional data for destination if necessary.
@@ -1730,7 +1698,6 @@ DISPLAY_ANDI_START      CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
                         
                         CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
                         BEQ         DISPLAY_ANDI_L_START     ; 'ANDI.L'
-                        ;TODO: error case?
                         
 DISPLAY_ANDI_B_START    LEA         ANDI_B_MSG,A1            ; 'ANDI.B'
                         MOVE.B      #14,D0
@@ -1748,7 +1715,7 @@ DISPLAY_ANDI_L_START    LEA         ANDI_L_MSG,A1            ; 'ANDI.L'
                         RTS
 
  *----------------------SUBI-related Subroutines------------------------------------
-SUBI_FOUND              JMP         STOP ;TODO: case for SUBI found
+SUBI_FOUND              BRA         INVALID_OPCODE_FOUND ;TODO: case for SUBI found
 
  *----------------------ADDI-related Subroutines------------------------------------
 ADDI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
@@ -1805,7 +1772,6 @@ DISPLAY_ADDI_START      CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
                         
                         CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
                         BEQ         DISPLAY_ADDI_L_START     ; 'ADDI.L'
-                        ;TODO: error case?
                         
 DISPLAY_ADDI_B_START    LEA         ADDI_B_MSG,A1            ;'ADDI.B'
                         MOVE.B      #14,D0
@@ -1876,7 +1842,6 @@ DISPLAY_EORI_START      CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
                         
                         CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
                         BEQ         DISPLAY_EORI_L_START     ; 'EORI.L'
-                        ;TODO: error case?
                         
 DISPLAY_EORI_B_START    LEA         EORI_B_MSG,A1            ; 'EORI.B'
                         MOVE.B      #14,D0
@@ -1905,9 +1870,7 @@ CMPI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         
                         MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_DEST_MD    ; set source mode/register to immediate.
                         MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_DEST_REG
-                        
-                        ; TODO: Error checking goes here. 
-                        
+                                         
                         BSR         READ_DEST_DATA                        ; set CURRENT_DEST_DATA to the immediate data.
                         BSR         READ_SOURCE_DATA                      ; read additional data for destination if necessary.
                         
@@ -1947,7 +1910,7 @@ DISPLAY_CMPI_START      LEA         CMPI_MSG,A1         ; 'CMPI'
                         RTS
 
 *-----------------------NEGX-related Subroutines------------------------------------
-NEGX_FOUND              JMP         STOP ;TODO: case for NEGX found 
+NEGX_FOUND              BRA         INVALID_OPCODE_FOUND ;TODO: case for NEGX found 
 
 *-----------------------CLR-related Subroutines------------------------------------
 CLR_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
@@ -2000,10 +1963,10 @@ DISPLAY_CLR_L_START     LEA         CLR_L_MSG,A1            ;'CLR.L'
                         RTS
 
 *-----------------------NEG-related Subroutines------------------------------------
-NEG_FOUND               JMP         STOP ;TODO: case for NEG found 
+NEG_FOUND               BRA         INVALID_OPCODE_FOUND ;TODO: case for NEG found 
 
 *-----------------------NOT-related Subroutines------------------------------------
-NOT_FOUND               JMP         STOP ;TODO: case for NOT found 
+NOT_FOUND               BRA         INVALID_OPCODE_FOUND ;TODO: case for NOT found 
 
 *-----------------------ADD-related Subroutines------------------------------------
 ADD_FOUND              ; NOTE: easy68k parses instructions like ADD.B #1,D1 as ADDQ operations. This seems to be a bug.
@@ -2046,7 +2009,6 @@ DISPLAY_ADD_START       CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
                         
                         CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
                         BEQ         DISPLAY_ADD_L_START     ; 'ADD.L'
-                        ;TODO: error case?
                         
 DISPLAY_ADD_B_START     LEA         ADD_B_MSG,A1            ;'ADD.B'
                         MOVE.B      #14,D0
@@ -2092,7 +2054,7 @@ ADD_DISPLAY_DONE        LEA         RETURN,A1          ; (return)
                         BRA         GO_TO_NEXT_OP
 
 *-----------------------ADDX-related Subroutines------------------------------------
-ADDX_FOUND              JMP         STOP ;TODO: case for ADDX
+ADDX_FOUND              BRA         INVALID_OPCODE_FOUND ;TODO: case for ADDX
 
 *-----------------------ADDA-related Subroutines------------------------------------
 ADDA_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
@@ -2148,7 +2110,7 @@ DISPLAY_ADDA_L_START    LEA         ADDA_L_MSG,A1            ; 'ADDA.L'
                         RTS
                         
 *-----------------------ADDQ-related Subroutines------------------------------------
-ADDQ_FOUND              JMP         STOP    ; TODO
+ADDQ_FOUND              BRA         INVALID_OPCODE_FOUND    ; TODO
                         
 *-----------------------SUB-related Subroutines------------------------------------
 SUB_FOUND               BSR         DISPLAY_CURRENT_ADDRESS ; TODO: check for the same immediate data bugs found in ADD.
@@ -2189,7 +2151,6 @@ DISPLAY_SUB_START       CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
                         
                         CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
                         BEQ         DISPLAY_SUB_L_START     ; 'SUB.L'
-                        ;TODO: error case?
                         
 DISPLAY_SUB_B_START     LEA         SUB_B_MSG,A1            ;'SUB.B'
                         MOVE.B      #14,D0
@@ -2385,7 +2346,7 @@ DISPLAY_SUBQ_L_START    LEA         SUBQ_L_MSG,A1           ;'SUBQ.L'
                         RTS
                         
 *-----------------------MULU-related Subroutines------------------------------------
-MULU_FOUND              JMP         STOP    ; TODO: MULU
+MULU_FOUND              BRA         INVALID_OPCODE_FOUND   ; TODO: MULU
 
 *-----------------------MULS-related Subroutines------------------------------------
 MULS_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
@@ -2614,7 +2575,7 @@ DISPLAY_CMPA_START      LEA         CMPA_MSG,A1         ; 'CMPA'
                         RTS
 
 *-----------------------CMPM-related Subroutines------------------------------------
-CMPM_FOUND              JMP         STOP    ; TODO: CMPM
+CMPM_FOUND              BRA         INVALID_OPCODE_FOUND    ; TODO: CMPM
 
 *-----------------------AND-related Subroutines------------------------------------
 AND_FOUND               BSR         DISPLAY_CURRENT_ADDRESS                        
@@ -2698,7 +2659,7 @@ AND_DISPLAY_DONE        LEA         RETURN,A1          ; (return)
                         BRA         GO_TO_NEXT_OP
 
 *-----------------------OR-related Subroutines------------------------------------
-OR_FOUND                JMP         STOP    ; TODO: OR
+OR_FOUND                BRA         INVALID_OPCODE_FOUND    ; TODO: OR
 
 *-----------------------EOR-related Subroutines------------------------------------
 EOR_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
@@ -3789,19 +3750,19 @@ DISPLAY_BRANCH_DEST     LEA         DOLLAR,A1          ; '$'
 
 *-----------------------LINK-related Subroutines------------------------------------
 
-LINK_FOUND              JMP         STOP ;TODO
+LINK_FOUND              BRA         INVALID_OPCODE_FOUND ;TODO
 
 *-----------------------TRAP-related Subroutines------------------------------------
 
-TRAP_FOUND              JMP         STOP ;TODO
+TRAP_FOUND              BRA         INVALID_OPCODE_FOUND ;TODO
 
 *-----------------------MOVE_USP-related Subroutines------------------------------------
 
-MOVE_USP_FOUND          JMP         STOP ;TODO
+MOVE_USP_FOUND          BRA         INVALID_OPCODE_FOUND ;TODO
 
 *-----------------------UNLK-related Subroutines------------------------------------
 
-UNLK_FOUND              JMP         STOP ;TODO
+UNLK_FOUND              BRA         INVALID_OPCODE_FOUND ;TODO
 
 *-----------------------JSR-related Subroutines------------------------------------
 
@@ -3834,25 +3795,25 @@ DISPLAY_JSR_START       LEA         JSR_MSG,A1       ; 'JSR'
 
 *-----------------------JMP-related Subroutines------------------------------------
 
-JMP_FOUND               JMP         STOP ;TODO
+JMP_FOUND               BRA         INVALID_OPCODE_FOUND ;TODO
 
 *-----------------------CHK-related Subroutines------------------------------------
-CHK_FOUND               JMP         STOP    ; TODO: CHK
+CHK_FOUND               BRA         INVALID_OPCODE_FOUND    ; TODO: CHK
 
 *-----------------------SCC-related Subroutines------------------------------------
-SCC_FOUND               JMP         STOP    ; TODO: SCC
+SCC_FOUND               BRA         INVALID_OPCODE_FOUND    ; TODO: SCC
 
 *-----------------------DBCC-related Subroutines------------------------------------
-DBCC_FOUND              JMP         STOP    ; TODO: DBCC
+DBCC_FOUND              BRA         INVALID_OPCODE_FOUND    ; TODO: DBCC
 
 *-----------------------ABCD-related Subroutines------------------------------------
-ABCD_FOUND              JMP         STOP    ; TODO: ABCD
+ABCD_FOUND              BRA         INVALID_OPCODE_FOUND    ; TODO: ABCD
 
 *-----------------------EXG-related Subroutines------------------------------------
-EXG_FOUND               JMP         STOP    ; TODO: EXG
+EXG_FOUND               BRA         INVALID_OPCODE_FOUND    ; TODO: EXG
 
 *-----------------------SBCD-related Subroutines------------------------------------
-SBCD_FOUND              JMP         STOP    ; TODO: SBCD
+SBCD_FOUND              BRA         INVALID_OPCODE_FOUND    ; TODO: SBCD
                     
 *###################### END OPCODE ##################################
 *###################### BEGIN EA ##################################
@@ -4471,7 +4432,7 @@ INVALID_ADDR_L_MSG      DC.B        'Not a valid address (too low).',CR,LF,0
 INVALID_ADDR_H_MSG      DC.B        'Not a valid address (too high).',CR,LF
                         DC.B        'Please enter a valid address.',CR,LF,0
                         
-DATA_MSG                DC.B        'DATA',CR,LF,0
+DATA_MSG                DC.B        'DATA',0
                         
 DONE_READING_MSG        DC.B        'Done reading address range of program.',CR,LF,0
 PROGRAM_END_MSG         DC.B        'Reached the end of the program. (Nothing else to read)',CR,LF,0
