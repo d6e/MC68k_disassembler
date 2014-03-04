@@ -1339,7 +1339,7 @@ READ_MOVEQ_DATA         CLR         D4
                         CLR         CURRENT_SRC_DATA
                         MOVE.W      CURRENT_WORD,D4
                         ANDI.W      #FILT_MOVEQ_DATA,D4        ; turn D4 into 0000 0000 XXXX XXXX (no shift necessary)
-                        MOVE.W      D4,CURRENT_SRC_DATA
+                        MOVE.L      D4,CURRENT_SRC_DATA
                         RTS
  
 *-----------------------EXT-related Subroutines------------------------------------
