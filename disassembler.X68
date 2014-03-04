@@ -1,4 +1,4 @@
-*-----------------------------------------------------------
+F5*-----------------------------------------------------------
 * Title      : Disassembler
 * Written by : Robert Brandenburg, Danielle Jenkins, Shahin Nahar
 * Date       : 2/13/14
@@ -561,6 +561,33 @@ DISPLAY_CURRENT_ADDRESS LEA         DOLLAR,A1       ; '$'
                         TRAP        #15     
                         
                         RTS
+                        
+*------------------- Case if we find some invalid OPcode -------------------                       
+INVALID_OPCODE_FOUND    BSR         DISPLAY_CURRENT_ADDRESS
+                        
+                        LEA         SPACE,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         DATA_MSG,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         SPACE,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         DOLLAR,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        CLR.L       D1
+                        MOVE.W      CURRENT_WORD,D1
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
+                        TRAP        #15
+                            
+                        BRA         GO_TO_NEXT_OP
 
 *------------------ Check to see if we are in no-man's land (all Fs)----------------
 CHECK_EMPTY             CMP         #CONST_FFFF,(CURRENT_WORD)
@@ -853,11 +880,6 @@ CONFIRM_0100_0XXX       CLR         D3
                         
                          BRA         CHK_FOUND        ; otherwise, we have CHK.
 
-                        
-                        ; TODO: we definitely have an error at this point.
-                        
-                        JMP         STOP     ;change STOP to whatever we want based on error. (probably some error case which will then branch to reading next OPcode.)
-                        
 CONFIRM_0100_1XXX       CLR         D3
                         MOVE.W      CURRENT_WORD,D3
                         ANDI.W      #FILT_NIB_2,D3  ; turn word into 0000 XXXX 0000 0000
@@ -881,10 +903,10 @@ CONFIRM_0100_1XXX       CLR         D3
                         
                          BRA         CHK_FOUND        ; otherwise, we have CHK.
                    
-CONFIRM_0100_1000       JMP         STOP                       
+CONFIRM_0100_1000        BRA         INVALID_OPCODE_FOUND                     
 ; TODO: check for NBCD, SWAP, or PEA. (EXT is already ruled out.)              
  
-CONFIRM_0100_1010       JMP         STOP  
+CONFIRM_0100_1010        BRA         INVALID_OPCODE_FOUND 
 ; TODO: check for TAS or TST. (ILLEGAL is already ruled out.)         
        
 CONFIRM_0100_1110        CLR         D3              
@@ -3788,8 +3810,6 @@ JSR_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
                         BSR         READ_SOURCE_REG     ; read the EA
                         BSR         READ_SOURCE_MODE
 
-                        ;TODO: error checking here
-
                         BSR         READ_SOURCE_DATA    ; read EA additional data if necessary
 
                         BSR         DISPLAY_JSR_START
@@ -4451,6 +4471,8 @@ INVALID_ADDR_L_MSG      DC.B        'Not a valid address (too low).',CR,LF,0
 INVALID_ADDR_H_MSG      DC.B        'Not a valid address (too high).',CR,LF
                         DC.B        'Please enter a valid address.',CR,LF,0
                         
+DATA_MSG                DC.B        'DATA',CR,LF,0
+                        
 DONE_READING_MSG        DC.B        'Done reading address range of program.',CR,LF,0
 PROGRAM_END_MSG         DC.B        'Reached the end of the program. (Nothing else to read)',CR,LF,0
 THANK_YOU_MSG           DC.B        'Thank you for playing.',CR,LF,0
@@ -5015,6 +5037,7 @@ STOP_CODE               EQU         $4E72   ; STOP                              
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+
 
 *~Font name~Courier New~
 *~Font size~10~
