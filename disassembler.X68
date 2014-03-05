@@ -4162,14 +4162,12 @@ CONFIRM_READ_DATA_MISC  CMP.B       #CONST_COUNTR_DISPLC_REG,CURRENT_REG      ; 
                         BEQ         READ_IMMEDIATE_DATA
      
                         RTS
-                        
-                        ; TODO: each of these SRs should increment A5 by the proper amount while also storing the correct data in CURRENT_DATA.
   
 READ_COUNTR_DISPLC_DATA MOVE.W (A5)+,CURRENT_DATA ;TODO: test that this is correct for more cases.
                         RTS
-                            ; TODO: read data for counter w/ displacement (d16,PC)
 
-READ_COUNTR_INDEX_DATA  RTS ; TODO: read data for counter w/ index        (d16,PC,Xn)
+READ_COUNTR_INDEX_DATA  MOVE.W (A5)+,CURRENT_DATA ;TODO: test that this is correct for more cases.
+                        RTS
                         
 *-----------------------Read additional data for address w/ displacement. ---------------------------
 READ_ADDR_DISPLC_DATA   MOVE.W (A5)+,CURRENT_DATA ;TODO: test that this is correct for more cases.
@@ -4274,8 +4272,8 @@ CHECK_ADDRESSING_MODES  CMP.B       #CONST_DATA_REG_MD,CURRENT_MD   ; check for 
                         ;TODO: error cases? 
                         RTS
 
-; case for displaying data register.          
-DISPLAY_DATA_REG        LEA         MSG_D,A1               ; print out 'D' (later, send this to dislpay buffer)
+*-----------------------Display data register  ------------------------------------              
+DISPLAY_DATA_REG        LEA         MSG_D,A1               ; print out 'D'
                         MOVE.B      #14,D0
                         TRAP        #15
                         
@@ -4287,7 +4285,7 @@ DISPLAY_DATA_REG        LEA         MSG_D,A1               ; print out 'D' (late
                         
                         RTS
 
-; case for displaying address register. 
+*-----------------------Display address register ------------------------------------     
 DISPLAY_ADDR_REG        LEA         MSG_A,A1               ; print out 'A'
                         MOVE.B      #14,D0
                         TRAP        #15
@@ -4300,7 +4298,7 @@ DISPLAY_ADDR_REG        LEA         MSG_A,A1               ; print out 'A'
                         
                         RTS
 
-; case for displaying address register indirect.                        
+*-----------------------Display address register  indirect ------------------------------------                            
 DISPLAY_ADDR_IND        LEA         OPEN_PARENS,A1         ; print out '(' (later, send this to dislpay buffer)
                         MOVE.B      #14,D0
                         TRAP        #15
@@ -4321,7 +4319,7 @@ DISPLAY_ADDR_IND        LEA         OPEN_PARENS,A1         ; print out '(' (late
                         
                         RTS
 
-; case for displaying address indirect postincrement.
+*-----------------------Display address register indirect postincrement------------------------------------     
 DISPLAY_ADDR_INCR       LEA         OPEN_PARENS,A1        ; print out '(' (later, send this to dislpay buffer)
                         MOVE.B      #14,D0
                         TRAP        #15
@@ -4346,7 +4344,7 @@ DISPLAY_ADDR_INCR       LEA         OPEN_PARENS,A1        ; print out '(' (later
                         
                         RTS
                         
-; case for displaying address indirect preedecrement mode.
+*-----------------------Display address register indirect predecrement------------------------------------                        
 DISPLAY_ADDR_DECR       LEA         MINUS,A1               ; print out '-'
                         MOVE.B      #14,D0
                         TRAP        #15                                           
@@ -4371,6 +4369,7 @@ DISPLAY_ADDR_DECR       LEA         MINUS,A1               ; print out '-'
                         
                         RTS     
 
+*-----------------------Display address w/ displacement------------------------------------
 DISPLAY_ADDR_DISPLC     LEA         OPEN_PARENS,A1        ; print out '(' 
                         MOVE.B      #14,D0
                         TRAP        #15
@@ -4405,6 +4404,7 @@ DISPLAY_ADDR_DISPLC     LEA         OPEN_PARENS,A1        ; print out '('
                         
                         RTS    
 
+*-----------------------Display absolute short address------------------------------------
 DISPLAY_ADDR_INDEX      LEA         OPEN_PARENS,A1        ; print out '(' 
                         MOVE.B      #14,D0
                         TRAP        #15
@@ -4519,7 +4519,8 @@ CHECK_MISC_ADDRESSINGS  CMP.B       #CONST_COUNTR_DISPLC_REG,CURRENT_REG
                         ; TODO: error case?
                         
                         RTS
-             
+
+*-----------------------Display program counter w/ displacement------------------------------------             
 DISPLAY_COUNTR_DISPLC   LEA         OPEN_PARENS,A1        ; print out '('. 
                         MOVE.B      #14,D0
                         TRAP        #15
@@ -4557,8 +4558,105 @@ DISPLAY_COUNTR_DISPLC   LEA         OPEN_PARENS,A1        ; print out '('.
                         
                         RTS         
 
-DISPLAY_COUNTR_INDEX    RTS         ;TODO   
 
+*-----------------------Display program counter w/ index------------------------------------
+DISPLAY_COUNTR_INDEX    LEA         OPEN_PARENS,A1        ; print out '('. 
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         DOLLAR,A1             ; print out '$' 
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        CLR.L       D1
+                        CLR.L       D3
+                        CLR.L       D4
+                        
+                        MOVE.W      (CURRENT_DATA),D3
+                        ANDI.W      #FILT_BYTE_2,D3       ; filter out just the second byte of the additional data
+                        MOVE.L      A4,D4 
+                        ADD.L       #2,D4      
+                        ADD.B       D3,D4
+                        
+                        MOVE.W      D4,D1 
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
+                        TRAP        #15
+
+                        LEA         COMMA,A1             ; print out ',' 
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         MSG_PC,A1            ; print out 'PC' 
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         COMMA,A1             ; print out ',' 
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_COUNTR_INDEX_AD
+                        
+                        CLR.L       D3
+                        MOVE.W      (CURRENT_DATA),D3       ; NOTE: we use FILT_ADDR_INDEX_REG, but it doesn't matter because it works on program counter w/ index, too.
+                        ANDI.W      #FILT_ADDR_INDEX_REG,D3 ; turn D3 into 0XXX 0000 0000 0000
+                        LSR.W       #8,D3                   ; turn D3 into 0000 0000 0XXX 0000
+                        LSR.W       #4,D3                   ; turn D3 into 0000 0000 0000 0XXX
+                        
+                        CLR.L       D1                      ; print out the number of the index.
+                        MOVE.W      D3,D1
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_COUNTR_INDEX_S
+                      
+                        LEA         CLOSE_PARENS,A1      ; print out ')' 
+                        MOVE.B      #14,D0
+                        TRAP        #15
+    
+                        RTS       
+
+DISPLAY_COUNTR_INDEX_AD CLR.L       D3
+                        MOVE.W      (CURRENT_DATA),D3
+                        ANDI.W      #FILT_BIT_1,D3        ; turn D3 into X000 0000 0000 0000
+                        LSR.W       #8,D3                 ; turn D3 into 0000 0000 X000 0000
+                        LSR.W       #7,D3                 ; turn D3 into 0000 0000 0000 000X
+                        
+                        CMP.W       #0,D3
+                        BEQ         DISPLAY_COUNTR_INDEX_D
+                        
+                        CMP.W       #1,D3
+                        BEQ         DISPLAY_COUNTR_INDEX_A
+
+                        RTS
+
+DISPLAY_COUNTR_INDEX_D  LEA         MSG_D,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+
+DISPLAY_COUNTR_INDEX_A  LEA         MSG_A,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+                        
+
+DISPLAY_COUNTR_INDEX_S  CLR.L       D3
+                        MOVE.W      (CURRENT_DATA),D3
+                        ANDI.W      #FILT_BIT_5,D3        ; turn D3 into 0000 X000 0000 0000
+                        LSR.W       #8,D3                 ; turn D3 into 0000 0000 0000 X000
+                        LSR.W       #3,D3                 ; turn D3 into 0000 0000 0000 000X
+                        
+                        CMP.W       #0,D3
+                        BEQ         DISPLAY_W_SIZE
+                        
+                        CMP.W       #1,D3
+                        BEQ         DISPLAY_L_SIZE
+                        
+                        RTS
+
+*-----------------------Display absolute short address------------------------------------
 DISPLAY_ABS_SHORT       LEA         DOLLAR,A1             ; print out '$'. 
                         MOVE.B      #14,D0
                         TRAP        #15
@@ -4571,6 +4669,7 @@ DISPLAY_ABS_SHORT       LEA         DOLLAR,A1             ; print out '$'.
                         
                         RTS 
 
+*-----------------------Display absolute long address------------------------------------
 DISPLAY_ABS_LONG        LEA         DOLLAR,A1             ; print out '$'. 
                         MOVE.B      #14,D0
                         TRAP        #15
@@ -4583,6 +4682,7 @@ DISPLAY_ABS_LONG        LEA         DOLLAR,A1             ; print out '$'.
                         
                         RTS 
 
+*-----------------------Display immediate data------------------------------------
 DISPLAY_IMMEDIATE       LEA         HASH,A1               ; print out '#'. (NOTE: should send this to display buffer instead.)
                         MOVE.B      #14,D0
                         TRAP        #15

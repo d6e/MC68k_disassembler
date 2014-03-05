@@ -6,7 +6,13 @@
 *-----------------------------------------------------------
 
 START       ORG    $7000                ; first instruction of program
-            MOVE.W ($70,PC,D5.W),D4
+            MOVE.W ($7000,PC,D5.W),D4
+            MOVE.W ($7000,PC,D5.W),D4
+            MOVE.W ($7000,PC,D5.W),D4
+            MOVE.W ($7000,PC,D5.W),D4
+            MOVE.W ($7000,PC,D5.W),D4
+            MOVE.W ($7008,PC,D5.W),D4
+            MOVE.W ($705A,PC,D5.W),D4
             MOVE.W ($7,A4,A5.W),D3
             MOVE.W ($7,A4,A5.L),D3
             MOVE.W ($7,A4,A4.L),D3
