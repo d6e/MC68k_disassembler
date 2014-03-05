@@ -1712,7 +1712,76 @@ DISPLAY_ANDI_L_START    LEA         ANDI_L_MSG,A1            ; 'ANDI.L'
                         RTS
 
  *----------------------SUBI-related Subroutines------------------------------------
-SUBI_FOUND              BRA         INVALID_OPCODE_FOUND ;TODO: case for SUBI found
+SUBI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
+                        CLR         D4
+                        MOVE.W      CURRENT_WORD,D4
+                       
+                        BSR         READ_OP_SIZE                          ; set CURRENT_OP_SIZE to the size of the SUBI.
+                        
+                            ;Note that we are saying source when we mean destination because of the way SUBI is parsed.
+                        BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the number of the SUBI's register. 
+                        BSR         READ_SOURCE_MODE                      ; set CURRENT_SRC_MD to the number of the SUBI's mode. 
+                        
+                        MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_DEST_MD    ; set source mode/register to immediate.
+                        MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_DEST_REG
+                        
+                        ; TODO: Error checking goes here. 
+                        
+                        BSR         READ_DEST_DATA                        ; set CURRENT_DEST_DATA to the immediate data.
+                        BSR         READ_SOURCE_DATA                      ; read additional data for destination if necessary.
+                        
+                        MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_L_MD      ; set left mode/register to immediate.
+                        MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_L_REG
+                        MOVE.L      CURRENT_DEST_DATA,CURRENT_L_DATA      ; put the immediate data in our left data.
+                        
+                        MOVE.B      CURRENT_SRC_REG,CURRENT_R_REG
+                        MOVE.B      CURRENT_SRC_MD,CURRENT_R_MD
+                        MOVE.L      CURRENT_SRC_DATA,CURRENT_R_DATA        ; if we have additional data for the right operand, it need to be stored here.
+           
+                        BSR         DISPLAY_SUBI_START
+                        
+                        LEA         SPACE,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_LEFT
+
+                        LEA         COMMA,A1            ; ','
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_RIGHT
+                      
+                        LEA         RETURN,A1          ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         GO_TO_NEXT_OP
+
+DISPLAY_SUBI_START      CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_SUBI_B_START     ; 'SUBI.B'
+                           
+                        CMP.B       #WORD_SIZE,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_SUBI_W_START     ; 'SUBI.W'
+                        
+                        CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_SUBI_L_START     ; 'SUBI.L'
+                        
+DISPLAY_SUBI_B_START    LEA         SUBI_B_MSG,A1            ;'SUBI.B'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+
+DISPLAY_SUBI_W_START    LEA         SUBI_W_MSG,A1           ;'SUBI.W'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+
+DISPLAY_SUBI_L_START    LEA         SUBI_L_MSG,A1           ;'SUBI.L'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+
 
  *----------------------ADDI-related Subroutines------------------------------------
 ADDI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
@@ -2107,7 +2176,94 @@ DISPLAY_ADDA_L_START    LEA         ADDA_L_MSG,A1            ; 'ADDA.L'
                         RTS
                         
 *-----------------------ADDQ-related Subroutines------------------------------------
-ADDQ_FOUND              BRA         INVALID_OPCODE_FOUND    ; TODO
+ADDQ_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
+                        CLR         D4
+                        MOVE.W      CURRENT_WORD,D4
+                       
+                        BSR         READ_OP_SIZE             ; set CURRENT_OP_SIZE to the size of the ADDQ.
+                        BSR         READ_DEST_REG            ; read the immediate data, which we store in our left data.
+                        CLR.L       CURRENT_L_DATA
+                        CLR.L       D2
+                        MOVE.B      CURRENT_DEST_REG,D2
+                        MOVE.L      D2,CURRENT_L_DATA        
+                        BSR         CHECK_ADDQ_8             ; make sure our left data is set correctly for the case CURRENT_L_DATA = 0.
+                        BSR         CHECK_ADDQ_WORD_DISPLAY  ; if byte or word, LSL current_L_data by 8 2 times (preparing to display word style)
+                        
+                        MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_L_MD      ; set left mode/register to immediate.
+                        MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_L_REG
+
+                        BSR         READ_SOURCE_MODE         ; read the source mode     
+                        BSR         READ_SOURCE_REG          ; read the source register
+                        BSR         READ_SOURCE_DATA         ; read additional source data if necessary
+                        
+                        ; source reg/mode/data are actually for our right operand.
+                        
+                        MOVE.B      CURRENT_SRC_MD,CURRENT_R_MD
+                        MOVE.B      CURRENT_SRC_REG,CURRENT_R_REG
+                        MOVE.L      CURRENT_SRC_DATA,CURRENT_R_DATA
+                        
+                        BSR         DISPLAY_ADDQ_START
+                        
+                        LEA         SPACE,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_LEFT        ; display the immediate data
+                        
+                        LEA         COMMA,A1            ; ','
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_RIGHT       ; display the right operand
+                      
+                        LEA         RETURN,A1           ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         GO_TO_NEXT_OP
+                      
+CHECK_ADDQ_8            CMP.L       #0,CURRENT_L_DATA       ; 000 in our dest register slot means the immediate data is 8. Everything else is just direct.
+                        BEQ         SET_ADDQ_8              ; example: 000 = 8, 001 = 1, 010 = 2, etc
+                        RTS
+                       
+SET_ADDQ_8              MOVE.L      #$00000008,CURRENT_L_DATA
+                        RTS
+
+; if byte or word, LSL current_L_data by 8 2 times (preparing to display word style)                    
+CHECK_ADDQ_WORD_DISPLAY CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
+                        BNE         SET_ADDQ_WORD_DISPLAY
+                        RTS
+
+SET_ADDQ_WORD_DISPLAY   CLR         D3
+                        MOVE.L      CURRENT_L_DATA,D3
+                        LSL.L       #8,D3
+                        LSL.L       #8,D3
+                        MOVE.L      D3,CURRENT_L_DATA
+                        RTS
+                       
+DISPLAY_ADDQ_START      CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_ADDQ_B_START    ; 'ADDQ.B'
+                           
+                        CMP.B       #WORD_SIZE,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_ADDQ_W_START    ; 'ADDQ.W'
+                        
+                        CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
+                        BEQ         DISPLAY_ADDQ_L_START    ; 'ADDQ.L'
+                        
+DISPLAY_ADDQ_B_START    LEA         ADDQ_B_MSG,A1           ;'ADDQ.B'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+
+DISPLAY_ADDQ_W_START    LEA         ADDQ_W_MSG,A1           ;'ADDQ.W'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+
+DISPLAY_ADDQ_L_START    LEA         ADDQ_L_MSG,A1           ;'ADDQ.L'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
                         
 *-----------------------SUB-related Subroutines------------------------------------
 SUB_FOUND               BSR         DISPLAY_CURRENT_ADDRESS ; TODO: check for the same immediate data bugs found in ADD.
@@ -2343,7 +2499,43 @@ DISPLAY_SUBQ_L_START    LEA         SUBQ_L_MSG,A1           ;'SUBQ.L'
                         RTS
                         
 *-----------------------MULU-related Subroutines------------------------------------
-MULU_FOUND              BRA         INVALID_OPCODE_FOUND   ; TODO: MULU
+MULU_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
+                        CLR         D4
+                        MOVE.W      CURRENT_WORD,D4
+                        
+                        MOVE.B      #WORD_SIZE,CURRENT_OP_SIZE            ; set CURRENT_OP_SIZE to word, only valid size for MULU
+                        
+                        BSR         READ_DEST_REG                         ; set CURRENT_DEST_REG to the number of the MULU's Dn. 
+                        MOVE.B      #CONST_DATA_REG_MD,CURRENT_DEST_MD    ; set CURRENT_DEST_MD to data register: Dn mode
+                        
+                        BSR         READ_SOURCE_MODE                      ; set CURRENT_SRC_MD to the EA's mode.
+                        BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the EA's register.
+                        BSR         READ_SOURCE_DATA                      ; set CURRENT_SRC_DATA to the EA's additional data.                       
+                        BSR         DISPLAY_MULU_START
+                        
+                        LEA         SPACE,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_SOURCE                        ; display the EA
+                        
+                        LEA         COMMA,A1            ; ','
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_DEST                          ; display the data register
+                      
+                        LEA         RETURN,A1          ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15                       
+
+                        BRA         GO_TO_NEXT_OP
+
+DISPLAY_MULU_START      LEA         MULU_W_MSG,A1       ; 'MULU.W'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        RTS
 
 *-----------------------MULS-related Subroutines------------------------------------
 MULS_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
@@ -4820,6 +5012,10 @@ ADDA_L_MSG              DC.B        'ADDA.L',0
 ADDI_B_MSG              DC.B        'ADDI.B',0
 ADDI_W_MSG              DC.B        'ADDI.W',0
 ADDI_L_MSG              DC.B        'ADDI.L',0
+
+ADDQ_B_MSG              DC.B        'ADDQ.B',0
+ADDQ_W_MSG              DC.B        'ADDQ.W',0
+ADDQ_L_MSG              DC.B        'ADDQ.L',0
 
     ;subs
 SUB_B_MSG               DC.B        'SUB.B',0

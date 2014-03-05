@@ -6,13 +6,13 @@
 *-----------------------------------------------------------
 
 START       ORG    $7000                ; first instruction of program
-            MOVE.W ($7000,PC,D5.W),D4
-            MOVE.W ($7000,PC,D5.W),D4
-            MOVE.W ($7000,PC,D5.W),D4
-            MOVE.W ($7000,PC,D5.W),D4
-            MOVE.W ($7000,PC,D5.W),D4
-            MOVE.W ($7008,PC,D5.W),D4
-            MOVE.W ($705A,PC,D5.W),D4
+            MULU.W D1, D1
+            MULU.W (A1), D1
+            MULU.W #1, D1
+            MULU.W (A1)+, D1
+            MULU.W -(A1), D1
+            MULU.W $10000000, D1
+            MULU.W $1000, D1
             MOVE.W ($7,A4,A5.W),D3
             MOVE.W ($7,A4,A5.L),D3
             MOVE.W ($7,A4,A4.L),D3
