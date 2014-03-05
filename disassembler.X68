@@ -123,40 +123,40 @@ TAKE_USER_INPUT         MOVE.L      #$00000000,D1   ; need to clear out the data
                         MOVE.L      #$00000000,D7
 
                         MOVE.B      #2,D0           ; Take user input for next address.
-                        MOVEA.W     #$5000,A1       ; Store the ascii input in A1,(note that we might not want to use 5000 here)
+                        MOVEA.W     INPUT_DIGIT_SPACE,A1
                         TRAP        #15             ; and the length in D1.W.  
 
-COUNT_INPUT_DIGITS      MOVEA.W     #$5001,A1
+COUNT_INPUT_DIGITS      ADDA.W      #1,A1
                         CMP         #1,D1
-                        BEQ         ASCII_TO_HEX  ;start converting if we have 1 digit.
+                        BEQ         ASCII_TO_HEX    ; start converting if we have 1 digit.
           
-                        MOVEA.W     #$5002,A1
+                        ADDA.W      #1,A1
                         CMP         #2,D1
-                        BEQ         ASCII_TO_HEX  ;start converting if we have 2 digits.
+                        BEQ         ASCII_TO_HEX    ; start converting if we have 2 digits.
           
-                        MOVEA.W     #$5003,A1
+                        ADDA.W      #1,A1
                         CMP         #3,D1
-                        BEQ         ASCII_TO_HEX  ;start converting if we have 3 digits.
+                        BEQ         ASCII_TO_HEX    ; start converting if we have 3 digits.
           
-                        MOVEA.W     #$5004,A1
+                        ADDA.W      #1,A1
                         CMP         #4,D1
-                        BEQ         ASCII_TO_HEX  ;start converting if we have 4 digits.
+                        BEQ         ASCII_TO_HEX    ; start converting if we have 4 digits.
           
-                        MOVEA.W     #$5005,A1
+                        ADDA.W      #1,A1
                         CMP         #5,D1
-                        BEQ         ASCII_TO_HEX  ;start converting if we have 5 digits.
+                        BEQ         ASCII_TO_HEX    ; start converting if we have 5 digits.
           
-                        MOVEA.W     #$5006,A1
+                        ADDA.W      #1,A1
                         CMP         #6,D1
-                        BEQ         ASCII_TO_HEX  ;start converting if we have 6 digits.
+                        BEQ         ASCII_TO_HEX    ; start converting if we have 6 digits.
           
-                        MOVEA.W     #$5007,A1
+                        ADDA.W      #1,A1
                         CMP         #7,D1
-                        BEQ         ASCII_TO_HEX  ;start converting if we have 7 digits.
+                        BEQ         ASCII_TO_HEX    ; start converting if we have 7 digits.
           
-                        MOVEA.W     #$5008,A1
+                        ADDA.W      #1,A1
                         CMP         #8,D1
-                        BEQ         ASCII_TO_HEX  ;start converting if we have 8 digits.
+                        BEQ         ASCII_TO_HEX    ; start converting if we have 8 digits.
           
                         LEA         INVALID_LEN_MSG,A1         ; If we get an invalid length, give and error message and... branch back asking user for input again
                         MOVE.B      #14,D0
@@ -368,12 +368,14 @@ VALID_ADDR              CMPI        #1,D3
                         BRA         SET_END_ADDR              
                                                
 SET_START_ADDR          MOVEA.L     D7,A5  ;when a valid start address is inputted, store and ask the user for an end address.
+                        MOVE.L      D7,START_ADDRESS
                         BRA         TAKE_USER_IN_E
 
 SET_END_ADDR            CMP.L       A5,D7    ;if end address is lower than start address, we get an error.
                         BLT         INVALID_END_ADDR           
                         
                         MOVEA.L     D7,A6  ;when a valid start address is inputted, store and ask the user for an end address.
+                        MOVE.L      D7,END_ADDRESS
                         BRA         BEGIN_READ
                         
 BEGIN_READ              MOVEA.L      A5,A4 ; keep track of address to print with A4. TODO: could also add this value to the display buffer.
@@ -455,7 +457,7 @@ PROMPT_RESTART          LEA         RESTART_PROMPT_MSG,A1  ; Prompt user for res
                         TRAP        #15
         
                         MOVE.B      #2,D0          			 ; Take user input for next address.
-                        MOVEA.W     #$5100,A1       ; Store the ascii input in A1,(note that we might not want to use 5100 here)
+                        MOVEA.W     RESTART_CHECK_SPC,A1     ; Store the ascii input in A1
                         TRAP        #15             		 ; and the length in D1.W.  
 
                         CMPI.B 		#$79,(A1) 							; if inputs 'y' 
@@ -3749,7 +3751,42 @@ LINK_FOUND              BRA         INVALID_OPCODE_FOUND ;TODO
 
 *-----------------------TRAP-related Subroutines------------------------------------
 
-TRAP_FOUND              BRA         INVALID_OPCODE_FOUND ;TODO
+TRAP_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
+                        BSR         READ_TRAP_VECTOR
+                        
+                        LEA         TRAP_MSG,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         SPACE,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         HASH,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         DOLLAR,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15                     
+                        
+                        CLR.L       D1
+                        MOVE.W      (CURRENT_TRAP_VECTOR),D1      ; print out our destination address.
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
+                        TRAP        #15
+                        
+                        LEA         RETURN,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         GO_TO_NEXT_OP
+                        
+READ_TRAP_VECTOR        CLR.L       D3
+                        MOVE.W      CURRENT_WORD,D3
+                        ANDI.W      #FILT_NIB_4,D3
+                        MOVE.W      D3,CURRENT_TRAP_VECTOR
+                        RTS
 
 *-----------------------MOVE_USP-related Subroutines------------------------------------
 
@@ -3993,23 +4030,31 @@ READ_CURRENT_DIRECTION   CLR         D4
                          
 *---------------------Read rotation mode for ASd, LSd, ROXd, ROd -----------------------------------//Shahin
                       
-READ_ROTATION_MODE         CLR         D4
+READ_ROTATION_MODE      CLR         D4
                         CLR.B       CURRENT_ROTATION_MODE      ; to avoid any junk data
                         MOVE.W      CURRENT_WORD,D4    
                         ANDI.W      #FILT_ROTATION_MODE,D4     ; 0000 0000 00X0 0000     filter out direction 
                         LSR.W       #5,D4                      ; 0000 0000 0000 000X
                         MOVE.B      D4,CURRENT_SMALL_MODE
-                       RTS
+                        RTS
                        
 *----------------------Read additional source data associated with the current word (if necessary).----------------- 
 *This needs to postincrement A5 as necessary for each case.
 READ_SOURCE_DATA        CLR.L       CURRENT_SRC_DATA
                         CLR.L       CURRENT_DATA
-                        CMP.B       #CONST_ADDR_MISC_MD,CURRENT_SRC_MD ; check the source mode
-                        BEQ         CONFIRM_READ_SRC_DATA              ; see if we have a source mode that requires additional data.               
+                       
+                        CMP.B       #CONST_ADDR_DISPLC_MD,CURRENT_SRC_MD ; check the source mode
+                        BEQ         CONFIRM_READ_SRC_DATA                ; see if we have a source mode that requires additional data. 
+                       
+                        CMP.B       #CONST_ADDR_INDEX_MD,CURRENT_SRC_MD  ; check the source mode
+                        BEQ         CONFIRM_READ_SRC_DATA                ; see if we have a source mode that requires additional data. 
+
+                        CMP.B       #CONST_ADDR_MISC_MD,CURRENT_SRC_MD   ; check the source mode
+                        BEQ         CONFIRM_READ_SRC_DATA                ; see if we have a source mode that requires additional data.               
                         RTS
                         
 CONFIRM_READ_SRC_DATA   CLR.B       CURRENT_REG
+                        MOVE.B      CURRENT_SRC_MD,CURRENT_MD
                         MOVE.B      CURRENT_SRC_REG,CURRENT_REG
                         BSR         CONFIRM_READ_DATA
                         MOVE.L      CURRENT_DATA,CURRENT_SRC_DATA
@@ -4019,11 +4064,20 @@ CONFIRM_READ_SRC_DATA   CLR.B       CURRENT_REG
 *This needs to postincrement A5 as necessary.                       
 READ_DEST_DATA          CLR.L       CURRENT_DEST_DATA
                         CLR.L       CURRENT_DATA
-                        CMP.B       #CONST_ADDR_MISC_MD,CURRENT_DEST_MD  ; check the destination mode.
-                        BEQ         CONFIRM_READ_DEST_DATA               ; see if we have a destination mode that requires additional data.                  
+                        
+                        CMP.B       #CONST_ADDR_DISPLC_MD,CURRENT_DEST_MD ; check the destination mode
+                        BEQ         CONFIRM_READ_DEST_DATA                ; see if we have a destination mode that requires additional data.
+                        
+                        CMP.B       #CONST_ADDR_INDEX_MD,CURRENT_DEST_MD ; check the destination mode
+                        BEQ         CONFIRM_READ_DEST_DATA                ; see if we have a destination mode that requires additional data.
+
+                        CMP.B       #CONST_ADDR_MISC_MD,CURRENT_DEST_MD   ; check the destination mode.
+                        BEQ         CONFIRM_READ_DEST_DATA                ; see if we have a destination mode that requires additional data.                  
+                        
                         RTS
                                             
 CONFIRM_READ_DEST_DATA  CLR.B       CURRENT_REG
+                        MOVE.B      CURRENT_DEST_MD,CURRENT_MD
                         MOVE.B      CURRENT_DEST_REG,CURRENT_REG
                         BSR         CONFIRM_READ_DATA
                         MOVE.L      CURRENT_DATA,CURRENT_DEST_DATA
@@ -4034,11 +4088,20 @@ CONFIRM_READ_DEST_DATA  CLR.B       CURRENT_REG
     *Left
 READ_LEFT_DATA          CLR.L       CURRENT_L_DATA
                         CLR.L       CURRENT_DATA
+                        
+                        CMP.B       #CONST_ADDR_DISPLC_MD,CURRENT_L_MD     ; check the left mode.
+                        BEQ         CONFIRM_READ_LEFT_DATA               ; see if we have a mode that requires additional data.
+
+                        CMP.B       #CONST_ADDR_INDEX_MD,CURRENT_L_MD     ; check the left mode.
+                        BEQ         CONFIRM_READ_LEFT_DATA               ; see if we have a mode that requires additional data.                  
+                        
                         CMP.B       #CONST_ADDR_MISC_MD,CURRENT_L_MD     ; check the left mode.
                         BEQ         CONFIRM_READ_LEFT_DATA               ; see if we have a mode that requires additional data.                  
+                        
                         RTS
                                             
 CONFIRM_READ_LEFT_DATA  CLR.B       CURRENT_REG
+                        MOVE.B      CURRENT_L_MD,CURRENT_MD
                         MOVE.B      CURRENT_L_REG,CURRENT_REG
                         BSR         CONFIRM_READ_DATA
                         MOVE.L      CURRENT_DATA,CURRENT_L_DATA
@@ -4047,11 +4110,20 @@ CONFIRM_READ_LEFT_DATA  CLR.B       CURRENT_REG
     *Right
 READ_RIGHT_DATA         CLR.L       CURRENT_R_DATA
                         CLR.L       CURRENT_DATA
+                        
+                        CMP.B       #CONST_ADDR_DISPLC_MD,CURRENT_R_MD ; check the right mode.
+                        BEQ         CONFIRM_READ_RIGHT_DATA              ; see if we have a mode that requires additional data.  
+
+                        CMP.B       #CONST_ADDR_INDEX_MD,CURRENT_R_MD ; check the right mode.
+                        BEQ         CONFIRM_READ_RIGHT_DATA              ; see if we have a mode that requires additional data.  
+                        
                         CMP.B       #CONST_ADDR_MISC_MD,CURRENT_R_MD ; check the right mode.
                         BEQ         CONFIRM_READ_RIGHT_DATA              ; see if we have a mode that requires additional data.                  
+                        
                         RTS
                                             
 CONFIRM_READ_RIGHT_DATA CLR.B       CURRENT_REG
+                        MOVE.B      CURRENT_R_MD,CURRENT_MD
                         MOVE.B      CURRENT_R_REG,CURRENT_REG
                         BSR         CONFIRM_READ_DATA
                         MOVE.L      CURRENT_DATA,CURRENT_R_DATA
@@ -4059,8 +4131,22 @@ CONFIRM_READ_RIGHT_DATA CLR.B       CURRENT_REG
 
 *-----------------------Read some additional data.----------------------------------------------------------
       ; This same subroutine is used for reading any kind of data, as long as CURRENT_REG is set beforehand.
-      ; By this point, CURRENT_REG holds whatever register we currently care about. (could also use CURRENT_REG)         
-CONFIRM_READ_DATA       CMP.B       #CONST_COUNTR_DISPLC_REG,CURRENT_REG      ; see if we are reading counter w/ displacement
+      ; By this point, CURRENT_REG holds whatever register we currently care about. (could also use CURRENT_REG) 
+
+    *check mode first.        
+CONFIRM_READ_DATA       CMP.B       #CONST_ADDR_MISC_MD,CURRENT_MD        
+                        BEQ         CONFIRM_READ_DATA_MISC
+
+                        CMP.B       #CONST_ADDR_DISPLC_MD,CURRENT_MD         ; see if we are reading address w/ displacement
+                        BEQ         READ_ADDR_DISPLC_DATA
+                        
+                        CMP.B       #CONST_ADDR_INDEX_MD,CURRENT_MD          ; see if we are reading address w/ index
+                        BEQ         READ_ADDR_INDEX_DATA
+                        
+                        RTS
+
+    *check register second.
+CONFIRM_READ_DATA_MISC  CMP.B       #CONST_COUNTR_DISPLC_REG,CURRENT_REG      ; see if we are reading counter w/ displacement
                         BEQ         READ_COUNTR_DISPLC_DATA
                    
                         CMP.B       #CONST_COUNTR_INDEX_REG,CURRENT_REG       ; see if we are reading counter w/ index
@@ -4077,10 +4163,21 @@ CONFIRM_READ_DATA       CMP.B       #CONST_COUNTR_DISPLC_REG,CURRENT_REG      ; 
      
                         RTS
                         
-; TODO: each of these SRs should increment A5 by the proper amount while also storing the correct data in CURRENT_DATA.
-READ_COUNTR_DISPLC_DATA RTS ; TODO: read data for counter w/ displacement (d16,PC)
+                        ; TODO: each of these SRs should increment A5 by the proper amount while also storing the correct data in CURRENT_DATA.
+  
+READ_COUNTR_DISPLC_DATA MOVE.W (A5)+,CURRENT_DATA ;TODO: test that this is correct for more cases.
+                        RTS
+                            ; TODO: read data for counter w/ displacement (d16,PC)
 
 READ_COUNTR_INDEX_DATA  RTS ; TODO: read data for counter w/ index        (d16,PC,Xn)
+                        
+*-----------------------Read additional data for address w/ displacement. ---------------------------
+READ_ADDR_DISPLC_DATA   MOVE.W (A5)+,CURRENT_DATA ;TODO: test that this is correct for more cases.
+                        RTS
+                        
+*-----------------------Read additional data for address w/ index. ---------------------------
+READ_ADDR_INDEX_DATA    MOVE.W (A5)+,CURRENT_DATA ;TODO: test that this is correct for more cases.
+                        RTS
 
 *-----------------------Read additional absolute word address---------------------------
 READ_ABS_SHORT_DATA     MOVE.W      (A5)+,CURRENT_DATA ; read data for absolute short address  (xxx).W
@@ -4254,7 +4351,7 @@ DISPLAY_ADDR_DECR       LEA         MINUS,A1               ; print out '-'
                         MOVE.B      #14,D0
                         TRAP        #15                                           
 
-                        LEA         OPEN_PARENS,A1        ; print out '(' (later, send this to dislpay buffer)
+                        LEA         OPEN_PARENS,A1        ; print out '(' 
                         MOVE.B      #14,D0
                         TRAP        #15
                         
@@ -4263,7 +4360,7 @@ DISPLAY_ADDR_DECR       LEA         MINUS,A1               ; print out '-'
                         TRAP        #15
                         
                         CLR         D1
-                        MOVE.B      (CURRENT_REG),D1      ; print out the number of the data register.
+                        MOVE.B      (CURRENT_REG),D1      ; print out the number of the address register.
                         MOVE.B      #16,D2
                         MOVE.B      #15,D0
                         TRAP        #15
@@ -4274,12 +4371,132 @@ DISPLAY_ADDR_DECR       LEA         MINUS,A1               ; print out '-'
                         
                         RTS     
 
-DISPLAY_ADDR_DISPLC     ;TODO: case for source mode is address with displacement mode.
+DISPLAY_ADDR_DISPLC     LEA         OPEN_PARENS,A1        ; print out '(' 
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         DOLLAR,A1             ; print out '$' 
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        CLR         D1
+                        MOVE.W      (CURRENT_DATA),D1     ; print out the number of the displacement.
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
+                        TRAP        #15
+                        
+                        LEA         COMMA,A1              ; print out ',' 
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         MSG_A,A1              ; print out 'A'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        CLR.L       D1
+                        MOVE.B      (CURRENT_REG),D1      ; print out the number of the address register.
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
+                        TRAP        #15
+                        
+                        LEA         CLOSE_PARENS,A1       ; print out ')'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
                         RTS    
 
-DISPLAY_ADDR_INDEX      ;TODO: case for source mode is address with index mode.
+DISPLAY_ADDR_INDEX      LEA         OPEN_PARENS,A1        ; print out '(' 
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         DOLLAR,A1             ; print out '$' 
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        CLR.L       D1
+                        MOVE.W      (CURRENT_DATA),D1     ; print out the number of the displacement.
+                        ANDI.W      #FILT_BYTE_2,D1       ; filter out the second byte of D1, since the displacement # is stored there.
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
+                        TRAP        #15
+                        
+                        LEA         COMMA,A1              ; print out ',' 
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         MSG_A,A1              ; print out 'A'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        CLR.L       D1
+                        MOVE.B      (CURRENT_REG),D1      ; print out the number of the address register.
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
+                        TRAP        #15
+                        
+                        LEA         COMMA,A1              ; print out ',' 
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_ADDR_INDEX_AD
+                        
+                        CLR.L       D3
+                        MOVE.W      (CURRENT_DATA),D3
+                        ANDI.W      #FILT_ADDR_INDEX_REG,D3 ; turn D3 into 0XXX 0000 0000 0000
+                        LSR.W       #8,D3                   ; turn D3 into 0000 0000 0XXX 0000
+                        LSR.W       #4,D3                   ; turn D3 into 0000 0000 0000 0XXX
+                        
+                        CLR.L       D1                      ; print out the number of the index.
+                        MOVE.W      D3,D1
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
+                        TRAP        #15
+                        
+                        BSR         DISPLAY_ADDR_INDEX_SIZE
+                        
+                        LEA         CLOSE_PARENS,A1       ; print out ')'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+
                         RTS 
 
+DISPLAY_ADDR_INDEX_AD   CLR.L       D3
+                        MOVE.W      (CURRENT_DATA),D3
+                        ANDI.W      #FILT_BIT_1,D3        ; turn D3 into X000 0000 0000 0000
+                        LSR.W       #8,D3                 ; turn D3 into 0000 0000 X000 0000
+                        LSR.W       #7,D3                 ; turn D3 into 0000 0000 0000 000X
+                        
+                        CMP.W       #0,D3
+                        BEQ         DISPLAY_ADDR_INDEX_D
+                        
+                        CMP.W       #1,D3
+                        BEQ         DISPLAY_ADDR_INDEX_A
+
+                        RTS
+
+DISPLAY_ADDR_INDEX_D    LEA         MSG_D,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+
+DISPLAY_ADDR_INDEX_A    LEA         MSG_A,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        RTS
+
+DISPLAY_ADDR_INDEX_SIZE CLR.L       D3
+                        MOVE.W      (CURRENT_DATA),D3
+                        ANDI.W      #FILT_BIT_5,D3        ; turn D3 into 0000 X000 0000 0000
+                        LSR.W       #8,D3                 ; turn D3 into 0000 0000 0000 X000
+                        LSR.W       #3,D3                 ; turn D3 into 0000 0000 0000 000X
+                        
+                        CMP.W       #0,D3
+                        BEQ         DISPLAY_W_SIZE
+                        
+                        CMP.W       #1,D3
+                        BEQ         DISPLAY_L_SIZE
+                        
+                        RTS
 *-----------------------Register checks (for displaying only)---------
 *these do not care whether the register is for source or destination.
 *not for cases where reg is simply a number (like D5, A5, (A5), etc),
@@ -4302,8 +4519,43 @@ CHECK_MISC_ADDRESSINGS  CMP.B       #CONST_COUNTR_DISPLC_REG,CURRENT_REG
                         ; TODO: error case?
                         
                         RTS
+             
+DISPLAY_COUNTR_DISPLC   LEA         OPEN_PARENS,A1        ; print out '('. 
+                        MOVE.B      #14,D0
+                        TRAP        #15
                         
-DISPLAY_COUNTR_DISPLC   RTS         ;TODO   
+                        LEA         DOLLAR,A1             ; print out '$' 
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        CLR.L       D1
+                        CLR.L       D3
+                        CLR.L       D4
+                        MOVE.W      (CURRENT_DATA),D3
+                        MOVE.L      #$0000FFFE,D4
+                        
+                        SUB.L       A4,D4    ; subtract our starting address from the destination word
+                        SUB.L       D3,D4
+                        NEG.L       D4
+                        
+                        MOVE.W      D4,D1 
+                        MOVE.B      #16,D2
+                        MOVE.B      #15,D0
+                        TRAP        #15
+
+                        LEA         COMMA,A1             ; print out ',' 
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         MSG_PC,A1            ; print out 'PC' 
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         CLOSE_PARENS,A1      ; print out ')' 
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        RTS         
 
 DISPLAY_COUNTR_INDEX    RTS         ;TODO   
 
@@ -4402,6 +4654,7 @@ RETURN                  DC.B        CR,LF,0
 SPACE                   DC.B        ' ',0
 DOLLAR                  DC.B        '$',0
 COMMA                   DC.B        ',',0
+PERIOD                  DC.B        '.',0
 HASH                    DC.B        '#',0
 OPEN_PARENS             DC.B        '(',0
 CLOSE_PARENS            DC.B        ')',0
@@ -4558,6 +4811,9 @@ BLE_MSG                 DC.B        'BLE',0
     ;JSR
 JSR_MSG                 DC.B        'JSR',0
 
+    ;TRAP
+TRAP_MSG                DC.B        'TRAP',0
+
     ;LEA
 LEA_L_MSG               DC.B        'LEA.L',0
 
@@ -4569,14 +4825,21 @@ CLR_L_MSG               DC.B        'CLR.L',0
 *other output instruction message constants
 MSG_D                   DC.B        'D',0
 MSG_A                   DC.B        'A',0
+MSG_PC                  DC.B        'PC',0
 
 *storage locations for input
 START_ADDR_IN           DS.B        20
+START_ADDRESS           DS.L        1
+END_ADDRESS             DS.L        1
+
+* input digit storage locations
+INPUT_DIGIT_SPACE       DS.L        2
 
 *other I/O-related variables/constants
 INPUTTING_START         SET         1 ;if 1, we are inputting start address. If 0, we are inputting end address.
 OPCODE_BUFFER           DS.L        1 ; can hold at most 4 characters
-SIZE_BUFFER             DS.W        1 ;cand hold at most 2 characters
+SIZE_BUFFER             DS.W        1 ; can hold at most 2 characters
+RESTART_CHECK_SPC       DS.W        1 ; checks whether the user wants to restart the program
 DISPLAY_BUFFER      	DCB.B       81,0              ; 81 bytes == 80 chars (the '0' at the end counts)
 DISP_BUFF_INDEX			DCB.L 		1,0 	; This is the index for the display buffer. It points to the current index
 RESTART_PROMPT_MSG      DC.B        'Restart? (y/n)',0
@@ -4650,6 +4913,7 @@ CURRENT_BRA_DEST        DS.L        1 ; ending location of a branch instruction
 CURRENT_BRA_DISPLC      DS.B        1 ; current branch displacement
 CURRENT_MASK_FIELD      DS.W        1 ; right now, this is only used for MOVEM.
 CURRENT_SHIFT_MODE      DS.B        1 ; used for logical shifts/rotations
+CURRENT_TRAP_VECTOR     DS.W        1 ; used for the vector of a TRAP instruction.
 
 *size constants
 BYTE_SIZE                EQU         $00 ; 0000 0000
@@ -4680,12 +4944,15 @@ END_ADDR                SET         $00009000
 *note: I'm not sure if it matters much whether you have the 4 leading 0s in these filters, but I don't want to
 *risk changing it. Therefore, some filters have leading 0s and some do not.
     * general filters
+FILT_BYTE_2             EQU         $000000FF   ;second byte:                           0000 0000 XXXX XXXX    
 FILT_2BIT_1             EQU         $0000C000   ;first 2 bits:                          XX00 0000 0000 0000
 FILT_NIB_1              EQU         $0000F000   ;first nibble:                          XXXX 0000 0000 0000
 FILT_NIB_2              EQU         $00000F00   ;second nibble:                         0000 XXXX 0000 0000
 FILT_NIB_3              EQU         $000000F0   ; third nibble:                         0000 0000 XXXX 0000
-FILT_BIT_5              EQU         $00000800   ;5th bit:                               0000 X000 0000 0000
-FILT_BIT_8              EQU         $00000100   ;8th bit:                               0000 000X 0000 0000
+FILT_NIB_4              EQU         $0000000F   ; fourth nibble:                        0000 0000 0000 XXXX
+FILT_BIT_1              EQU         $00008000   ; 1st bit:                              X000 0000 0000 0000
+FILT_BIT_5              EQU         $00000800   ; 5th bit:                              0000 X000 0000 0000
+FILT_BIT_8              EQU         $00000100   ; 8th bit:                              0000 000X 0000 0000
 FILT_BIT_10             EQU         $00000040   ; 10th bit:                             0000 0000 0X00 0000
 
     * source/destination filters (not applicable for bidirectional operations)
@@ -4702,6 +4969,9 @@ FILT_OP_DIRECTION       EQU         $00000100   ; operation direction           
     * direction filter
 FILT_DIRECTION          EQU         $00000100   ; direction of an operation             0000 000X 0000 0000  // shahin
 
+    * Address with index mode-specific filters
+FILT_ADDR_INDEX_REG     EQU         $00007000   ; index of an addressing w/ index:      0111 0000 0000 0000
+
    * small Mode filter for SBCD, SUBX, ABCD, EXG, ADDX
 FILT_SMALL_MODE         EQU         $00000004   ; small mode:                           0000 0000 0000 X000  // shahin
     
@@ -4710,7 +4980,6 @@ FILT_SMALL_SIZE         EQU         $00000100   ; small size:                   
 
     * rotation mode filter
 FILT_ROTATION_MODE      EQU         $00000020   ; rotation mode of an operation         0000 0000 00X0 0000  //shahin
-
     
     * shift mode filter
 FILT_SHIFT_MODE         EQU         $00000020   ; mode of a register shift              0000 0000 00X0 0000
@@ -4994,6 +5263,7 @@ STOP_CODE               EQU         $4E72   ; STOP                              
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+
 
 
 *~Font name~Courier New~

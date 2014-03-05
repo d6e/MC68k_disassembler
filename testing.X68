@@ -6,7 +6,15 @@
 *-----------------------------------------------------------
 
 START       ORG    $7000                ; first instruction of program
-            MOVE.W ($706A,PC,A2.L),D2
+            MOVE.W ($70,PC,D5.W),D4
+            MOVE.W ($7,A4,A5.W),D3
+            MOVE.W ($7,A4,A5.L),D3
+            MOVE.W ($7,A4,A4.L),D3
+            MOVE.W ($7,A4,D5.W),D3
+            MOVE.W ($7,A4,D5.L),D3
+            MOVE.W ($7,A4,A1.W),D3
+            MOVE.L ($7,A4,A5.L),D3
+            MOVE.W ($15,A2),D2
             NOP
             MOVEA.W #$1000,A3
             MOVE.B #10,D0
@@ -399,24 +407,24 @@ START       ORG    $7000                ; first instruction of program
             CMPI.L #1, D1
             CMPI.L #1, $10000000
             CMPI.L #1, $1000
-            JSR (A1)
-            JSR $10000000
-            JSR $1000
-            BRA $7000
-            BRA $7700
-            BRA $0000972C
-            BCC $7000
-            BCC $7700
-            BCC $0000972C
-            BGT $7000
-            BGT $7700
-            BGT $0000972C
-            BLE $7000
-            BLE $7700
-            BLE $0000972C
-            BVS $7000
-            BVS $7700
-            BVS $0000972C
+            ;JSR (A1)
+            ;JSR $10000000
+            ;JSR $1000
+            ;BRA $7000
+            ;BRA $7700
+            ;BRA $0000972C
+            ;BCC $7000
+            ;BCC $7700
+            ;BCC $0000972C
+            ;BGT $7000
+            ;BGT $7700
+            ;BGT $0000972C
+            ;BLE $7000
+            ;BLE $7700
+            ;BLE $0000972C
+            ;BVS $7000
+            ;BVS $7700
+            ;BVS $0000972C
             ;RTS 
 
             STOP   #$7700          ; halt simulator
