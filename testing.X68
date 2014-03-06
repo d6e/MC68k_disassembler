@@ -118,7 +118,6 @@ START       ORG    $7000                ; first instruction of program
             MOVEM.L $1000, D1
             ADD.B D1, D1
             ADD.B (A1), D1
-            ADD.B #9, D1
             ADD.B (A1)+, D1
             ADD.B -(A1), D1
             ADD.B $10000000, D1
@@ -126,7 +125,6 @@ START       ORG    $7000                ; first instruction of program
             ADD.W D1, D1
             ADD.W A1, D1
             ADD.W (A1), D1
-            ADD.W #9, D1
             ADD.W (A1)+, D1
             ADD.W -(A1), D1
             ADD.W $10000000, D1
@@ -134,7 +132,6 @@ START       ORG    $7000                ; first instruction of program
             ADD.L D1, D1
             ADD.L A1, D1
             ADD.L (A1), D1
-            ADD.L #9, D1
             ADD.L (A1)+, D1
             ADD.L -(A1), D1
             ADD.L $10000000, D1
@@ -142,7 +139,6 @@ START       ORG    $7000                ; first instruction of program
             ADDA.W D1, A1
             ADDA.W A1, A1
             ADDA.W (A1), A1
-            ADDA.W #9, A1
             ADDA.W (A1)+, A1
             ADDA.W -(A1), A1
             ADDA.W $10000000, A1
@@ -150,7 +146,6 @@ START       ORG    $7000                ; first instruction of program
             ADDA.L D1, A1
             ADDA.L A1, A1
             ADDA.L (A1), A1
-            ADDA.L #9, A1
             ADDA.L (A1)+, A1
             ADDA.L -(A1), A1
             ADDA.L $10000000, A1
