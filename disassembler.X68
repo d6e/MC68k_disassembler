@@ -99,9 +99,6 @@ BLANK_THE_SCREEN		ADD.B 		#1,D2         ; loop counter
 *-------------------- Print ASCII logo ----------------------
 PROMPT_INPUT            BRA         TAKE_USER_IN_S ;TODO: change to welcome/ASCII logo
 
-
-
-
 *------------------- Prompt user for input -------------------
 
                 
@@ -128,46 +125,25 @@ TAKE_USER_INPUT         MOVE.L      #$00000000,D1   ; need to clear out the data
                         MOVEA.W     INPUT_DIGIT_SPACE,A1
                         TRAP        #15             ; and the length in D1.W.  
 
-COUNT_INPUT_DIGITS      ADDA.W      #1,A1
-                        CMP         #1,D1
-                        BEQ         ASCII_TO_HEX  ;start converting if we have 1 digit.
-          
-                        ADDA.W      #1,A1
-                        CMP         #2,D1
-                        BEQ         ASCII_TO_HEX  ;start converting if we have 2 digits.
-          
-                        ADDA.W      #1,A1
-                        CMP         #3,D1
-                        BEQ         ASCII_TO_HEX  ;start converting if we have 3 digits.
-          
-                        ADDA.W      #1,A1
-                        CMP         #4,D1
-                        BEQ         ASCII_TO_HEX  ;start converting if we have 4 digits.
-          
-                        ADDA.W      #1,A1
-                        CMP         #5,D1
-                        BEQ         ASCII_TO_HEX  ;start converting if we have 5 digits.
-          
-                        ADDA.W      #1,A1
-                        CMP         #6,D1
-                        BEQ         ASCII_TO_HEX  ;start converting if we have 6 digits.
-          
-                        ADDA.W      #1,A1
-                        CMP         #7,D1
-                        BEQ         ASCII_TO_HEX  ;start converting if we have 7 digits.
-          
-                        ADDA.W      #1,A1
-                        CMP         #8,D1
-                        BEQ         ASCII_TO_HEX  ;start converting if we have 8 digits.
-          
-                        LEA         INVALID_LEN_MSG,A1         ; If we get an invalid length, give and error message and... branch back asking user for input again
+COUNT_INPUT_DIGITS      BRA         CHECK_DIGIT_COUNT
+
+CHECK_DIGIT_COUNT       CMP.B       #0,D1
+                        BEQ         INVALID_DIGIT_COUNT  ; don't start converting until we get a valid number of digits.
+
+                        CMP.B       #8,D1
+                        BGT         INVALID_DIGIT_COUNT  ; don't start converting until we get a valid number of digits.
+
+                        BRA         VALID_DIGIT_COUNT
+                        
+INVALID_DIGIT_COUNT     LEA         INVALID_LEN_MSG,A1         ; If we get an invalid length, give and error message and... branch back asking user for input again
                         MOVE.B      #14,D0
                         TRAP        #15
 
-                        BEQ         TAKE_USER_INPUT               
+                        BEQ         TAKE_USER_INPUT   
 
-
-
+VALID_DIGIT_COUNT       ADDA.W      D1,A1          ; Move A1 based on the number of input digits.     
+                        BRA         ASCII_TO_HEX        
+                     
 *------------------- Convert to hex subroutine -------------------
 
 ASCII_TO_HEX            MOVE.L      #$00000000,D6      ; running total of converted hex number
@@ -5038,14 +5014,17 @@ SLASH                   DC.B        '/',0
 START_ADDR_MSG          DC.B        'Please enter a starting hex address to read from.',CR,LF,0
 END_ADDR_MSG            DC.B        'Please enter an ending hex address to read from.',CR,LF,0
 
-INVALID_LEN_MSG         DC.B        'Not a valid length for input address.',CR,LF,0
+INVALID_LEN_MSG         DC.B        'Not a valid length for input address.',CR,LF
                         DC.B        'Please enter a valid-length address.',CR,LF,0
-INVALID_ADDR_MSG        DC.B        'Not a valid address.',CR,LF,0
+                        
+INVALID_ADDR_MSG        DC.B        'Not a valid address.',CR,LF
                         DC.B        'Please enter a valid address.',CR,LF,0
-INVALID_END_ADDR_MSG    DC.B        'Not a valid end address.',CR,LF,0
+                        
+INVALID_END_ADDR_MSG    DC.B        'Not a valid end address.',CR,LF
                         DC.B        'Please enter an end address after the start address.',CR,LF,0
+                        
                       
-INVALID_ADDR_L_MSG      DC.B        'Not a valid address (too low).',CR,LF,0
+INVALID_ADDR_L_MSG      DC.B        'Not a valid address (too low).',CR,LF
                         DC.B        'Please enter a valid address.',CR,LF,0
                         
 INVALID_ADDR_H_MSG      DC.B        'Not a valid address (too high).',CR,LF
@@ -5067,10 +5046,10 @@ LONG_SIZE_MSG           DC.B        '.L',0
 RESET_MSG               DC.B        'RESET',0
 NOP_MSG                 DC.B        'NOP',0
 STOP_MSG                DC.B        'STOP',0
-RTE_MSG                 DC.B        'RETURN FROM EXCEPTION',0
-RTS_MSG                 DC.B        'RETURN FROM SUBROUTINE',0
-TRAPV_MSG               DC.B        'TRAP ON OVERFLOW',0
-RTR_MSG                 DC.B        'RETURN AND RESTORE',0
+RTE_MSG                 DC.B        'RTE',0
+RTS_MSG                 DC.B        'RTS',0
+TRAPV_MSG               DC.B        'TRAPV',0
+RTR_MSG                 DC.B        'RTR',0
 
 
     ;moves
@@ -5648,6 +5627,9 @@ RTR_CODE                EQU         $4E77   ; RETURN FROM RESTORE               
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+
+
+
 
 
 
