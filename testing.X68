@@ -6,26 +6,10 @@
 *-----------------------------------------------------------
 
 START       ORG    $7000                ; first instruction of program
-            MULU.W D1, D1
-            MULU.W (A1), D1
-            MULU.W #1, D1
-            MULU.W (A1)+, D1
-            MULU.W -(A1), D1
-            MULU.W $10000000, D1
-            MULU.W $1000, D1
-            MOVE.W ($7,A4,A5.W),D3
-            MOVE.W ($7,A4,A5.L),D3
-            MOVE.W ($7,A4,A4.L),D3
-            MOVE.W ($7,A4,D5.W),D3
-            MOVE.W ($7,A4,D5.L),D3
-            MOVE.W ($7,A4,A1.W),D3
-            MOVE.L ($7,A4,A5.L),D3
-            MOVE.W ($15,A2),D2
             NOP
-            MOVEA.W #$1000,A3
             MOVE.B #10,D0
-            MOVEQ.L #2,D1
-            ;TST.B $8000
+
+* TODO: use all required opcodes in all possible combinations here
             MOVE.B D1, D1
             MOVE.B D1, $10000000
             MOVE.B D1, $1000
@@ -134,7 +118,6 @@ START       ORG    $7000                ; first instruction of program
             MOVEM.L $1000, D1
             ADD.B D1, D1
             ADD.B (A1), D1
-            ;ADD.B #9, D1
             ADD.B (A1)+, D1
             ADD.B -(A1), D1
             ADD.B $10000000, D1
@@ -142,7 +125,6 @@ START       ORG    $7000                ; first instruction of program
             ADD.W D1, D1
             ADD.W A1, D1
             ADD.W (A1), D1
-            ;ADD.W #9, D1
             ADD.W (A1)+, D1
             ADD.W -(A1), D1
             ADD.W $10000000, D1
@@ -150,7 +132,6 @@ START       ORG    $7000                ; first instruction of program
             ADD.L D1, D1
             ADD.L A1, D1
             ADD.L (A1), D1
-            ;ADD.L #9, D1
             ADD.L (A1)+, D1
             ADD.L -(A1), D1
             ADD.L $10000000, D1
@@ -158,7 +139,6 @@ START       ORG    $7000                ; first instruction of program
             ADDA.W D1, A1
             ADDA.W A1, A1
             ADDA.W (A1), A1
-            ;ADDA.W #9, A1
             ADDA.W (A1)+, A1
             ADDA.W -(A1), A1
             ADDA.W $10000000, A1
@@ -166,20 +146,10 @@ START       ORG    $7000                ; first instruction of program
             ADDA.L D1, A1
             ADDA.L A1, A1
             ADDA.L (A1), A1
-            ;ADDA.L #9, A1
             ADDA.L (A1)+, A1
             ADDA.L -(A1), A1
             ADDA.L $10000000, A1
             ADDA.L $1000, A1
-            ADDI.B #18, D1
-            ADDI.B #20, $10000000
-            ADDI.B #30, $1000
-            ADDI.W #1000, D1
-            ADDI.W #1000, $10000000
-            ADDI.W #1000, $1000
-            ADDI.L #1000, D1
-            ADDI.L #1000, $10000000
-            ADDI.L #1000, $1000
             ADDI.B #9, D1
             ADDI.B #9, $10000000
             ADDI.B #9, $1000
@@ -191,7 +161,7 @@ START       ORG    $7000                ; first instruction of program
             ADDI.L #9, $1000
             SUB.B D1, D1
             SUB.B (A1), D1
-            ;SUB.B #1, D1
+            SUB.B #1, D1
             SUB.B (A1)+, D1
             SUB.B -(A1), D1
             SUB.B $10000000, D1
@@ -199,7 +169,7 @@ START       ORG    $7000                ; first instruction of program
             SUB.W D1, D1
             SUB.W A1, D1
             SUB.W (A1), D1
-            ;SUB.W #1, D1
+            SUB.W #1, D1
             SUB.W (A1)+, D1
             SUB.W -(A1), D1
             SUB.W $10000000, D1
@@ -207,7 +177,7 @@ START       ORG    $7000                ; first instruction of program
             SUB.L D1, D1
             SUB.L A1, D1
             SUB.L (A1), D1
-            ;SUB.L #1, D1
+            SUB.L #1, D1
             SUB.L (A1)+, D1
             SUB.L -(A1), D1
             SUB.L $10000000, D1
@@ -215,7 +185,7 @@ START       ORG    $7000                ; first instruction of program
             SUBA.W D1, A1
             SUBA.W A1, A1
             SUBA.W (A1), A1
-            ;SUBA.W #1, A1
+            SUBA.W #1, A1
             SUBA.W (A1)+, A1
             SUBA.W -(A1), A1
             SUBA.W $10000000, A1
@@ -223,7 +193,7 @@ START       ORG    $7000                ; first instruction of program
             SUBA.L D1, A1
             SUBA.L A1, A1
             SUBA.L (A1), A1
-            ;SUBA.L #1, A1
+            SUBA.L #1, A1
             SUBA.L (A1)+, A1
             SUBA.L -(A1), A1
             SUBA.L $10000000, A1
@@ -341,7 +311,6 @@ START       ORG    $7000                ; first instruction of program
             ASR.B #1, D2
             ASR.W #1, D2
             ASR.L #1, D2
-            ASR $1000
             LSL.B D1, D2
             LSL.W D1, D2
             LSL.L D1, D2
@@ -413,37 +382,16 @@ START       ORG    $7000                ; first instruction of program
             CMPI.L #1, D1
             CMPI.L #1, $10000000
             CMPI.L #1, $1000
-            ;JSR (A1)
-            ;JSR $10000000
-            ;JSR $1000
-            ;BRA $7000
-            ;BRA $7700
-            ;BRA $0000972C
-            ;BCC $7000
-            ;BCC $7700
-            ;BCC $0000972C
-            ;BGT $7000
-            ;BGT $7700
-            ;BGT $0000972C
-            ;BLE $7000
-            ;BLE $7700
-            ;BLE $0000972C
-            ;BVS $7000
-            ;BVS $7700
-            ;BVS $0000972C
-            ;RTS 
+            JSR (A1)
+            JSR $10000000
+            JSR $1000
+            RTS 
 
             STOP   #$7700          ; halt simulator
 
 * Put variables and constants here
 
             END    START        ; last line of source
-
-
-
-
-
-
 
 
 *~Font name~Courier New~

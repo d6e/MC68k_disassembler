@@ -59,6 +59,8 @@ START                   ORG        $1000       ; first instruction of program
                         CLR.B      LINE_COUNTER
                         BRA        PROMPT_INPUT            ; prompt the user for input
                  
+STOP                    STOP       #$2700          ; halt simulator, end of main
+
 END_PROGRAM             STOP       #$2700          ; halt simulator, end of main
 
 *################ END MAIN ###############################
@@ -128,35 +130,35 @@ TAKE_USER_INPUT         MOVE.L      #$00000000,D1   ; need to clear out the data
 
 COUNT_INPUT_DIGITS      ADDA.W      #1,A1
                         CMP         #1,D1
-                        BEQ         ASCII_TO_HEX    ; start converting if we have 1 digit.
+                        BEQ         ASCII_TO_HEX  ;start converting if we have 1 digit.
           
                         ADDA.W      #1,A1
                         CMP         #2,D1
-                        BEQ         ASCII_TO_HEX    ; start converting if we have 2 digits.
+                        BEQ         ASCII_TO_HEX  ;start converting if we have 2 digits.
           
                         ADDA.W      #1,A1
                         CMP         #3,D1
-                        BEQ         ASCII_TO_HEX    ; start converting if we have 3 digits.
+                        BEQ         ASCII_TO_HEX  ;start converting if we have 3 digits.
           
                         ADDA.W      #1,A1
                         CMP         #4,D1
-                        BEQ         ASCII_TO_HEX    ; start converting if we have 4 digits.
+                        BEQ         ASCII_TO_HEX  ;start converting if we have 4 digits.
           
                         ADDA.W      #1,A1
                         CMP         #5,D1
-                        BEQ         ASCII_TO_HEX    ; start converting if we have 5 digits.
+                        BEQ         ASCII_TO_HEX  ;start converting if we have 5 digits.
           
                         ADDA.W      #1,A1
                         CMP         #6,D1
-                        BEQ         ASCII_TO_HEX    ; start converting if we have 6 digits.
+                        BEQ         ASCII_TO_HEX  ;start converting if we have 6 digits.
           
                         ADDA.W      #1,A1
                         CMP         #7,D1
-                        BEQ         ASCII_TO_HEX    ; start converting if we have 7 digits.
+                        BEQ         ASCII_TO_HEX  ;start converting if we have 7 digits.
           
                         ADDA.W      #1,A1
                         CMP         #8,D1
-                        BEQ         ASCII_TO_HEX    ; start converting if we have 8 digits.
+                        BEQ         ASCII_TO_HEX  ;start converting if we have 8 digits.
           
                         LEA         INVALID_LEN_MSG,A1         ; If we get an invalid length, give and error message and... branch back asking user for input again
                         MOVE.B      #14,D0
@@ -615,8 +617,21 @@ CHECK_CONSTANTS         CMP         #RESET_CODE,(CURRENT_WORD)
                         CMP         #STOP_CODE,(CURRENT_WORD)
                         BEQ         STOP_FOUND
                         
-                        BRA         CHECK_NON_CONSTANTS     ;Once we rule out all the constants we know of, we check for non-constants.
+                        CMP         #RTE_CODE,(CURRENT_WORD)
+                        BEQ         RTE_FOUND
 
+                        CMP         #RTS_CODE,(CURRENT_WORD)
+                        BEQ         RTS_FOUND
+                        
+                        CMP         #TRAPV_CODE,(CURRENT_WORD)
+                        BEQ         TRAPV_FOUND
+                        
+                        CMP         #RTR_CODE,(CURRENT_WORD)
+                        BEQ         RTR_FOUND
+
+                        
+                        BRA         CHECK_NON_CONSTANTS     ;Once we rule out all the constants we know of, we check for non-constants.
+                       
 RESET_FOUND             BSR         DISPLAY_CURRENT_ADDRESS
 
                         LEA         RESET_MSG,A1    ; 'RESET'
@@ -666,6 +681,66 @@ READ_STOP_DATA          MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_SRC_REG
                         MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_SRC_MD
                         BSR         READ_SOURCE_DATA     
                         RTS
+
+
+
+
+RTE_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
+
+
+                        LEA         RTE_MSG,A1    ; 'RETURN FROM EXCEPTION'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         RETURN,A1       ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+               
+                        BRA         GO_TO_NEXT_OP  
+
+
+
+
+RTS_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
+
+
+                        LEA         RTS_MSG,A1    ; 'RETURN FROM SUBROUTINE'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         RETURN,A1       ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+               
+                        BRA         GO_TO_NEXT_OP  
+
+
+
+TRAPV_FOUND             BSR         DISPLAY_CURRENT_ADDRESS
+
+
+                        LEA         TRAPV_MSG,A1    ; 'TRAP ON OVERFLOW'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         RETURN,A1       ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+               
+                        BRA         GO_TO_NEXT_OP  
+                        
+RTR_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
+
+
+                        LEA         RTR_MSG,A1    ; 'RETURN AND RESTORE'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        LEA         RETURN,A1       ; (return)
+                        MOVE.B      #14,D0
+                        TRAP        #15
+               
+                        BRA         GO_TO_NEXT_OP  
 
 
 ;TODO: add cases for rest of valid constant OPcodes here
@@ -873,6 +948,11 @@ CONFIRM_0100_0XXX       CLR         D3
                         
                          BRA         CHK_FOUND        ; otherwise, we have CHK.
 
+
+                        
+                        ; TODO: we definitely have an error at this point.
+                        
+                        
 CONFIRM_0100_1XXX       CLR         D3
                         MOVE.W      CURRENT_WORD,D3
                         ANDI.W      #FILT_NIB_2,D3  ; turn word into 0000 XXXX 0000 0000
@@ -1205,14 +1285,14 @@ CHECK_MOVEM             CLR         D3
 *MOVE.B
 MOVE_B_FOUND            MOVE.B      #BYTE_SIZE,CURRENT_OP_SIZE
                         BSR         DISPLAY_CURRENT_ADDRESS
-                        BSR         PARSE_MOVE_DATA                                           
+                        BSR         PARSE_MOVE_DATA                           
                         BSR         DISPLAY_MOVE_DATA
                         BRA         GO_TO_NEXT_OP
 
 *MOVE.W                        
 MOVE_W_FOUND            MOVE.B      #WORD_SIZE,CURRENT_OP_SIZE
                         BSR         DISPLAY_CURRENT_ADDRESS
-                        BSR         PARSE_MOVE_DATA                                                       
+                        BSR         PARSE_MOVE_DATA       
                         BSR         DISPLAY_MOVE_DATA
                         BRA         GO_TO_NEXT_OP  
 
@@ -1283,11 +1363,11 @@ DISPLAY_MOVE_OP_WORD    CMP.B       #CONST_ADDR_REG_MD,CURRENT_DEST_MD
                         RTS
                         
 DISPLAY_MOVEA           LEA         MOVEA_MSG,A1       ;'MOVEA'
-                        MOVE.B      #14,D0      
-                        TRAP        #15     
+                        MOVE.B      #14,D0
+                        TRAP        #15
 
-                        RTS 
-                 
+                        RTS        
+                         
 *-----------------------MOVEQ-related Subroutines------------------------------------
 
 *-----------------------Case for finding MOVEQ------------------------------------
@@ -1781,7 +1861,6 @@ DISPLAY_SUBI_L_START    LEA         SUBI_L_MSG,A1           ;'SUBI.L'
                         MOVE.B      #14,D0
                         TRAP        #15
                         RTS
-
 
  *----------------------ADDI-related Subroutines------------------------------------
 ADDI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
@@ -4130,7 +4209,7 @@ READ_OP_SIZE           CLR          D4
                        LSR.W        #6,D4                  ; turn D4 into 0000 0000 0000 00XX
                        MOVE.B       D4,CURRENT_OP_SIZE     ; save current OP size
                        RTS
-
+                       
 *Rename                      
 *---------------------Read small operation size for MOVEM,MOVEP, EXT, ------------------------------------------------//Shahin
 READ_SMALL_OP_SIZE    CLR         D4
@@ -4147,8 +4226,8 @@ READ_OP_SIZE_SMALL     CLR          D4
                        ANDI.W       #FILT_SMALL_SIZE,D4    ; turn D4 into 0000 000X 0000 0000
                        LSR.W        #8,D4                  ; turn D4 into 0000 0000 0000 000X
                        MOVE.B       D4,CURRENT_OP_SIZE     ; save current OP size
-                       RTS
-
+                      RTS
+                      
 
 *-----------------------Read the operation direction----------------------------------------                       
 READ_OP_DIRECTION      CLR          D4
@@ -4222,7 +4301,7 @@ READ_CURRENT_DIRECTION   CLR         D4
                          
 *---------------------Read rotation mode for ASd, LSd, ROXd, ROd -----------------------------------//Shahin
                       
-READ_ROTATION_MODE      CLR         D4
+READ_ROTATION_MODE         CLR         D4
                         CLR.B       CURRENT_ROTATION_MODE      ; to avoid any junk data
                         MOVE.W      CURRENT_WORD,D4    
                         ANDI.W      #FILT_ROTATION_MODE,D4     ; 0000 0000 00X0 0000     filter out direction 
@@ -4241,8 +4320,8 @@ READ_SOURCE_DATA        CLR.L       CURRENT_SRC_DATA
                         CMP.B       #CONST_ADDR_INDEX_MD,CURRENT_SRC_MD  ; check the source mode
                         BEQ         CONFIRM_READ_SRC_DATA                ; see if we have a source mode that requires additional data. 
 
-                        CMP.B       #CONST_ADDR_MISC_MD,CURRENT_SRC_MD   ; check the source mode
-                        BEQ         CONFIRM_READ_SRC_DATA                ; see if we have a source mode that requires additional data.               
+                        CMP.B       #CONST_ADDR_MISC_MD,CURRENT_SRC_MD ; check the source mode
+                        BEQ         CONFIRM_READ_SRC_DATA              ; see if we have a source mode that requires additional data.               
                         RTS
                         
 CONFIRM_READ_SRC_DATA   CLR.B       CURRENT_REG
@@ -4263,8 +4342,8 @@ READ_DEST_DATA          CLR.L       CURRENT_DEST_DATA
                         CMP.B       #CONST_ADDR_INDEX_MD,CURRENT_DEST_MD ; check the destination mode
                         BEQ         CONFIRM_READ_DEST_DATA                ; see if we have a destination mode that requires additional data.
 
-                        CMP.B       #CONST_ADDR_MISC_MD,CURRENT_DEST_MD   ; check the destination mode.
-                        BEQ         CONFIRM_READ_DEST_DATA                ; see if we have a destination mode that requires additional data.                  
+                        CMP.B       #CONST_ADDR_MISC_MD,CURRENT_DEST_MD  ; check the destination mode.
+                        BEQ         CONFIRM_READ_DEST_DATA               ; see if we have a destination mode that requires additional data.                  
                         
                         RTS
                                             
@@ -4323,7 +4402,7 @@ CONFIRM_READ_RIGHT_DATA CLR.B       CURRENT_REG
 
 *-----------------------Read some additional data.----------------------------------------------------------
       ; This same subroutine is used for reading any kind of data, as long as CURRENT_REG is set beforehand.
-      ; By this point, CURRENT_REG holds whatever register we currently care about. (could also use CURRENT_REG) 
+      ; By this point, CURRENT_REG holds whatever register we currently care about. (could also use CURRENT_REG)         
 
     *check mode first.        
 CONFIRM_READ_DATA       CMP.B       #CONST_ADDR_MISC_MD,CURRENT_MD        
@@ -4354,7 +4433,7 @@ CONFIRM_READ_DATA_MISC  CMP.B       #CONST_COUNTR_DISPLC_REG,CURRENT_REG      ; 
                         BEQ         READ_IMMEDIATE_DATA
      
                         RTS
-  
+                        
 READ_COUNTR_DISPLC_DATA MOVE.W (A5)+,CURRENT_DATA ;TODO: test that this is correct for more cases.
                         RTS
 
@@ -4711,16 +4790,16 @@ CHECK_MISC_ADDRESSINGS  CMP.B       #CONST_COUNTR_DISPLC_REG,CURRENT_REG
                         ; TODO: error case?
                         
                         RTS
-
+                        
 *-----------------------Display program counter w/ displacement------------------------------------             
 DISPLAY_COUNTR_DISPLC   LEA         OPEN_PARENS,A1        ; print out '('. 
                         MOVE.B      #14,D0
                         TRAP        #15
-                        
+
                         LEA         DOLLAR,A1             ; print out '$' 
                         MOVE.B      #14,D0
                         TRAP        #15
-                        
+
                         CLR.L       D1
                         CLR.L       D3
                         CLR.L       D4
@@ -4988,6 +5067,11 @@ LONG_SIZE_MSG           DC.B        '.L',0
 RESET_MSG               DC.B        'RESET',0
 NOP_MSG                 DC.B        'NOP',0
 STOP_MSG                DC.B        'STOP',0
+RTE_MSG                 DC.B        'RETURN FROM EXCEPTION',0
+RTS_MSG                 DC.B        'RETURN FROM SUBROUTINE',0
+TRAPV_MSG               DC.B        'TRAP ON OVERFLOW',0
+RTR_MSG                 DC.B        'RETURN AND RESTORE',0
+
 
     ;moves
 MOVE_MSG                DC.B        'MOVE',0
@@ -5247,8 +5331,8 @@ FILT_NIB_2              EQU         $00000F00   ;second nibble:                 
 FILT_NIB_3              EQU         $000000F0   ; third nibble:                         0000 0000 XXXX 0000
 FILT_NIB_4              EQU         $0000000F   ; fourth nibble:                        0000 0000 0000 XXXX
 FILT_BIT_1              EQU         $00008000   ; 1st bit:                              X000 0000 0000 0000
-FILT_BIT_5              EQU         $00000800   ; 5th bit:                              0000 X000 0000 0000
-FILT_BIT_8              EQU         $00000100   ; 8th bit:                              0000 000X 0000 0000
+FILT_BIT_5              EQU         $00000800   ;5th bit:                               0000 X000 0000 0000
+FILT_BIT_8              EQU         $00000100   ;8th bit:                               0000 000X 0000 0000
 FILT_BIT_10             EQU         $00000040   ; 10th bit:                             0000 0000 0X00 0000
 
     * source/destination filters (not applicable for bidirectional operations)
@@ -5259,7 +5343,7 @@ FILT_SRC_REG            EQU         $00000007   ;source register:               
 
     * OP size filters
 FILT_OP_SIZE            EQU         $000000C0   ; operation size:                       0000 0000 XX00 0000   // Shahin 
-
+    
     * OP direction filter
 FILT_OP_DIRECTION       EQU         $00000100   ; operation direction                   0000 000X 0000 0000
     * direction filter
@@ -5276,7 +5360,7 @@ FILT_SMALL_SIZE         EQU         $00000100   ; small size:                   
 
     * rotation mode filter
 FILT_ROTATION_MODE      EQU         $00000020   ; rotation mode of an operation         0000 0000 00X0 0000  //shahin
-    
+
     * shift mode filter
 FILT_SHIFT_MODE         EQU         $00000020   ; mode of a register shift              0000 0000 00X0 0000
 
@@ -5482,7 +5566,7 @@ CONST_ADDX              EQU         $0100    ; confirm ADDX                     
         
     * ADDA
 CONST_ADDA              EQU         $00C0    ; confirm ADDA                          XXXX XXXX 11XX XXXX
-
+         
     * SUBX
 CONST_SUBX              EQU         $0100    ; confirm SUBX                          XXXX XXX1 XX00 XXXX        
     
@@ -5554,6 +5638,11 @@ CONST_IMMEDIATE_REG     EQU         $04      ; Immediate data:         #imm     
 RESET_CODE              EQU         $4E70   ; RESET                                 0100 1110 0111 0001
 NOP_CODE                EQU         $4E71   ; NOP                                   0100 1110 0111 0001
 STOP_CODE               EQU         $4E72   ; STOP                                  0100 1110 0111 0010
+RTE_CODE                EQU         $4E73   ; RETURN FROM EXCEPTION                 0100 1110 0111 0011
+RTS_CODE                EQU         $4E75   ; RETURN FROM SUBROUTINE                0100 1110 0111 0101
+TRAPV_CODE              EQU         $4E76   ; TRAP ON OVERFLOW                      0100 1110 0111 0110
+RTR_CODE                EQU         $4E77   ; RETURN FROM RESTORE                   0100 1110 0111 0111
+
 
   
 *############# END VARIABLES/CONSTANTS #########################
