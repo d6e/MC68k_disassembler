@@ -573,14 +573,31 @@ INVALID_OPCODE_FOUND    BSR         DISPLAY_CURRENT_ADDRESS
 CHECK_EMPTY             CMP         #CONST_FFFF,(CURRENT_WORD)
                         BEQ         CONFIRM_EMPTY
                         RTS
-                        
-CONFIRM_EMPTY           LEA         PROGRAM_END_MSG,A1
+        
+CONFIRM_EMPTY           LEA         PROMPT_EMPTY_CONTINUE,A1
                         MOVE.B      #14,D0      
                         TRAP        #15
-
-                        BRA         PROMPT_RESTART
                         
-                        RTS
+                        BRA         TAKE_USER_IN_CONTINUE
+        
+TAKE_USER_IN_CONTINUE   MOVE.B      #2,D0          			 ; Take user input for contitue reading.
+                        MOVEA.W     CONTINUE_CHECK_SPC,A1    ; Store the ascii input in A1
+                        TRAP        #15             		 ; and the length in D1.W.  
+
+                        CMPI.B 		#$79,(A1) 							; if inputs 'y' 
+                        BEQ			GO_TO_NEXT_OP						; read the next word of data.
+
+                        CMPI.B 		#$6E,(A1)					 			; if inputs 'n' 
+                        BEQ			CONFIRM_DONE						; confirm done reading, prompt the user to restart.
+
+                        BRA 		USER_CONTINUE_IN_ERR 			 			; otherwise, print error message and restart this loop. 
+
+*------------------- Error Restart ------------------- 
+USER_CONTINUE_IN_ERR    LEA 		CONTINUE_ERROR_STR,A1 ; Print out error message 			
+                        MOVE.B 		#14,D0
+                        TRAP 		#15
+
+                        BRA 	    TAKE_USER_IN_CONTINUE     ; reconfirm whether to restart again
  
 *------------------ Check current word for constants---------
 ; By this point, the current word should store a potential beginning of an instruction.                   
@@ -5199,11 +5216,16 @@ INPUTTING_START         SET         1 ;if 1, we are inputting start address. If 
 OPCODE_BUFFER           DS.L        1 ; can hold at most 4 characters
 SIZE_BUFFER             DS.W        1 ; can hold at most 2 characters
 RESTART_CHECK_SPC       DS.W        1 ; checks whether the user wants to restart the program
+CONTINUE_CHECK_SPC      DS.W        1 ; checks whether the user wants to continue reading the program
 DISPLAY_BUFFER      	DCB.B       81,0              ; 81 bytes == 80 chars (the '0' at the end counts)
 DISP_BUFF_INDEX			DCB.L 		1,0 	; This is the index for the display buffer. It points to the current index
 RESTART_PROMPT_MSG      DC.B        'Restart? (y/n)',0
 RESTART_ERROR_STR       DC.B        'That is not a valid response.',CR,LF,0
+CONTINUE_ERROR_STR      DC.B        'That is not a valid response. Please enter y or n.',CR,LF,0
 NEWLINE                 DC.B        CR,LF,0
+
+PROMPT_EMPTY_CONTINUE   DC.B        'Empty data detected (possible end of program).',CR,LF ;NOTE: do not add a 0 here because this is not end of string.
+                        DC.B        'Contitue reading? (y/n)',0
 ENTER_TO_CONT_MSG	DC.B 		'Press Enter to continue',CR,LF,0
 LINE_COUNTER		DCB.B 		1,0 	; Counts number of lines printed to determine when prompt user to hit enter to continue
 ASCII_BANNER01            DC.B        '#######################################################',CR,LF,0
@@ -5627,6 +5649,7 @@ RTR_CODE                EQU         $4E77   ; RETURN FROM RESTORE               
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+
 
 
 
