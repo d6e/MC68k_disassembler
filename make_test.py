@@ -4,7 +4,6 @@
 size = ['.B', '.W', '.L']
 src = ['D1', 'A1', '(A1)', '#1', '(A1)+', '-(A1)','$10000000', '$1000']
 dest = ['D1','$10000000', '$1000']
-# add address with displacement, address with index, program counter with displacement, program counter with index 
 
 class Instruction:
 	def __init__(self, opcode, src=src, dest=dest, size=size, bidirectional=True, label='', AnForSizeB=True):
@@ -76,10 +75,10 @@ def initInstructionList():
 		Instruction('BLE', src, dest, size, False),
 		Instruction('BVS', src, dest, size, False),
 		Instruction('JSR', ['(A1)', '$10000000', '$1000'], [''], [''], False),
-		Instruction('RTS', [''], [''], [''], False),
-        #RTE
-        #TRAPV
-        #RTR
+        Instruction('RTS', [''], [''], [''], False),
+        Instruction('RTE', [''], [''], [''], False),
+        Instruction('TRAPV', [''], [''], [''], False),
+		Instruction('RTR', [''], [''], [''], False),
 	]
 
 

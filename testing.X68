@@ -7,14 +7,10 @@
 
 START       ORG    $7000                ; first instruction of program
             NOP
-			RTS
-			RTE
-			RTR
-			TRAPV
             MOVE.B #10,D0
-			MOVE.B ($70,A3),D4     
-            MOVE.B ($70,A3,D4),D5
-            MOVE.B D1, D2
+
+* TODO: use all required opcodes in all possible combinations here
+            MOVE.B D1, D1
             MOVE.B D1, $10000000
             MOVE.B D1, $1000
             MOVE.B (A1), D1
@@ -386,18 +382,236 @@ START       ORG    $7000                ; first instruction of program
             CMPI.L #1, D1
             CMPI.L #1, $10000000
             CMPI.L #1, $1000
+            BCC GO_TO_SR
+            BGT.B D1, D1
+            BGT.B D1, $10000000
+            BGT.B D1, $1000
+            BGT.B A1, D1
+            BGT.B A1, $10000000
+            BGT.B A1, $1000
+            BGT.B (A1), D1
+            BGT.B (A1), $10000000
+            BGT.B (A1), $1000
+            BGT.B #1, D1
+            BGT.B #1, $10000000
+            BGT.B #1, $1000
+            BGT.B (A1)+, D1
+            BGT.B (A1)+, $10000000
+            BGT.B (A1)+, $1000
+            BGT.B -(A1), D1
+            BGT.B -(A1), $10000000
+            BGT.B -(A1), $1000
+            BGT.B $10000000, D1
+            BGT.B $10000000, $10000000
+            BGT.B $10000000, $1000
+            BGT.B $1000, D1
+            BGT.B $1000, $10000000
+            BGT.B $1000, $1000
+            BGT.W D1, D1
+            BGT.W D1, $10000000
+            BGT.W D1, $1000
+            BGT.W A1, D1
+            BGT.W A1, $10000000
+            BGT.W A1, $1000
+            BGT.W (A1), D1
+            BGT.W (A1), $10000000
+            BGT.W (A1), $1000
+            BGT.W #1, D1
+            BGT.W #1, $10000000
+            BGT.W #1, $1000
+            BGT.W (A1)+, D1
+            BGT.W (A1)+, $10000000
+            BGT.W (A1)+, $1000
+            BGT.W -(A1), D1
+            BGT.W -(A1), $10000000
+            BGT.W -(A1), $1000
+            BGT.W $10000000, D1
+            BGT.W $10000000, $10000000
+            BGT.W $10000000, $1000
+            BGT.W $1000, D1
+            BGT.W $1000, $10000000
+            BGT.W $1000, $1000
+            BGT.L D1, D1
+            BGT.L D1, $10000000
+            BGT.L D1, $1000
+            BGT.L A1, D1
+            BGT.L A1, $10000000
+            BGT.L A1, $1000
+            BGT.L (A1), D1
+            BGT.L (A1), $10000000
+            BGT.L (A1), $1000
+            BGT.L #1, D1
+            BGT.L #1, $10000000
+            BGT.L #1, $1000
+            BGT.L (A1)+, D1
+            BGT.L (A1)+, $10000000
+            BGT.L (A1)+, $1000
+            BGT.L -(A1), D1
+            BGT.L -(A1), $10000000
+            BGT.L -(A1), $1000
+            BGT.L $10000000, D1
+            BGT.L $10000000, $10000000
+            BGT.L $10000000, $1000
+            BGT.L $1000, D1
+            BGT.L $1000, $10000000
+            BGT.L $1000, $1000
+            BLE.B D1, D1
+            BLE.B D1, $10000000
+            BLE.B D1, $1000
+            BLE.B A1, D1
+            BLE.B A1, $10000000
+            BLE.B A1, $1000
+            BLE.B (A1), D1
+            BLE.B (A1), $10000000
+            BLE.B (A1), $1000
+            BLE.B #1, D1
+            BLE.B #1, $10000000
+            BLE.B #1, $1000
+            BLE.B (A1)+, D1
+            BLE.B (A1)+, $10000000
+            BLE.B (A1)+, $1000
+            BLE.B -(A1), D1
+            BLE.B -(A1), $10000000
+            BLE.B -(A1), $1000
+            BLE.B $10000000, D1
+            BLE.B $10000000, $10000000
+            BLE.B $10000000, $1000
+            BLE.B $1000, D1
+            BLE.B $1000, $10000000
+            BLE.B $1000, $1000
+            BLE.W D1, D1
+            BLE.W D1, $10000000
+            BLE.W D1, $1000
+            BLE.W A1, D1
+            BLE.W A1, $10000000
+            BLE.W A1, $1000
+            BLE.W (A1), D1
+            BLE.W (A1), $10000000
+            BLE.W (A1), $1000
+            BLE.W #1, D1
+            BLE.W #1, $10000000
+            BLE.W #1, $1000
+            BLE.W (A1)+, D1
+            BLE.W (A1)+, $10000000
+            BLE.W (A1)+, $1000
+            BLE.W -(A1), D1
+            BLE.W -(A1), $10000000
+            BLE.W -(A1), $1000
+            BLE.W $10000000, D1
+            BLE.W $10000000, $10000000
+            BLE.W $10000000, $1000
+            BLE.W $1000, D1
+            BLE.W $1000, $10000000
+            BLE.W $1000, $1000
+            BLE.L D1, D1
+            BLE.L D1, $10000000
+            BLE.L D1, $1000
+            BLE.L A1, D1
+            BLE.L A1, $10000000
+            BLE.L A1, $1000
+            BLE.L (A1), D1
+            BLE.L (A1), $10000000
+            BLE.L (A1), $1000
+            BLE.L #1, D1
+            BLE.L #1, $10000000
+            BLE.L #1, $1000
+            BLE.L (A1)+, D1
+            BLE.L (A1)+, $10000000
+            BLE.L (A1)+, $1000
+            BLE.L -(A1), D1
+            BLE.L -(A1), $10000000
+            BLE.L -(A1), $1000
+            BLE.L $10000000, D1
+            BLE.L $10000000, $10000000
+            BLE.L $10000000, $1000
+            BLE.L $1000, D1
+            BLE.L $1000, $10000000
+            BLE.L $1000, $1000
+            BVS.B D1, D1
+            BVS.B D1, $10000000
+            BVS.B D1, $1000
+            BVS.B A1, D1
+            BVS.B A1, $10000000
+            BVS.B A1, $1000
+            BVS.B (A1), D1
+            BVS.B (A1), $10000000
+            BVS.B (A1), $1000
+            BVS.B #1, D1
+            BVS.B #1, $10000000
+            BVS.B #1, $1000
+            BVS.B (A1)+, D1
+            BVS.B (A1)+, $10000000
+            BVS.B (A1)+, $1000
+            BVS.B -(A1), D1
+            BVS.B -(A1), $10000000
+            BVS.B -(A1), $1000
+            BVS.B $10000000, D1
+            BVS.B $10000000, $10000000
+            BVS.B $10000000, $1000
+            BVS.B $1000, D1
+            BVS.B $1000, $10000000
+            BVS.B $1000, $1000
+            BVS.W D1, D1
+            BVS.W D1, $10000000
+            BVS.W D1, $1000
+            BVS.W A1, D1
+            BVS.W A1, $10000000
+            BVS.W A1, $1000
+            BVS.W (A1), D1
+            BVS.W (A1), $10000000
+            BVS.W (A1), $1000
+            BVS.W #1, D1
+            BVS.W #1, $10000000
+            BVS.W #1, $1000
+            BVS.W (A1)+, D1
+            BVS.W (A1)+, $10000000
+            BVS.W (A1)+, $1000
+            BVS.W -(A1), D1
+            BVS.W -(A1), $10000000
+            BVS.W -(A1), $1000
+            BVS.W $10000000, D1
+            BVS.W $10000000, $10000000
+            BVS.W $10000000, $1000
+            BVS.W $1000, D1
+            BVS.W $1000, $10000000
+            BVS.W $1000, $1000
+            BVS.L D1, D1
+            BVS.L D1, $10000000
+            BVS.L D1, $1000
+            BVS.L A1, D1
+            BVS.L A1, $10000000
+            BVS.L A1, $1000
+            BVS.L (A1), D1
+            BVS.L (A1), $10000000
+            BVS.L (A1), $1000
+            BVS.L #1, D1
+            BVS.L #1, $10000000
+            BVS.L #1, $1000
+            BVS.L (A1)+, D1
+            BVS.L (A1)+, $10000000
+            BVS.L (A1)+, $1000
+            BVS.L -(A1), D1
+            BVS.L -(A1), $10000000
+            BVS.L -(A1), $1000
+            BVS.L $10000000, D1
+            BVS.L $10000000, $10000000
+            BVS.L $10000000, $1000
+            BVS.L $1000, D1
+            BVS.L $1000, $10000000
+            BVS.L $1000, $1000
             JSR (A1)
             JSR $10000000
             JSR $1000
             RTS 
+            RTE 
+            TRAPV 
+            RTR 
 
             STOP   #$7700          ; halt simulator
 
 * Put variables and constants here
 
             END    START        ; last line of source
-
-
 
 
 *~Font name~Courier New~
