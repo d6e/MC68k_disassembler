@@ -1747,30 +1747,13 @@ ANDI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         
                         BRA         GO_TO_NEXT_OP
                         
-DISPLAY_ANDI_START      CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_ANDI_B_START     ; 'ANDI.B'
-                           
-                        CMP.B       #WORD_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_ANDI_W_START     ; 'ANDI.W'
+DISPLAY_ANDI_START      LEA         ANDI_MSG,A1            ; 'ANDI'
+                        MOVE.B      #14,D0
+                        TRAP        #15
                         
-                        CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_ANDI_L_START     ; 'ANDI.L'
+                        BSR         DISPLAY_CURRENT_SIZE
+                        RTS
                         
-DISPLAY_ANDI_B_START    LEA         ANDI_B_MSG,A1            ; 'ANDI.B'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        RTS
-
-DISPLAY_ANDI_W_START    LEA         ANDI_W_MSG,A1            ; 'ANDI.W'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        RTS
-
-DISPLAY_ANDI_L_START    LEA         ANDI_L_MSG,A1            ; 'ANDI.L'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        RTS
-
  *----------------------SUBI-related Subroutines------------------------------------
 SUBI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         CLR         D4
@@ -1816,28 +1799,10 @@ SUBI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         
                         BRA         GO_TO_NEXT_OP
 
-DISPLAY_SUBI_START      CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_SUBI_B_START     ; 'SUBI.B'
-                           
-                        CMP.B       #WORD_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_SUBI_W_START     ; 'SUBI.W'
-                        
-                        CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_SUBI_L_START     ; 'SUBI.L'
-                        
-DISPLAY_SUBI_B_START    LEA         SUBI_B_MSG,A1            ;'SUBI.B'
+DISPLAY_SUBI_START      LEA         SUBI_MSG,A1             ; 'SUBI'
                         MOVE.B      #14,D0
                         TRAP        #15
-                        RTS
-
-DISPLAY_SUBI_W_START    LEA         SUBI_W_MSG,A1           ;'SUBI.W'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        RTS
-
-DISPLAY_SUBI_L_START    LEA         SUBI_L_MSG,A1           ;'SUBI.L'
-                        MOVE.B      #14,D0
-                        TRAP        #15
+                        BSR         DISPLAY_CURRENT_SIZE
                         RTS
 
  *----------------------ADDI-related Subroutines------------------------------------
@@ -1885,30 +1850,12 @@ ADDI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         
                         BRA         GO_TO_NEXT_OP
 
-DISPLAY_ADDI_START      CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_ADDI_B_START     ; 'ADDI.B'
-                           
-                        CMP.B       #WORD_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_ADDI_W_START     ; 'ADDI.W'
-                        
-                        CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_ADDI_L_START     ; 'ADDI.L'
-                        
-DISPLAY_ADDI_B_START    LEA         ADDI_B_MSG,A1            ;'ADDI.B'
+DISPLAY_ADDI_START      LEA         ADDI_MSG,A1            ;'ADDI'
                         MOVE.B      #14,D0
                         TRAP        #15
+                        BSR         DISPLAY_CURRENT_SIZE
                         RTS
 
-DISPLAY_ADDI_W_START    LEA         ADDI_W_MSG,A1           ;'ADDI.W'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        RTS
-
-DISPLAY_ADDI_L_START    LEA         ADDI_L_MSG,A1           ;'ADDI.L'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        RTS
- 
 *-----------------------EORI-related Subroutines------------------------------------
 EORI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         CLR         D4
@@ -1953,30 +1900,12 @@ EORI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
 
                         BRA         GO_TO_NEXT_OP
 
-DISPLAY_EORI_START      CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_EORI_B_START     ; 'EORI.B'
-                           
-                        CMP.B       #WORD_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_EORI_W_START     ; 'EORI.W'
+DISPLAY_EORI_START      LEA         EORI_MSG,A1            ; 'EORI'
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        BSR         DISPLAY_CURRENT_SIZE
+                        RTS
                         
-                        CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_EORI_L_START     ; 'EORI.L'
-                        
-DISPLAY_EORI_B_START    LEA         EORI_B_MSG,A1            ; 'EORI.B'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        RTS
-
-DISPLAY_EORI_W_START    LEA         EORI_W_MSG,A1            ; 'EORI.W'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        RTS
-
-DISPLAY_EORI_L_START    LEA         EORI_L_MSG,A1            ; 'EORI.L'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        RTS
- 
 *-----------------------CMPI-related Subroutines------------------------------------
 CMPI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         CLR         D4
@@ -2113,28 +2042,10 @@ ADD_FOUND              ; NOTE: easy68k parses instructions like ADD.B #1,D1 as A
                         BEQ         DISPLAY_ADD_DATA_DIR_0                  
                         BRA         DISPLAY_ADD_DATA_DIR_1
                         
-DISPLAY_ADD_START       CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_ADD_B_START     ; 'ADD.B'
-                           
-                        CMP.B       #WORD_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_ADD_W_START     ; 'ADD.W'
-                        
-                        CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_ADD_L_START     ; 'ADD.L'
-                        
-DISPLAY_ADD_B_START     LEA         ADD_B_MSG,A1            ;'ADD.B'
+DISPLAY_ADD_START       LEA         ADD_MSG,A1              ;'ADD'
                         MOVE.B      #14,D0
                         TRAP        #15
-                        RTS
-
-DISPLAY_ADD_W_START     LEA         ADD_W_MSG,A1           ;'ADD.W'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        RTS
-
-DISPLAY_ADD_L_START     LEA         ADD_L_MSG,A1           ;'ADD.L'
-                        MOVE.B      #14,D0
-                        TRAP        #15
+                        BSR         DISPLAY_CURRENT_SIZE
                         RTS
                        
     * ADD.(S) <ea>,Dn
@@ -2205,22 +2116,12 @@ ADDA_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         
                         BRA         GO_TO_NEXT_OP
                         
-DISPLAY_ADDA_START      CMP.B       #WORD_SIZE_SMALL,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_ADDA_W_START     ; 'ADDA.W'
-                        
-                        CMP.B       #LONG_SIZE_SMALL,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_ADDA_L_START     ; 'ADDA.L'
-                        
-DISPLAY_ADDA_W_START    LEA         ADDA_W_MSG,A1            ; 'ADDA.W'
+DISPLAY_ADDA_START      LEA         ADDA_MSG,A1              ; 'ADDA'
                         MOVE.B      #14,D0
                         TRAP        #15
+                        BSR         DISPLAY_CURRENT_SIZE
                         RTS
-                        
-DISPLAY_ADDA_L_START    LEA         ADDA_L_MSG,A1            ; 'ADDA.L'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        RTS
-                        
+                                               
 *-----------------------ADDQ-related Subroutines------------------------------------
 ADDQ_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         CLR         D4
@@ -2287,28 +2188,10 @@ SET_ADDQ_WORD_DISPLAY   CLR         D3
                         MOVE.L      D3,CURRENT_L_DATA
                         RTS
                        
-DISPLAY_ADDQ_START      CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_ADDQ_B_START    ; 'ADDQ.B'
-                           
-                        CMP.B       #WORD_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_ADDQ_W_START    ; 'ADDQ.W'
-                        
-                        CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_ADDQ_L_START    ; 'ADDQ.L'
-                        
-DISPLAY_ADDQ_B_START    LEA         ADDQ_B_MSG,A1           ;'ADDQ.B'
+DISPLAY_ADDQ_START      LEA         ADDQ_MSG,A1             ;'ADDQ'
                         MOVE.B      #14,D0
                         TRAP        #15
-                        RTS
-
-DISPLAY_ADDQ_W_START    LEA         ADDQ_W_MSG,A1           ;'ADDQ.W'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        RTS
-
-DISPLAY_ADDQ_L_START    LEA         ADDQ_L_MSG,A1           ;'ADDQ.L'
-                        MOVE.B      #14,D0
-                        TRAP        #15
+                        BSR         DISPLAY_CURRENT_SIZE   
                         RTS
                         
 *-----------------------SUB-related Subroutines------------------------------------
@@ -2339,28 +2222,10 @@ SUB_FOUND               BSR         DISPLAY_CURRENT_ADDRESS ; TODO: check for th
                         BEQ         DISPLAY_SUB_DATA_DIR_0                  
                         BRA         DISPLAY_SUB_DATA_DIR_1
                         
-DISPLAY_SUB_START       CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_SUB_B_START     ; 'SUB.B'
-                           
-                        CMP.B       #WORD_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_SUB_W_START     ; 'SUB.W'
-                        
-                        CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_SUB_L_START     ; 'SUB.L'
-                        
-DISPLAY_SUB_B_START     LEA         SUB_B_MSG,A1            ;'SUB.B'
+DISPLAY_SUB_START       LEA         SUB_MSG,A1              ;'SUB'
                         MOVE.B      #14,D0
                         TRAP        #15
-                        RTS
-
-DISPLAY_SUB_W_START     LEA         SUB_W_MSG,A1            ;'SUB.W'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        RTS
-
-DISPLAY_SUB_L_START     LEA         SUB_L_MSG,A1            ;'SUB.L'
-                        MOVE.B      #14,D0
-                        TRAP        #15
+                        BSR         DISPLAY_CURRENT_SIZE
                         RTS
                        
     * SUB.(S) <ea>,Dn
@@ -2428,22 +2293,12 @@ SUBA_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         
                         BRA         GO_TO_NEXT_OP
                         
-DISPLAY_SUBA_START      CMP.B       #WORD_SIZE_SMALL,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_SUBA_W_START     ; 'SUBA.W'
-                        
-                        CMP.B       #LONG_SIZE_SMALL,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_SUBA_L_START     ; 'SUBA.L'
-                        
-DISPLAY_SUBA_W_START    LEA         SUBA_W_MSG,A1            ; 'SUBA.W'
+DISPLAY_SUBA_START      LEA         SUBA_MSG,A1              ; 'SUBA'
                         MOVE.B      #14,D0
                         TRAP        #15
+                        BSR         DISPLAY_CURRENT_SIZE
                         RTS
-                        
-DISPLAY_SUBA_L_START    LEA         SUBA_L_MSG,A1            ; 'SUBA.L'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        RTS
-                        
+                                               
 *-----------------------SUBQ-related Subroutines------------------------------------
 SUBQ_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         CLR         D4
@@ -2510,28 +2365,10 @@ SET_SUBQ_WORD_DISPLAY   CLR         D3
                         MOVE.L      D3,CURRENT_L_DATA
                         RTS
                        
-DISPLAY_SUBQ_START      CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_SUBQ_B_START    ; 'SUBQ.B'
-                           
-                        CMP.B       #WORD_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_SUBQ_W_START    ; 'SUBQ.W'
-                        
-                        CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_SUBQ_L_START    ; 'SUBQ.L'
-                        
-DISPLAY_SUBQ_B_START    LEA         SUBQ_B_MSG,A1           ;'SUBQ.B'
+DISPLAY_SUBQ_START      LEA         SUBQ_MSG,A1           ;'SUBQ'
                         MOVE.B      #14,D0
                         TRAP        #15
-                        RTS
-
-DISPLAY_SUBQ_W_START    LEA         SUBQ_W_MSG,A1           ;'SUBQ.W'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        RTS
-
-DISPLAY_SUBQ_L_START    LEA         SUBQ_L_MSG,A1           ;'SUBQ.L'
-                        MOVE.B      #14,D0
-                        TRAP        #15
+                        BSR         DISPLAY_CURRENT_SIZE
                         RTS
                         
 *-----------------------MULU-related Subroutines------------------------------------
@@ -2812,30 +2649,14 @@ AND_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
                         BEQ         DISPLAY_AND_DATA_DIR_0                  
                         BRA         DISPLAY_AND_DATA_DIR_1
                         
-DISPLAY_AND_START       CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_AND_B_START     ; 'AND.B'
-                           
-                        CMP.B       #WORD_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_AND_W_START     ; 'AND.W'
-                        
-                        CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_AND_L_START     ; 'AND.L'
-                        
-DISPLAY_AND_B_START     LEA         AND_B_MSG,A1            ; 'AND.B'
+DISPLAY_AND_START       LEA         AND_MSG,A1            ; 'AND'
                         MOVE.B      #14,D0
                         TRAP        #15
-                        RTS
-
-DISPLAY_AND_W_START     LEA         AND_W_MSG,A1            ; 'AND.W'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        RTS
-
-DISPLAY_AND_L_START     LEA         AND_L_MSG,A1            ; 'AND.L'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        RTS
                         
+                        BSR         DISPLAY_CURRENT_SIZE
+                        
+                        RTS
+                                                
     * AND.(S) <ea>,Dn
 DISPLAY_AND_DATA_DIR_0  BSR         DISPLAY_SOURCE          ; display the EA
                 
@@ -2906,29 +2727,10 @@ EOR_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
 
                         BRA         GO_TO_NEXT_OP
                                                     
-DISPLAY_EOR_START       CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_EOR_B_START     ; 'EOR.B'
-                           
-                        CMP.B       #WORD_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_EOR_W_START     ; 'EOR.W'
-                        
-                        CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
-                        BEQ         DISPLAY_EOR_L_START     ; 'EOR.L'
-                        ;TODO: error case?
-                        
-DISPLAY_EOR_B_START     LEA         EOR_B_MSG,A1            ; 'EOR.B'
+DISPLAY_EOR_START       LEA         EOR_MSG,A1              ; 'EOR'
                         MOVE.B      #14,D0
                         TRAP        #15
-                        RTS
-
-DISPLAY_EOR_W_START     LEA         EOR_W_MSG,A1            ; 'EOR.W'
-                        MOVE.B      #14,D0
-                        TRAP        #15
-                        RTS
-
-DISPLAY_EOR_L_START     LEA         EOR_L_MSG,A1            ; 'EOR.L'
-                        MOVE.B      #14,D0
-                        TRAP        #15
+                        BSR         DISPLAY_CURRENT_SIZE
                         RTS
 
 *-----------------------Memory Shift Subroutines------------------------------------
@@ -4929,50 +4731,24 @@ RTS_MSG                 DC.B        'RTS',0
 TRAPV_MSG               DC.B        'TRAPV',0
 RTR_MSG                 DC.B        'RTR',0
 
-
     ;moves
 MOVE_MSG                DC.B        'MOVE',0
 MOVEA_MSG               DC.B        'MOVEA',0
-MOVE_B_MSG              DC.B        'MOVE.B',0
-MOVE_W_MSG              DC.B        'MOVE.W',0
-MOVE_L_MSG              DC.B        'MOVE.L',0
-
 MOVEQ_MSG               DC.B        'MOVEQ',0
-
 MOVEM_W_MSG             DC.B        'MOVEM.W',0
 MOVEM_L_MSG             DC.B        'MOVEM.L',0
 
     ;adds
-ADD_B_MSG               DC.B        'ADD.B',0
-ADD_W_MSG               DC.B        'ADD.W',0
-ADD_L_MSG               DC.B        'ADD.L',0
-
-ADDA_W_MSG              DC.B        'ADDA.W',0
-ADDA_L_MSG              DC.B        'ADDA.L',0
-
-ADDI_B_MSG              DC.B        'ADDI.B',0
-ADDI_W_MSG              DC.B        'ADDI.W',0
-ADDI_L_MSG              DC.B        'ADDI.L',0
-
-ADDQ_B_MSG              DC.B        'ADDQ.B',0
-ADDQ_W_MSG              DC.B        'ADDQ.W',0
-ADDQ_L_MSG              DC.B        'ADDQ.L',0
+ADD_MSG                 DC.B        'ADD',0
+ADDA_MSG                DC.B        'ADDA',0
+ADDI_MSG                DC.B        'ADDI',0
+ADDQ_MSG                DC.B        'ADDQ',0
 
     ;subs
-SUB_B_MSG               DC.B        'SUB.B',0
-SUB_W_MSG               DC.B        'SUB.W',0
-SUB_L_MSG               DC.B        'SUB.L',0
-
-SUBA_W_MSG              DC.B        'SUBA.W',0
-SUBA_L_MSG              DC.B        'SUBA.L',0
-
-SUBI_B_MSG              DC.B        'SUBI.B',0
-SUBI_W_MSG              DC.B        'SUBI.W',0
-SUBI_L_MSG              DC.B        'SUBI.L',0
-
-SUBQ_B_MSG              DC.B        'SUBQ.B',0
-SUBQ_W_MSG              DC.B        'SUBQ.W',0
-SUBQ_L_MSG              DC.B        'SUBQ.L',0
+SUB_MSG                 DC.B        'SUB',0
+SUBA_MSG                DC.B        'SUBA',0
+SUBI_MSG                DC.B        'SUBI',0
+SUBQ_MSG                DC.B        'SUBQ',0
 
     ;multiplication
 MULU_W_MSG              DC.B        'MULU.W',0
@@ -4988,22 +4764,12 @@ CMPA_MSG                DC.B        'CMPA',0
 CMPI_MSG                DC.B        'CMPI',0
 
     ;ANDs
-AND_B_MSG               DC.B        'AND.B',0
-AND_W_MSG               DC.B        'AND.W',0
-AND_L_MSG               DC.B        'AND.L',0
-
-ANDI_B_MSG              DC.B        'ANDI.B',0
-ANDI_W_MSG              DC.B        'ANDI.W',0
-ANDI_L_MSG              DC.B        'ANDI.L',0
+AND_MSG                 DC.B        'AND',0
+ANDI_MSG                DC.B        'ANDI',0
 
     ;EORs
-EOR_B_MSG               DC.B        'EOR.B',0
-EOR_W_MSG               DC.B        'EOR.W',0
-EOR_L_MSG               DC.B        'EOR.L',0
-
-EORI_B_MSG              DC.B        'EORI.B',0
-EORI_W_MSG              DC.B        'EORI.W',0
-EORI_L_MSG              DC.B        'EORI.L',0
+EOR_MSG                 DC.B        'EOR',0
+EORI_MSG                DC.B        'EORI',0
 
     ;ASds
 ASR_MSG                 DC.B        'ASR',0
