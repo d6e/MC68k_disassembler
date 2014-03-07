@@ -8,8 +8,9 @@
 START       ORG    $7000                ; first instruction of program
             NOP
             MOVE.B #10,D0
-MUHAHAHA    DS.B            1     
-* TODO: use all required opcodes in all possible combinations here
+MUHAHAHA    DS.B            1
+            MOVE.B ($70,A3),D4     
+            MOVE.B ($70,A3,D4),D5
             MOVE.B D1, D2
             MOVE.B D1, $10000000
             MOVE.B D1, $1000

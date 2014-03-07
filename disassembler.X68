@@ -5,11 +5,6 @@
 * Description: Disassemble hex machine code instructions into 68K instructions
 *-----------------------------------------------------------
 
-* TODO: write disassembler
-* TODO: more specific TODOs for our plan
-* TODO: comments saying who is working where
-
-
 * Commenting Key: 
 *    "----------"  <-- subroutine commenting
 *    "##########"  <-- section/role commenting
@@ -28,40 +23,16 @@
 * Relevant wiki page:
 *   https://en.wikipedia.org/wiki/Mask_(computing)#Masking_bits_to_0
 *
-*################ TODO LIST ################################
-*----------------OPcode TODOS (ROBERT)-----------------------------
-* Implement a method to reverse the mask words for MOVEM commands with -(An).
-* This means no need for special reverse reading methods in this case.
-
-* Fix the current bugs with MOVEs performed on absolute addresses. Not sure why these errors occur.
-*   -consult the bug report before trying to debug.
-* Continue decoding OPcodes in the following order: (with sizes)
-*   NOTE: I will delete OPcodes from this list as I implement them.
-
-*   -JSR    (N/A)
-
-*   (add others if we have time)
-*
-*----------------I/O TODOS (DANIELLE)-----------------------------
-* (TODOs for I/O go here.)
-*   - Complete display buffer
-*   - Print only a screenful at a time
-*   - At the end ask the user if they want to restart
-*   - Drop dollar sign if it appears in input
-*   - Hex to ASCII converter
-*
-*----------------EA TODOS  (SHAHIN)-----------------------------
-* (TODOs for EA go here.)
 *################ BEGIN MAIN ###############################
 *** All subroutine calls are made here ***
-START                   ORG        $1000       ; first instruction of program
+START                   ORG        $1000               ; first instruction of program
                         BSR        PRINT_ASCII_BANNER  ; Prints the ascii banner/logo
                         CLR.B      LINE_COUNTER
-                        BRA        PROMPT_INPUT            ; prompt the user for input
+                        BRA        PROMPT_INPUT        ; prompt the user for input
                  
-STOP                    STOP       #$2700          ; halt simulator, end of main
+STOP                    STOP       #$2700              ; halt simulator, end of main
 
-END_PROGRAM             STOP       #$2700          ; halt simulator, end of main
+END_PROGRAM             STOP       #$2700              ; halt simulator, end of main
 
 *################ END MAIN ###############################
 *################ BEGIN IO ###############################
@@ -3674,9 +3645,6 @@ BCLR_DYNAMIC_FOUND      BSR         DISPLAY_CURRENT_ADDRESS                 ; st
 
                         BSR         READ_SOURCE_REG                         ; read our EA (destination)
                         BSR         READ_SOURCE_MODE 
-
-                        ;TODO: error checking goes here
-
                         BSR         READ_SOURCE_DATA                        ; read additional data for the EA if necessary.
 
                         BSR         DISPLAY_BCLR_START
@@ -3710,8 +3678,6 @@ BSET_DYNAMIC_FOUND      BSR         DISPLAY_CURRENT_ADDRESS                 ; st
 
                         BSR         READ_SOURCE_REG                         ; read our EA (destination)
                         BSR         READ_SOURCE_MODE 
-
-                        ;TODO: error checking goes here
 
                         BSR         READ_SOURCE_DATA                        ; read additional data for the EA if necessary.
 
@@ -3747,8 +3713,6 @@ LEA_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
                         
                         BSR         READ_SOURCE_MODE                      ; set CURRENT_SRC_MD to the EA's mode.
                         BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the EA's register.
-                        
-                        ; TODO: error checking goes here.
                         
                         BSR         READ_SOURCE_DATA                      ; set CURRENT_SRC_DATA to the EA's additional data.
 
@@ -4148,7 +4112,7 @@ SBCD_FOUND              BRA         INVALID_OPCODE_FOUND    ; TODO: SBCD
 *###################### END OPCODE ##################################
 *###################### BEGIN EA ##################################
 *** EA Subroutines are kept here ***
-; TODO
+
 ; Mode has fixed 3 digits for the following cases 
 ;                Dn           000     Reg No. Dn
 ;                An           001     Reg No. An
@@ -4166,27 +4130,6 @@ SBCD_FOUND              BRA         INVALID_OPCODE_FOUND    ; TODO: SBCD
 ;               d16, PC       111     010
 ;               (d8,PC,Xn)    111     011
 ; reading one of the fixed Mode and Register means there is additional move data
-
-;TODO 
-;       check the different error condition of MOVE
-                ;IMPORTANT: remember that different MOVE error are specific to different MOVE sizes.
-                        ; example: MOVE.B  A0,D3 is invalid. However, MOVE.W  A0,D3 is valid.
-                        ;
-                        ; possible errors:
-                        ;       CURRENT_DEST_MD = CONST_IMMEDIATE_REG (immediate data cannot be a destination)
-                        ;       CURRENT_SRC_MD  = CONST_ADDR_REG_MD   (byte is not a valid size for this move)
-                        ;       CURRENT_DEST_MD = CONST_ADDR_REG_MD   (byte is not a valid size, although we should be using MOVEA at this point, not MOVE.)
-                        ;       TODO: figure out other possible errors.
-;       need to check whether we need to read additional data before we start displaying the
-                        ; instruction (for instance, this is necessary for MOVE.B #10,D0).
-
-;       check the different error condition of MOVEM
-                        ;  Possible errors:
-                        ;       Size = word or long, byte is not possible
-                        ;       Dn, An, #<data> is not allowed
-                        ;       for register to memory,( MOVEM list,<ea> ) (An)+ is not possible
-                        ;       for momory to register (MOVEM <ea>, list) -(An) is not allowed
-
 
 *----------------------Check the destination register of the current word.-------------
 READ_DEST_REG           CLR         D4
@@ -4228,7 +4171,7 @@ READ_SOURCE_REG         CLR         D4
                         MOVE.B      D4,CURRENT_SRC_REG
                         RTS
                         
-*-----------------------Read the operation size----------------------------------------// Shahin
+*-----------------------Read the operation size----------------------------------------
 READ_OP_SIZE           CLR          D4
                        CLR.B        CURRENT_OP_SIZE        ; to avoid any junk data
                        MOVE.W       CURRENT_WORD,D4        ; copy CURRENT_WORD into D4
@@ -4236,15 +4179,6 @@ READ_OP_SIZE           CLR          D4
                        LSR.W        #6,D4                  ; turn D4 into 0000 0000 0000 00XX
                        MOVE.B       D4,CURRENT_OP_SIZE     ; save current OP size
                        RTS
-                       
-*Rename                      
-*---------------------Read small operation size for MOVEM,MOVEP, EXT, ------------------------------------------------//Shahin
-READ_SMALL_OP_SIZE    CLR         D4
-                      CLR.B       CURRENT_OP_SIZE_SMALL       ; to avoid any junk data
-                      MOVE.W      Current_WORD, D4            ; copy CURRENT_WORD into D4
-                      ANDI.W      #FILT_MOVEM_SIZE,D4         ; turn D4 into 0000 0000 0X00 0000
-                      LSR.W       #6,D4                       ; turn D4 into 0000 0000 0000 00XX
-                      MOVE.B      D4, CURRENT_OP_SIZE_SMALL   ; copy filtered and 
 
 *-----------------------Read the operation size (small)---------------------------------------
 READ_OP_SIZE_SMALL     CLR          D4
@@ -4253,7 +4187,7 @@ READ_OP_SIZE_SMALL     CLR          D4
                        ANDI.W       #FILT_SMALL_SIZE,D4    ; turn D4 into 0000 000X 0000 0000
                        LSR.W        #8,D4                  ; turn D4 into 0000 0000 0000 000X
                        MOVE.B       D4,CURRENT_OP_SIZE     ; save current OP size
-                      RTS
+                       RTS
                       
 
 *-----------------------Read the operation direction----------------------------------------                       
@@ -4266,7 +4200,7 @@ READ_OP_DIRECTION      CLR          D4
                        RTS
                        
                       
-*---------------------Read direction for MOVEP--------------------------------------------//Shahin 
+*---------------------Read direction for MOVEP--------------------------------------------
                       
 READ_MOVEP_DIR          CLR         D4
                         CLR.B       CURRENT_DIRECTION        ; to avoid any junk data
@@ -4276,27 +4210,7 @@ READ_MOVEP_DIR          CLR         D4
                         MOVE.B      D4,CURRENT_DIRECTION
                         RTS
 
-*---------------------Read size for MOVEP--------------------------------------------//Shahin // can be deleted
-                      
-READ_MOVEP_SIZE         CLR         D4 
-                        CLR.B       CURRENT_OP_SIZE_SMALL       ; to avoid any junk data
-                        MOVE.W      CURRENT_WORD,D4    
-                        ANDI.W      #FILT_MOVEP_SIZE,D4         ; 0000 0000 0X00 0000     filter out size 
-                        LSR.W       #6,D4                       ; 0000 0000 0000 000X
-                        MOVE.B      D4,CURRENT_OP_SIZE_SMALL
-                        RTS
-                        
-*---------------------Read size for EXT--------------------------------------------//Shahin  // can be deleted
-; #FILT_MOVEP_SIZE works for EXP size also                      
-READ_EXT_SIZE           CLR         D4 
-                        CLR.B       CURRENT_OP_SIZE_SMALL       ; to avoid any junk data
-                        MOVE.W      CURRENT_WORD,D4    
-                        ANDI.W      #FILT_MOVEP_SIZE,D4         ; 0000 0000 0X00 0000     filter out size 
-                        LSR.W       #6,D4                       ; 0000 0000 0000 000X
-                        MOVE.B      D4,CURRENT_OP_SIZE_SMALL
-                        RTS
-
-*---------------------Read direction for MOVE USP--------------------------------------------//Shahin
+*---------------------Read direction for MOVE USP--------------------------------------------
                       
 READ_MOVE_USP_DIR       CLR         D4
                         CLR.B       CURRENT_DIRECTION        ; to avoid any junk data
@@ -4306,7 +4220,7 @@ READ_MOVE_USP_DIR       CLR         D4
                         MOVE.B      D4,CURRENT_DIRECTION
                         RTS
 
-*---------------------Read small mode for SBCD, SUBX, ABCD, EXG, ADDX-----------------------------------//Shahin
+*---------------------Read small mode for SBCD, SUBX, ABCD, EXG, ADDX-----------------------------------
                       
 READ_SMALL_MODE         CLR         D4
                         CLR.B       CURRENT_SMALL_MODE        ; to avoid any junk data
@@ -4316,8 +4230,7 @@ READ_SMALL_MODE         CLR         D4
                         MOVE.B      D4,CURRENT_SMALL_MODE
                         RTS
                         
-*--------------------Read Current Direction ----------------------------------------------------------//Shahin  //has Robert made one already?
-; can be deleted if ROBERT already made one
+*--------------------Read Current Direction ----------------------------------------------------------
 READ_CURRENT_DIRECTION   CLR         D4
                          CLR.B       CURRENT_DIRECTION        ; to avoid any junk data
                          MOVE.W      CURRENT_WORD,D4    
@@ -4326,7 +4239,7 @@ READ_CURRENT_DIRECTION   CLR         D4
                          MOVE.B      D4,CURRENT_DIRECTION
                          RTS
                          
-*---------------------Read rotation mode for ASd, LSd, ROXd, ROd -----------------------------------//Shahin
+*---------------------Read rotation mode for ASd, LSd, ROXd, ROd ----------------------------------
                       
 READ_ROTATION_MODE         CLR         D4
                         CLR.B       CURRENT_ROTATION_MODE      ; to avoid any junk data
@@ -4347,8 +4260,8 @@ READ_SOURCE_DATA        CLR.L       CURRENT_SRC_DATA
                         CMP.B       #CONST_ADDR_INDEX_MD,CURRENT_SRC_MD  ; check the source mode
                         BEQ         CONFIRM_READ_SRC_DATA                ; see if we have a source mode that requires additional data. 
 
-                        CMP.B       #CONST_ADDR_MISC_MD,CURRENT_SRC_MD ; check the source mode
-                        BEQ         CONFIRM_READ_SRC_DATA              ; see if we have a source mode that requires additional data.               
+                        CMP.B       #CONST_ADDR_MISC_MD,CURRENT_SRC_MD   ; check the source mode
+                        BEQ         CONFIRM_READ_SRC_DATA                ; see if we have a source mode that requires additional data.               
                         RTS
                         
 CONFIRM_READ_SRC_DATA   CLR.B       CURRENT_REG
@@ -4366,11 +4279,11 @@ READ_DEST_DATA          CLR.L       CURRENT_DEST_DATA
                         CMP.B       #CONST_ADDR_DISPLC_MD,CURRENT_DEST_MD ; check the destination mode
                         BEQ         CONFIRM_READ_DEST_DATA                ; see if we have a destination mode that requires additional data.
                         
-                        CMP.B       #CONST_ADDR_INDEX_MD,CURRENT_DEST_MD ; check the destination mode
+                        CMP.B       #CONST_ADDR_INDEX_MD,CURRENT_DEST_MD  ; check the destination mode
                         BEQ         CONFIRM_READ_DEST_DATA                ; see if we have a destination mode that requires additional data.
 
-                        CMP.B       #CONST_ADDR_MISC_MD,CURRENT_DEST_MD  ; check the destination mode.
-                        BEQ         CONFIRM_READ_DEST_DATA               ; see if we have a destination mode that requires additional data.                  
+                        CMP.B       #CONST_ADDR_MISC_MD,CURRENT_DEST_MD   ; check the destination mode.
+                        BEQ         CONFIRM_READ_DEST_DATA                ; see if we have a destination mode that requires additional data.                  
                         
                         RTS
                                             
@@ -4387,10 +4300,10 @@ CONFIRM_READ_DEST_DATA  CLR.B       CURRENT_REG
 READ_LEFT_DATA          CLR.L       CURRENT_L_DATA
                         CLR.L       CURRENT_DATA
                         
-                        CMP.B       #CONST_ADDR_DISPLC_MD,CURRENT_L_MD     ; check the left mode.
+                        CMP.B       #CONST_ADDR_DISPLC_MD,CURRENT_L_MD   ; check the left mode.
                         BEQ         CONFIRM_READ_LEFT_DATA               ; see if we have a mode that requires additional data.
 
-                        CMP.B       #CONST_ADDR_INDEX_MD,CURRENT_L_MD     ; check the left mode.
+                        CMP.B       #CONST_ADDR_INDEX_MD,CURRENT_L_MD    ; check the left mode.
                         BEQ         CONFIRM_READ_LEFT_DATA               ; see if we have a mode that requires additional data.                  
                         
                         CMP.B       #CONST_ADDR_MISC_MD,CURRENT_L_MD     ; check the left mode.
@@ -4409,13 +4322,13 @@ CONFIRM_READ_LEFT_DATA  CLR.B       CURRENT_REG
 READ_RIGHT_DATA         CLR.L       CURRENT_R_DATA
                         CLR.L       CURRENT_DATA
                         
-                        CMP.B       #CONST_ADDR_DISPLC_MD,CURRENT_R_MD ; check the right mode.
+                        CMP.B       #CONST_ADDR_DISPLC_MD,CURRENT_R_MD   ; check the right mode.
                         BEQ         CONFIRM_READ_RIGHT_DATA              ; see if we have a mode that requires additional data.  
 
-                        CMP.B       #CONST_ADDR_INDEX_MD,CURRENT_R_MD ; check the right mode.
+                        CMP.B       #CONST_ADDR_INDEX_MD,CURRENT_R_MD    ; check the right mode.
                         BEQ         CONFIRM_READ_RIGHT_DATA              ; see if we have a mode that requires additional data.  
                         
-                        CMP.B       #CONST_ADDR_MISC_MD,CURRENT_R_MD ; check the right mode.
+                        CMP.B       #CONST_ADDR_MISC_MD,CURRENT_R_MD     ; check the right mode.
                         BEQ         CONFIRM_READ_RIGHT_DATA              ; see if we have a mode that requires additional data.                  
                         
                         RTS
@@ -4814,8 +4727,6 @@ CHECK_MISC_ADDRESSINGS  CMP.B       #CONST_COUNTR_DISPLC_REG,CURRENT_REG
                         CMP.B       #CONST_IMMEDIATE_REG,CURRENT_REG
                         BEQ         DISPLAY_IMMEDIATE
                         
-                        ; TODO: error case?
-                        
                         RTS
                         
 *-----------------------Display program counter w/ displacement------------------------------------             
@@ -4833,7 +4744,7 @@ DISPLAY_COUNTR_DISPLC   LEA         OPEN_PARENS,A1        ; print out '('.
                         MOVE.W      (CURRENT_DATA),D3
                         MOVE.L      #$0000FFFE,D4
                         
-                        SUB.L       A4,D4    ; subtract our starting address from the destination word
+                        SUB.L       A4,D4                ; subtract our starting address from the destination word
                         SUB.L       D3,D4
                         NEG.L       D4
                         
@@ -5265,10 +5176,10 @@ CONTINUE_ERROR_STR      DC.B        'That is not a valid response. Please enter 
 SELF_D_ERROR_STR        DC.B        'That is not a valid response. Please enter y or n.',CR,LF,0
 NEWLINE                 DC.B        CR,LF,0
 
-PROMPT_EMPTY_CONTINUE   DC.B        'Empty data detected (possible end of program).',CR,LF ;NOTE: do not add a 0 here because this is not end of string.
-                        DC.B        'Contitue reading? (y/n)',0
-ENTER_TO_CONT_MSG	DC.B 		'Press Enter to continue',CR,LF,0
-LINE_COUNTER		DCB.B 		1,0 	; Counts number of lines printed to determine when prompt user to hit enter to continue
+PROMPT_EMPTY_CONTINUE     DC.B        'Empty data detected (possible end of program).',CR,LF ;NOTE: do not add a 0 here because this is not end of string.
+                          DC.B        'Contitue reading? (y/n)',0
+ENTER_TO_CONT_MSG	      DC.B 		'Press Enter to continue',CR,LF,0
+LINE_COUNTER		      DCB.B 		1,0 	; Counts number of lines printed to determine when prompt user to hit enter to continue
 ASCII_BANNER01            DC.B        '#######################################################',CR,LF,0
 ASCII_BANNER02            DC.B        '##                                                   ##',CR,LF,0
 ASCII_BANNER03            DC.B        '##     MMM     MMM       6666       888    KK   KK   ##',CR,LF,0
@@ -5690,6 +5601,7 @@ RTR_CODE                EQU         $4E77   ; RETURN FROM RESTORE               
 *############# END VARIABLES/CONSTANTS #########################
 
     END START        ; last line of source, very end of the program
+
 
 
 

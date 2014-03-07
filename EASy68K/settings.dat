@@ -11,14 +11,14 @@ Courier New$font name
 10$font size
 1$tab type
 4$fixed tab size
-1$maximized edit
+0$maximized edit
 1$auto indent
 0$real tabs
 1$assemble bit field
-5$main top
--3$main left
-741$main height
-1286$main width
+-8$main top
+-8$main left
+786$main height
+1296$main width
 0$code color
 0$code bold
 0$code italic
