@@ -322,6 +322,34 @@ INVALID_ADDR_LOW        LEA         INVALID_ADDR_L_MSG,A1    ;tell the user the 
                         MOVE.B      #14,D0
                         TRAP        #15
                         
+                        LEA         PROMPT_SELF_DISASSEMBLE,A1   ; ask the user if they want the disassembler to disassemble itself.
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
+                        BRA         TAKE_USER_IN_SELF_D
+        
+TAKE_USER_IN_SELF_D     MOVE.B      #2,D0          			 ; Take user input for self-disassemble.
+                        MOVEA.W     SELF_D_CHECK_SPC,A1    ; Store the ascii input in A1
+                        TRAP        #15             		 ; and the length in D1.W.  
+
+                        CMPI.B 		#$79,(A1) 							; if inputs 'y' 
+                        BEQ			BEGIN_SELF_DISASSMEBLE				; the disassembler starts disassembling itself
+
+                        CMPI.B 		#$6E,(A1)					 			; if inputs 'n' 
+                        BEQ         CANCEL_SELF_D                         ; take in input for end address again.
+
+                        BRA 		USER_SELF_D_IN_ERR 			 			; otherwise, print error message and restart this loop. 
+
+USER_SELF_D_IN_ERR      LEA 		SELF_D_ERROR_STR,A1 ; Print out error message 			
+                        MOVE.B 		#14,D0
+                        TRAP 		#15
+
+                        BRA 	    TAKE_USER_IN_SELF_D     ; reconfirm whether to self-disassmeble
+                        
+CANCEL_SELF_D           LEA         PLEASE_VALID_ADDR_MSG,A1
+                        MOVE.B      #14,D0
+                        TRAP        #15
+                        
                         BRA         TAKE_USER_INPUT
 
 INVALID_ADDR_HIGH       LEA         INVALID_ADDR_H_MSG,A1    ;tell the user the address was invalid and prompt input again.
@@ -332,13 +360,13 @@ INVALID_ADDR_HIGH       LEA         INVALID_ADDR_H_MSG,A1    ;tell the user the 
                
 CONVERSION_DONE         LSL.L       #8,D7   ; Prepare for concatenation
                         LSL.L       #8,D7   ; Got to perform the same operation twice to get it all the way to the left
-                        ADD.W       D6,D7  ; concatenate the two data registers into one value
+                        ADD.W       D6,D7   ; concatenate the two data registers into one value
                         
                         CMP.L       #MIN_ADDRESS,D7
-                        BLT         INVALID_ADDR_LOW ;Not a valid address-- too low.
+                        BLT         INVALID_ADDR_LOW   ; Not a valid address-- too low.
                         
                         CMP.L       #MAX_ADDRESS,D7
-                        BGT         INVALID_ADDR_HIGH  ;Not a valid address-- too high.
+                        BGT         INVALID_ADDR_HIGH  ; Not a valid address-- too high.
                         
 VALID_ADDR              CMPI        #1,D3
                         
@@ -354,6 +382,11 @@ SET_END_ADDR            CMP.L       A5,D7    ;if end address is lower than start
                         
                         MOVEA.L     D7,A6  ;when a valid start address is inputted, store and ask the user for an end address.
                         MOVE.L      D7,END_ADDRESS
+                        BRA         BEGIN_READ
+                    
+    *program disassembles itself    
+BEGIN_SELF_DISASSMEBLE  MOVEA.L     #DISASSEMBLER_START_ADDR,A5
+                        MOVEA.L     #DISASSEMBLER_END_ADDR,A6
                         BRA         BEGIN_READ
                         
 BEGIN_READ              MOVEA.L      A5,A4 ; keep track of address to print with A4. TODO: could also add this value to the display buffer.
@@ -570,6 +603,7 @@ INVALID_OPCODE_FOUND    BSR         DISPLAY_CURRENT_ADDRESS
                         BRA         GO_TO_NEXT_OP
 
 *------------------ Check to see if we are in no-man's land (all Fs)----------------
+
 CHECK_EMPTY             CMP         #CONST_FFFF,(CURRENT_WORD)
                         BEQ         CONFIRM_EMPTY
                         RTS
@@ -580,7 +614,7 @@ CONFIRM_EMPTY           LEA         PROMPT_EMPTY_CONTINUE,A1
                         
                         BRA         TAKE_USER_IN_CONTINUE
         
-TAKE_USER_IN_CONTINUE   MOVE.B      #2,D0          			 ; Take user input for contitue reading.
+TAKE_USER_IN_CONTINUE   MOVE.B      #2,D0          			 ; Take user input for continue reading.
                         MOVEA.W     CONTINUE_CHECK_SPC,A1    ; Store the ascii input in A1
                         TRAP        #15             		 ; and the length in D1.W.  
 
@@ -592,7 +626,7 @@ TAKE_USER_IN_CONTINUE   MOVE.B      #2,D0          			 ; Take user input for con
 
                         BRA 		USER_CONTINUE_IN_ERR 			 			; otherwise, print error message and restart this loop. 
 
-*------------------- Error Restart ------------------- 
+*------------------- Error continue ------------------- 
 USER_CONTINUE_IN_ERR    LEA 		CONTINUE_ERROR_STR,A1 ; Print out error message 			
                         MOVE.B 		#14,D0
                         TRAP 		#15
@@ -5041,9 +5075,12 @@ INVALID_END_ADDR_MSG    DC.B        'Not a valid end address.',CR,LF
                         DC.B        'Please enter an end address after the start address.',CR,LF,0
                         
                       
-INVALID_ADDR_L_MSG      DC.B        'Not a valid address (too low).',CR,LF
-                        DC.B        'Please enter a valid address.',CR,LF,0
-                        
+INVALID_ADDR_L_MSG      DC.B        'Not a valid address -- that is part of the disassembler.',CR,LF,0
+
+PROMPT_SELF_DISASSEMBLE DC.B        'Do you want the disassembler to disassemble itself? (y/n)',CR,LF,0
+
+PLEASE_VALID_ADDR_MSG   DC.B        'Please enter a valid address.',CR,LF,0
+                   
 INVALID_ADDR_H_MSG      DC.B        'Not a valid address (too high).',CR,LF
                         DC.B        'Please enter a valid address.',CR,LF,0
                         
@@ -5212,16 +5249,20 @@ END_ADDRESS             DS.L        1
 INPUT_DIGIT_SPACE       DS.L        2
 
 *other I/O-related variables/constants
+DISASSEMBLER_START_ADDR EQU         $1000 ; start address of our disassembler.
+DISASSEMBLER_END_ADDR   EQU         $5000 ; end address of our disassembler.
 INPUTTING_START         SET         1 ;if 1, we are inputting start address. If 0, we are inputting end address.
 OPCODE_BUFFER           DS.L        1 ; can hold at most 4 characters
 SIZE_BUFFER             DS.W        1 ; can hold at most 2 characters
 RESTART_CHECK_SPC       DS.W        1 ; checks whether the user wants to restart the program
 CONTINUE_CHECK_SPC      DS.W        1 ; checks whether the user wants to continue reading the program
+SELF_D_CHECK_SPC        DS.W        1 ; checks whether the user wants the program to self-disassemble.
 DISPLAY_BUFFER      	DCB.B       81,0              ; 81 bytes == 80 chars (the '0' at the end counts)
 DISP_BUFF_INDEX			DCB.L 		1,0 	; This is the index for the display buffer. It points to the current index
 RESTART_PROMPT_MSG      DC.B        'Restart? (y/n)',0
 RESTART_ERROR_STR       DC.B        'That is not a valid response.',CR,LF,0
 CONTINUE_ERROR_STR      DC.B        'That is not a valid response. Please enter y or n.',CR,LF,0
+SELF_D_ERROR_STR        DC.B        'That is not a valid response. Please enter y or n.',CR,LF,0
 NEWLINE                 DC.B        CR,LF,0
 
 PROMPT_EMPTY_CONTINUE   DC.B        'Empty data detected (possible end of program).',CR,LF ;NOTE: do not add a 0 here because this is not end of string.
@@ -5312,8 +5353,8 @@ WORD_SIZE_MOVEM         EQU         $00 ; 0000 0000
 LONG_SIZE_MOVEM         EQU         $01 ; 0000 0001
 
 *address constants
-MIN_ADDRESS             EQU         $00000900 ;TEMP
-MAX_ADDRESS             EQU         $0FFF0000
+MIN_ADDRESS             EQU         $00005000 ; minimum address (anything lower is part of our disassembler)
+MAX_ADDRESS             EQU         $0FFF0000 ; TEMP
 
 *address variables
 TEST_ORIGIN             SET         $00007000
