@@ -4,7 +4,7 @@
 size = ['.B', '.W', '.L']
 src = ['D1', 'A1', '(A1)', '#1', '(A1)+', '-(A1)','$10000000', '$1000']
 dest = ['D1','$10000000', '$1000']
-
+# add address with displacement, address with index, program counter with displacement, program counter with index 
 
 class Instruction:
 	def __init__(self, opcode, src=src, dest=dest, size=size, bidirectional=True, label='', AnForSizeB=True):
@@ -71,12 +71,15 @@ def initInstructionList():
 		Instruction('CMP', src, ['D1'], size, False, '', False), # Only for src: No 'An' if size is '.B'
 		Instruction('CMPA', src, ['A1'], ['.W','.L'], False),
 		Instruction('CMPI', ['#1'], dest, size, False),
-		# Instruction('BCC', src, dest, size, False, 'GO_TO_SR'),  # Only label
-		# Instruction('BGT', src, dest, size, False),
-		# Instruction('BLE', src, dest, size, False),
-		# Instruction('BVS', src, dest, size, False),
+		Instruction('BCC', src, dest, size, False, 'GO_TO_SR'),  # Only label
+		Instruction('BGT', src, dest, size, False),
+		Instruction('BLE', src, dest, size, False),
+		Instruction('BVS', src, dest, size, False),
 		Instruction('JSR', ['(A1)', '$10000000', '$1000'], [''], [''], False),
 		Instruction('RTS', [''], [''], [''], False),
+        #RTE
+        #TRAPV
+        #RTR
 	]
 
 
