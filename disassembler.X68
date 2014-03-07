@@ -686,7 +686,7 @@ READ_STOP_DATA          MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_SRC_REG
 RTE_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
 
 
-                        LEA         RTE_MSG,A1    ; 'RETURN FROM EXCEPTION'
+                        LEA         RTE_MSG,A1    ; 'RTE'
                         MOVE.B      #14,D0
                         TRAP        #15
                         
@@ -702,7 +702,7 @@ RTE_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
 RTS_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
 
 
-                        LEA         RTS_MSG,A1    ; 'RETURN FROM SUBROUTINE'
+                        LEA         RTS_MSG,A1    ; 'RTS'
                         MOVE.B      #14,D0
                         TRAP        #15
                         
@@ -717,7 +717,7 @@ RTS_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
 TRAPV_FOUND             BSR         DISPLAY_CURRENT_ADDRESS
 
 
-                        LEA         TRAPV_MSG,A1    ; 'TRAP ON OVERFLOW'
+                        LEA         TRAPV_MSG,A1    ; 'TRAPV'
                         MOVE.B      #14,D0
                         TRAP        #15
                         
@@ -730,7 +730,7 @@ TRAPV_FOUND             BSR         DISPLAY_CURRENT_ADDRESS
 RTR_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
 
 
-                        LEA         RTR_MSG,A1    ; 'RETURN AND RESTORE'
+                        LEA         RTR_MSG,A1    ; 'RTR'
                         MOVE.B      #14,D0
                         TRAP        #15
                         
@@ -739,7 +739,6 @@ RTR_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
                         TRAP        #15
                
                         BRA         GO_TO_NEXT_OP  
-
 
 ;TODO: add cases for rest of valid constant OPcodes here
 
@@ -762,7 +761,6 @@ CHECK_NON_CONSTANTS     BSR         CHECK_MOVE        ; MOVE is a special case b
                         BSR         CHECK_NIB1_1110
                         
                         BRA         INVALID_OPCODE_FOUND
-                        ;TODO: check for other instructions instead of stopping if it's not one of these.
   
 *------------------------First 4bit checks go here-----------------------------------
   
@@ -1303,23 +1301,7 @@ MOVE_L_FOUND            MOVE.B      #LONG_SIZE,CURRENT_OP_SIZE
                        
 *-----------------------Parse data for any-sized MOVE instruction---------------------
 *Note that the size of the MOVE is stored in CURRENT_OP_SIZE.
-PARSE_MOVE_DATA         ; TODO: error checking 
-                        ;(maybe after reading the first 4 instruction parts, but before reading additional data)
-                        ;IMPORTANT: remember that different MOVE error are specific to different MOVE sizes.
-                        ; example: MOVE.B  A0,D3 is invalid. However, MOVE.W  A0,D3 is valid.
-                        ;
-                        ; possible errors:
-                        ;       CURRENT_DEST_MD = CONST_IMMEDIATE_REG (immediate data cannot be a destination)
-                        ;       CURRENT_SRC_MD  = CONST_ADDR_REG_MD   (byte is not a valid size for this move)
-                        ;       CURRENT_DEST_MD = CONST_ADDR_REG_MD   (byte is not a valid size, although we should be using MOVEA at this point, not MOVE.)
-                        ;       TODO: figure out other possible errors.
-                        
-                        ; after we confirm that there are no errors, we know that we can safely check for additional data and display the instruction.
-                        
-                        
-                        ; at this point, need to read more information (parsed by EA, probably)
-                        ; now that we have a move instruction, we set our EA variables accordingly:
-                        BSR         READ_DEST_REG      ; EA will set CURRENT_DEST_REG.
+PARSE_MOVE_DATA         BSR         READ_DEST_REG      ; EA will set CURRENT_DEST_REG.
                         BSR         READ_DEST_MODE     ; EA will set CURRENT_DEST_MD.
                         BSR         READ_SOURCE_MODE   ; EA will set CURRENT_SRC_MD.
                         BSR         READ_SOURCE_REG    ; EA will set CURRENT_SRC_REG.
@@ -1803,8 +1785,6 @@ SUBI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_DEST_MD    ; set source mode/register to immediate.
                         MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_DEST_REG
                         
-                        ; TODO: Error checking goes here. 
-                        
                         BSR         READ_DEST_DATA                        ; set CURRENT_DEST_DATA to the immediate data.
                         BSR         READ_SOURCE_DATA                      ; read additional data for destination if necessary.
                         
@@ -1873,9 +1853,7 @@ ADDI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         
                         MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_DEST_MD    ; set source mode/register to immediate.
                         MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_DEST_REG
-                        
-                        ; TODO: Error checking goes here. 
-                        
+                      
                         BSR         READ_DEST_DATA                        ; set CURRENT_DEST_DATA to the immediate data.
                         BSR         READ_SOURCE_DATA                      ; read additional data for destination if necessary.
                         
@@ -1943,9 +1921,7 @@ EORI_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         
                         MOVE.B      #CONST_ADDR_MISC_MD,CURRENT_DEST_MD    ; set source mode/register to immediate.
                         MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_DEST_REG
-                        
-                        ; TODO: Error checking goes here. 
-                        
+                      
                         BSR         READ_DEST_DATA                        ; set CURRENT_DEST_DATA to the immediate data.
                         BSR         READ_SOURCE_DATA                      ; read additional data for destination if necessary.
                         
@@ -2061,9 +2037,6 @@ CLR_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
                         BSR         READ_OP_SIZE                          ; set CURRENT_OP_SIZE to the size of the CLR.
                         BSR         READ_SOURCE_MODE                      ; set CURRENT_SRC_MD to the EA's mode.
                         BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the EA's register.
-                        
-                        ; TODO: Error checking goes here.
-                        
                         BSR         READ_SOURCE_DATA                      ; set CURRENT_SRC_DATA to the EA's additional data.
      
                         BSR         DISPLAY_CLR_START
@@ -2088,7 +2061,6 @@ DISPLAY_CLR_START       CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
                         
                         CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
                         BEQ         DISPLAY_CLR_L_START     ; 'CLR.L'
-                        ;TODO: error case?
                         
 DISPLAY_CLR_B_START     LEA         CLR_B_MSG,A1            ;'CLR.B'
                         MOVE.B      #14,D0
@@ -2129,9 +2101,6 @@ ADD_FOUND              ; NOTE: easy68k parses instructions like ADD.B #1,D1 as A
 
                         BSR         READ_SOURCE_MODE                      ; set CURRENT_SRC_MD to the EA's mode.
                         BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the EA's register.
-                        
-                        ; TODO: Error checking goes here. (can't add with An as destination, etc.)
-                        
                         BSR         READ_SOURCE_DATA                      ; set CURRENT_SRC_DATA to the EA's additional data.
                         
                         BSR         DISPLAY_ADD_START
@@ -2357,10 +2326,7 @@ SUB_FOUND               BSR         DISPLAY_CURRENT_ADDRESS ; TODO: check for th
                         MOVE.B      #CONST_DATA_REG_MD,CURRENT_DEST_MD    ; set CURRENT_DEST_MD to data register: Dn mode
                         
                         BSR         READ_SOURCE_MODE                      ; set CURRENT_SRC_MD to the EA's mode.
-                        BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the EA's register.
-                        
-                        ; TODO: Error checking goes here. (can't add with An as destination, etc.)
-                        
+                        BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the EA's register.   
                         BSR         READ_SOURCE_DATA                      ; set CURRENT_SRC_DATA to the EA's additional data.
                         
                         BSR         DISPLAY_SUB_START
@@ -2439,10 +2405,7 @@ SUBA_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         MOVE.B      #CONST_ADDR_REG_MD,CURRENT_DEST_MD    ; set CURRENT_DEST_MD to address register: An mode
                         
                         BSR         READ_SOURCE_MODE                      ; set CURRENT_SRC_MD to the EA's mode.
-                        BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the EA's register.
-                        
-                        ; TODO: Error checking goes here.
-                        
+                        BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the EA's register.  
                         BSR         READ_SOURCE_DATA                      ; set CURRENT_SRC_DATA to the EA's additional data.
                         
                         BSR         DISPLAY_SUBA_START
@@ -2499,10 +2462,7 @@ SUBQ_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         MOVE.B      #CONST_IMMEDIATE_REG,CURRENT_L_REG
 
                         BSR         READ_SOURCE_MODE         ; read the source mode     
-                        BSR         READ_SOURCE_REG          ; read the source register
-                        
-                        ; TODO: error checking goes here.
-                        
+                        BSR         READ_SOURCE_REG          ; read the source register          
                         BSR         READ_SOURCE_DATA         ; read additional source data if necessary
                         
                         ; source reg/mode/data are actually for our right operand.
@@ -2558,7 +2518,6 @@ DISPLAY_SUBQ_START      CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
                         
                         CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
                         BEQ         DISPLAY_SUBQ_L_START    ; 'SUBQ.L'
-                        ;TODO: error case?
                         
 DISPLAY_SUBQ_B_START    LEA         SUBQ_B_MSG,A1           ;'SUBQ.B'
                         MOVE.B      #14,D0
@@ -2626,9 +2585,6 @@ MULS_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         
                         BSR         READ_SOURCE_MODE                      ; set CURRENT_SRC_MD to the EA's mode.
                         BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the EA's register.
-                        
-                        ; TODO: Error checking goes here.
-                        
                         BSR         READ_SOURCE_DATA                      ; set CURRENT_SRC_DATA to the EA's additional data.
                         
                         BSR         DISPLAY_MULS_START
@@ -2669,10 +2625,7 @@ DIVU_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         MOVE.B      #CONST_DATA_REG_MD,CURRENT_DEST_MD    ; set CURRENT_DEST_MD to data register: Dn mode
                         
                         BSR         READ_SOURCE_MODE                      ; set CURRENT_SRC_MD to the EA's mode.
-                        BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the EA's register.
-                        
-                        ; TODO: Error checking goes here.
-                        
+                        BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the EA's register.          
                         BSR         READ_SOURCE_DATA                      ; set CURRENT_SRC_DATA to the EA's additional data.
                         
                         BSR         DISPLAY_DIVU_START
@@ -2712,10 +2665,7 @@ DIVS_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
                         MOVE.B      #CONST_DATA_REG_MD,CURRENT_DEST_MD    ; set CURRENT_DEST_MD to data register: Dn mode
                         
                         BSR         READ_SOURCE_MODE                      ; set CURRENT_SRC_MD to the EA's mode.
-                        BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the EA's register.
-                        
-                        ; TODO: Error checking goes here.
-                        
+                        BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the EA's register.              
                         BSR         READ_SOURCE_DATA                      ; set CURRENT_SRC_DATA to the EA's additional data.
                         
                         BSR         DISPLAY_DIVS_START
@@ -2755,9 +2705,6 @@ CMP_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
 
                         BSR         READ_DEST_REG                        ; read the Dn
                         MOVE.B      #CONST_DATA_REG_MD,CURRENT_DEST_MD
-
-                        ; TODO: error checking goes here
-
                         BSR         READ_SOURCE_DATA                     ; read additional ea data if necessary
 
                         BSR         DISPLAY_CMP_START
@@ -2798,9 +2745,6 @@ CMPA_FOUND              BSR         DISPLAY_CURRENT_ADDRESS
 
                         BSR         READ_DEST_REG                        ; read the An
                         MOVE.B      #CONST_ADDR_REG_MD,CURRENT_DEST_MD
-
-                        ; TODO: error checking goes here
-
                         BSR         READ_SOURCE_DATA                     ; read additional ea data if necessary
 
                         BSR         DISPLAY_CMPA_START
@@ -2855,10 +2799,7 @@ AND_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
                         MOVE.B      #CONST_DATA_REG_MD,CURRENT_DEST_MD    ; set CURRENT_DEST_MD to data register: Dn mode
                         
                         BSR         READ_SOURCE_MODE                      ; set CURRENT_SRC_MD to the EA's mode.
-                        BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the EA's register.
-                        
-                        ; TODO: Error checking goes here. 
-                        
+                        BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the EA's register.                        
                         BSR         READ_SOURCE_DATA                      ; set CURRENT_SRC_DATA to the EA's additional data.
                         
                         BSR         DISPLAY_AND_START
@@ -2879,7 +2820,6 @@ DISPLAY_AND_START       CMP.B       #BYTE_SIZE,CURRENT_OP_SIZE
                         
                         CMP.B       #LONG_SIZE,CURRENT_OP_SIZE
                         BEQ         DISPLAY_AND_L_START     ; 'AND.L'
-                        ;TODO: error case?
                         
 DISPLAY_AND_B_START     LEA         AND_B_MSG,A1            ; 'AND.B'
                         MOVE.B      #14,D0
@@ -2934,15 +2874,12 @@ EOR_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
                         
                         BSR         READ_OP_SIZE
                         
-                        BSR         READ_DEST_REG            ; read the destination register, which we will actually use as the source.
+                        BSR         READ_DEST_REG       ; read the destination register, which we will actually use as the source.
                         MOVE.B      CURRENT_DEST_REG,CURRENT_L_REG
                         MOVE.B      #CONST_DATA_REG_MD,CURRENT_L_MD
                         
                         BSR         READ_SOURCE_MODE    ; read EA mode
                         BSR         READ_SOURCE_REG     ; read EA register
-                        
-                        ;TODO: error checking goes here
-                        
                         BSR         READ_SOURCE_DATA    ; read EA additional data if necessary
 
                         MOVE.B      CURRENT_SRC_REG,CURRENT_R_REG                
@@ -3003,9 +2940,6 @@ ASD_MEM_FOUND           BSR         DISPLAY_CURRENT_ADDRESS
                         BSR         READ_OP_DIRECTION         ; determine whether this is ASR (0) or ASL (1)
                         BSR         READ_SOURCE_MODE          ; read the EA (which is actually our destination, but parsed like source)
                         BSR         READ_SOURCE_REG
-
-                        ; TODO: error checking goes here
-
                         BSR         READ_SOURCE_DATA          ; read additional data if necessary
 
                         BSR         DISPLAY_ASD_MEM_START
@@ -3043,9 +2977,6 @@ LSD_MEM_FOUND           BSR         DISPLAY_CURRENT_ADDRESS
                         BSR         READ_OP_DIRECTION         ; determine whether this is LSR (0) or LSL (1)
                         BSR         READ_SOURCE_MODE          ; read the EA (which is actually our destination, but parsed like source)
                         BSR         READ_SOURCE_REG
-
-                        ; TODO: error checking goes here
-
                         BSR         READ_SOURCE_DATA          ; read additional data if necessary
 
                         BSR         DISPLAY_LSD_MEM_START
@@ -3083,9 +3014,6 @@ ROXD_MEM_FOUND          BSR         DISPLAY_CURRENT_ADDRESS
                         BSR         READ_OP_DIRECTION         ; determine whether this is ROXR (0) or ROXL (1)
                         BSR         READ_SOURCE_MODE          ; read the EA (which is actually our destination, but parsed like source)
                         BSR         READ_SOURCE_REG
-
-                        ; TODO: error checking goes here
-
                         BSR         READ_SOURCE_DATA          ; read additional data if necessary
 
                         BSR         DISPLAY_ROXD_MEM_START
@@ -3123,9 +3051,6 @@ ROD_MEM_FOUND           BSR         DISPLAY_CURRENT_ADDRESS
                         BSR         READ_OP_DIRECTION         ; determine whether this is ROR (0) or ROL (1)
                         BSR         READ_SOURCE_MODE          ; read the EA (which is actually our destination, but parsed like source)
                         BSR         READ_SOURCE_REG
-
-                        ; TODO: error checking goes here
-
                         BSR         READ_SOURCE_DATA          ; read additional data if necessary
 
                         BSR         DISPLAY_ROD_MEM_START
@@ -3402,9 +3327,6 @@ BTST_STATIC_FOUND       BSR         DISPLAY_CURRENT_ADDRESS                 ; st
 
                         BSR         READ_SOURCE_REG                         ; read our EA (destination)
                         BSR         READ_SOURCE_MODE 
-
-                        ;TODO: error checking goes here
-
                         BSR         READ_DEST_DATA                          ; read the additional immediate data.
                         BSR         READ_SOURCE_DATA                        ; read additional data for the EA if necessary.
 
@@ -3444,9 +3366,6 @@ BCHG_STATIC_FOUND       BSR         DISPLAY_CURRENT_ADDRESS                 ; st
 
                         BSR         READ_SOURCE_REG                         ; read our EA (destination)
                         BSR         READ_SOURCE_MODE 
-
-                        ;TODO: error checking goes here
-
                         BSR         READ_DEST_DATA                          ; read the additional immediate data.
                         BSR         READ_SOURCE_DATA                        ; read additional data for the EA if necessary.
 
@@ -3486,9 +3405,6 @@ BCLR_STATIC_FOUND       BSR         DISPLAY_CURRENT_ADDRESS                 ; st
 
                         BSR         READ_SOURCE_REG                         ; read our EA (destination)
                         BSR         READ_SOURCE_MODE 
-
-                        ;TODO: error checking goes here
-
                         BSR         READ_DEST_DATA                          ; read the additional immediate data.
                         BSR         READ_SOURCE_DATA                        ; read additional data for the EA if necessary.
 
@@ -3528,9 +3444,6 @@ BSET_STATIC_FOUND       BSR         DISPLAY_CURRENT_ADDRESS                 ; st
 
                         BSR         READ_SOURCE_REG                         ; read our EA (destination)
                         BSR         READ_SOURCE_MODE 
-
-                        ;TODO: error checking goes here
-
                         BSR         READ_DEST_DATA                          ; read the additional immediate data.
                         BSR         READ_SOURCE_DATA                        ; read additional data for the EA if necessary.
 
