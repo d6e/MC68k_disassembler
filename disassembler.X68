@@ -3288,11 +3288,7 @@ BTST_DYNAMIC_FOUND      BSR         DISPLAY_CURRENT_ADDRESS                 ; st
 
                         BSR         READ_SOURCE_REG                         ; read our EA (destination)
                         BSR         READ_SOURCE_MODE 
-
-                        ;TODO: error checking goes here
-
                         BSR         READ_SOURCE_DATA                        ; read additional data for the EA if necessary.
-
                         BSR         DISPLAY_BTST_START
 
                         LEA         SPACE,A1            ; ' '
@@ -3324,11 +3320,7 @@ BCHG_DYNAMIC_FOUND      BSR         DISPLAY_CURRENT_ADDRESS                 ; st
 
                         BSR         READ_SOURCE_REG                         ; read our EA (destination)
                         BSR         READ_SOURCE_MODE 
-
-                        ;TODO: error checking goes here
-
                         BSR         READ_SOURCE_DATA                        ; read additional data for the EA if necessary.
-
                         BSR         DISPLAY_BCHG_START
 
                         LEA         SPACE,A1            ; ' '
@@ -3361,7 +3353,6 @@ BCLR_DYNAMIC_FOUND      BSR         DISPLAY_CURRENT_ADDRESS                 ; st
                         BSR         READ_SOURCE_REG                         ; read our EA (destination)
                         BSR         READ_SOURCE_MODE 
                         BSR         READ_SOURCE_DATA                        ; read additional data for the EA if necessary.
-
                         BSR         DISPLAY_BCLR_START
 
                         LEA         SPACE,A1            ; ' '
@@ -3393,9 +3384,7 @@ BSET_DYNAMIC_FOUND      BSR         DISPLAY_CURRENT_ADDRESS                 ; st
 
                         BSR         READ_SOURCE_REG                         ; read our EA (destination)
                         BSR         READ_SOURCE_MODE 
-
                         BSR         READ_SOURCE_DATA                        ; read additional data for the EA if necessary.
-
                         BSR         DISPLAY_BSET_START
 
                         LEA         SPACE,A1            ; ' '
@@ -3428,9 +3417,7 @@ LEA_FOUND               BSR         DISPLAY_CURRENT_ADDRESS
                         
                         BSR         READ_SOURCE_MODE                      ; set CURRENT_SRC_MD to the EA's mode.
                         BSR         READ_SOURCE_REG                       ; set CURRENT_SRC_REG to the EA's register.
-                        
                         BSR         READ_SOURCE_DATA                      ; set CURRENT_SRC_DATA to the EA's additional data.
-
                         BSR         DISPLAY_LEA_START
                         
                         LEA         SPACE,A1
@@ -3804,7 +3791,7 @@ DISPLAY_JSR_START       LEA         JSR_MSG,A1       ; 'JSR'
 
 *-----------------------JMP-related Subroutines------------------------------------
 
-JMP_FOUND               BRA         INVALID_OPCODE_FOUND ;TODO
+JMP_FOUND               BRA         INVALID_OPCODE_FOUND    ; TODO
 
 *-----------------------CHK-related Subroutines------------------------------------
 CHK_FOUND               BRA         INVALID_OPCODE_FOUND    ; TODO: CHK
